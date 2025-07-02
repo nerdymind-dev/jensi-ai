@@ -1,0 +1,36 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "target": "esnext",
+    "jsx": "preserve",
+    "outDir": "./dist",
+    "baseUrl": "./",
+    "paths": {
+      "~src/*": ["src/*"]
+    },
+    "types": ["@types/jest"],
+    /* Additional Options */
+    "strict": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true,
+    "importsNotUsedAsValues": "error",
+    "esModuleInterop": true,
+    "removeComments": false, //Magic comment /* webpackChunkName: ChunkName */ is used to name the chunk
+    "sourceMap": true,
+    "allowJs": true
+  },
+  "include": [
+    "src",
+    "tests/jsunit"
+  ],
+  "exclude": [
+    ".git",
+    "node_modules",
+    "dist",
+    "public",
+    "vendor"
+  ]
+}
