@@ -16,10 +16,10 @@ class SettingControllerTests extends PluginTestCase
             ->with('', 'names')
             ->andReturn(['post', 'page']);
 
-        $controller = new \PluginSpace\Api\SettingController();
+        $controller = new \JensiAI\Api\SettingController();
 
         $actual = $this->accessNonPublicProperty($controller, 'namespace');
-        $expected = \PluginSpace\Main::PREFIX.'/v1';
+        $expected = \JensiAI\Main::PREFIX.'/v1';
         $this->assertEquals($expected, $actual);
 
         $actual = $this->accessNonPublicProperty($controller, 'rest_base');

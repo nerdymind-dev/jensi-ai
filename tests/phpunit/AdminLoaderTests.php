@@ -8,8 +8,8 @@ class AdminLoaderTests extends PluginTestCase
 {
     public function test_construct()
     {
-        new \PluginSpace\AdminLoader('test');
+        new \JensiAI\AdminLoader('test');
 
-        $this->assertTrue(has_action('admin_menu', '\PluginSpace\AdminLoader->admin_menu()') > 0);
+        $this->assertTrue(has_action('admin_menu', '\JensiAI\AdminLoader->admin_menu()') > 0);
     }
 }

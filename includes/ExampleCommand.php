@@ -1,6 +1,6 @@
 <?php
 
-namespace PluginSpace;
+namespace JensiAI;
 
 /**
  * Implements example command.

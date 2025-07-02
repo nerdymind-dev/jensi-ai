@@ -1,6 +1,6 @@
 <?php
 
-namespace PluginSpace;
+namespace JensiAI;
 
 /**
  * Main class.
@@ -15,7 +15,7 @@ final class Main
      *
      * @var string
      */
-    public const PREFIX = 'PluginPrefix';
+    public const PREFIX = 'jensi_ai';
 
     /**
      * Holds various class instances.
@@ -105,7 +105,7 @@ final class Main
 
         $setting_key = self::PREFIX.'_settings';
         $settings = get_option($setting_key, []);
-        (new \PluginSpace\Migrations())->cleanUp(self::PREFIX, $settings);
+        (new \JensiAI\Migrations())->cleanUp(self::PREFIX, $settings);
     }
 
     /**
@@ -124,7 +124,7 @@ final class Main
 
         // setup cli
         if (defined('WP_CLI') && \WP_CLI) {
-            $this->container['cli'] = new \PluginSpace\CliLoader(self::PREFIX);
+            $this->container['cli'] = new \JensiAI\CliLoader(self::PREFIX);
         }
 
         // this is to register an action link from the Plugin manager page to our settings page
@@ -178,7 +178,7 @@ final class Main
      */
     public function activate_plugin()
     {
-        (new \PluginSpace\Migrations())->run(self::PREFIX, $this->VERSION);
+        (new \JensiAI\Migrations())->run(self::PREFIX, $this->VERSION);
 
         // set the current version to activate plugin
         update_option(self::PREFIX.'_version', $this->VERSION);
@@ -220,24 +220,24 @@ final class Main
     public function init_hook_handler()
     {
         // initialize assets
-        $this->container['assets'] = new \PluginSpace\Assets(self::PREFIX);
+        $this->container['assets'] = new \JensiAI\Assets(self::PREFIX);
 
         // initialize the various loader classes
         if ($this->is_request('admin')) {
-            $ctx = new \PluginSpace\AdminLoader(self::PREFIX);
+            $ctx = new \JensiAI\AdminLoader(self::PREFIX);
             $this->container['admin'] = $ctx;
         }
 
         if ($this->is_request('frontend')) {
-            $this->container['frontend'] = new \PluginSpace\FrontendLoader(self::PREFIX);
+            $this->container['frontend'] = new \JensiAI\FrontendLoader(self::PREFIX);
         }
 
         if ($this->is_request('ajax')) {
-            // $this->container['ajax'] =  new \PluginSpace\AjaxLoader(self::PREFIX);
+            // $this->container['ajax'] =  new \JensiAI\AjaxLoader(self::PREFIX);
         }
 
         // finally load api routes
-        $this->container['api'] = new \PluginSpace\ApiRoutes(self::PREFIX);
+        $this->container['api'] = new \JensiAI\ApiRoutes(self::PREFIX);
     }
 
     /**

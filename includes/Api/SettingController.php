@@ -1,6 +1,6 @@
 <?php
 
-namespace PluginSpace\Api;
+namespace JensiAI\Api;
 
 /**
  * Backend settings controller.
@@ -19,7 +19,7 @@ class SettingController extends \WP_REST_Controller
      */
     public function __construct()
     {
-        $this->prefix = \PluginSpace\Main::PREFIX;
+        $this->prefix = \JensiAI\Main::PREFIX;
         $this->namespace = $this->prefix.'/v1';
         $this->rest_base = 'settings';
     }
@@ -171,7 +171,7 @@ class SettingController extends \WP_REST_Controller
      */
     public function get_settings_structure($runOptionsCallback = false)
     {
-        $options = include \PluginSpace\Main::$PLUGINDIR.'/config/settings.php';
+        $options = include \JensiAI\Main::$PLUGINDIR.'/config/settings.php';
 
         if ($runOptionsCallback) {
             $settings_details = $options['options'];
@@ -194,7 +194,7 @@ class SettingController extends \WP_REST_Controller
      */
     public function get_setting_defaults()
     {
-        $options = include \PluginSpace\Main::$PLUGINDIR.'/config/settings.php';
+        $options = include \JensiAI\Main::$PLUGINDIR.'/config/settings.php';
         $result = [];
 
         $settings_details = $options['options'];

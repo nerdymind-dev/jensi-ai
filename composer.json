@@ -18,8 +18,8 @@
     "preferred-install": "dist",
     "sort-packages": true,
     "classmap-authoritative": false,
-    "classloader-suffix": "PluginSpace",
-    "autoloader-suffix": "PluginSpace",
+    "classloader-suffix": "JensiAI",
+    "autoloader-suffix": "JensiAI",
     "process-timeout": 0,
     "vendor-dir": "vendor",
     "platform-check": false,
@@ -30,7 +30,7 @@
   },
   "autoload": {
     "psr-4": {
-      "PluginSpace\\": "includes/"
+      "JensiAI\\": "includes/"
     }
   },
   "autoload-dev": {

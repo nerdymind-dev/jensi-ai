@@ -1,6 +1,6 @@
 <?php
 
-namespace PluginSpace;
+namespace JensiAI;
 
 /**
  * Admin pages loader.
@@ -36,8 +36,8 @@ class AdminLoader
         $slug = $this->prefix;
 
         $hook = add_menu_page(
-            esc_html(__('PluginName', $this->prefix)),
-            esc_html(__('PluginName', $this->prefix)),
+            esc_html(__('Jensi AI', $this->prefix)),
+            esc_html(__('Jensi AI', $this->prefix)),
             $capability,
             $slug,
             [$this, 'plugin_page'],
@@ -88,7 +88,7 @@ class AdminLoader
 
         // output data for use on client-side
         // https://wordpress.stackexchange.com/questions/344537/authenticating-with-rest-api
-        $appVars = apply_filters('PluginPrefix/admin_app_vars', [
+        $appVars = apply_filters('jensi_ai/admin_app_vars', [
             'rest'             => [
                 'endpoints' => [
                     'settings' => esc_url_raw(rest_url($settingController->get_endpoint())),
@@ -100,7 +100,7 @@ class AdminLoader
             'settingStructure' => $settingController->get_settings_structure(true),
             'prefix'           => $this->prefix,
             'adminUrl'         => admin_url('/'),
-            'pluginUrl'        => rtrim(\PluginSpace\Main::$BASEURL, '/'),
+            'pluginUrl'        => rtrim(\JensiAI\Main::$BASEURL, '/'),
         ]);
 
         wp_localize_script($this->prefix.'-admin', 'vue_wp_plugin_config_admin', $appVars);

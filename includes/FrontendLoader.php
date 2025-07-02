@@ -1,6 +1,6 @@
 <?php
 
-namespace PluginSpace;
+namespace JensiAI;
 
 /**
  * Frontend pages loader.
@@ -62,8 +62,8 @@ class FrontendLoader
         if ($postfix === 'frontend') {
             // output data for use on client-side
             // https://wordpress.stackexchange.com/questions/344537/authenticating-with-rest-api
-            $appVars = apply_filters('PluginPrefix/frontend_app_vars', [
-                'pluginUrl'     => rtrim(\PluginSpace\Main::$BASEURL, '/'),
+            $appVars = apply_filters('jensi_ai/frontend_app_vars', [
+                'pluginUrl'     => rtrim(\JensiAI\Main::$BASEURL, '/'),
             ]);
             wp_localize_script($this->prefix.'-'.$postfix, 'vue_wp_plugin_config_'.$postfix, $appVars);
 
@@ -71,9 +71,9 @@ class FrontendLoader
         } elseif ($postfix === 'frontview') {
             // output data for use on client-side
             // https://wordpress.stackexchange.com/questions/344537/authenticating-with-rest-api
-            $appVars = apply_filters('PluginPrefix/frontview_app_vars', [
+            $appVars = apply_filters('jensi_ai/frontview_app_vars', [
                 'viewComponent' => esc_attr($a['view']),
-                'pluginUrl'     => rtrim(\PluginSpace\Main::$BASEURL, '/'),
+                'pluginUrl'     => rtrim(\JensiAI\Main::$BASEURL, '/'),
             ]);
             wp_localize_script($this->prefix.'-'.$postfix, 'vue_wp_plugin_config_'.$postfix, $appVars);
 

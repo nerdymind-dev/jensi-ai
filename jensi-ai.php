@@ -1,16 +1,17 @@
 <?php
+
 /**
- * Plugin Name: PluginName
+ * Plugin Name: Jensi AI
  * Version: 1.0.0
- * Plugin URI:
- * Description: PluginName
- * Author: noogen
- * Author URI:
- * Requires at least: 5.6
- * Tested up to: 6.0.0
- * Requires PHP: 7.4
+ * Plugin URI: https://nerdymind.com/
+ * Description: Jensi AI 🤖
+ * Author: Shaun Parkison (NerdyMind)
+ * Author URI: 
+ * Requires at least: 6.0
+ * Tested up to: 6.8.1
+ * Requires PHP: 8.0
  *
- * Text Domain: PluginPrefix
+ * Text Domain: jensi_ai
  * Domain Path: /languages/
  *
  * License: GPLv2 or later
@@ -38,7 +39,7 @@ require __DIR__ . '/vendor/autoload.php';
 /**
  * Returns the main instance to prevent the need to use globals.
  */
-$instance = \PluginSpace\Main::get_instance(__FILE__, '1.0.0');
+$instance = \JensiAI\Main::get_instance(__FILE__, '1.0.0');
 $instance->run();
 
 return $instance;

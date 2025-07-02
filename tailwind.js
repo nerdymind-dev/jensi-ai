@@ -17,7 +17,7 @@ module.exports = {
       cursor: ['disabled'],
     },
   },
-//  prefix: 'PluginPrefix-', //to prevent overlapping styles from WP
+//  prefix: 'jensi_ai-', //to prevent overlapping styles from WP
   plugins: [
     require('@tailwindcss/forms'),
   ],
