@@ -3,6 +3,7 @@ const path = require('path')
 const mix = require('laravel-mix')
 //const webpack = require('webpack')
 const StylelintPlugin = require('stylelint-webpack-plugin')
+const Dotenv = require('dotenv-webpack');
 
 require('laravel-mix-tailwind')
 
@@ -23,6 +24,7 @@ const webpackConfig = {
       files: '**/*.css',
       fix: true,
     }),
+    new Dotenv()
   ],
   module: {
     exprContextCritical: false,
@@ -113,8 +115,8 @@ const postcssPlugins = [
 
 // Add CSS
 mix.options({
-    postCss: postcssPlugins
-  })
+  postCss: postcssPlugins
+})
   .postCss(
     'assets/admin.css',
     'css'
@@ -134,17 +136,16 @@ if (mix.inProduction()) {
   mix.version()
 } else {
   // For local dev specify HMR options
-  webpackConfig.devServer = {
-    host: "sageba.test",
-    https: {
-      key: fs.readFileSync(
-        "/Users/shaunparkison/Library/Application Support/Herd/config/valet/Certificates/sageba.test.key"
-      ),
-      cert: fs.readFileSync(
-        "/Users/shaunparkison/Library/Application Support/Herd/config/valet/Certificates/sageba.test.crt"
-      ),
-    },
-  };
+  let devServer = {
+    host: (process.env.APP_SCHEME + "://" + process.env.APP_HOST) || 'localhost',
+  }
+  if (process.env.APP_SCHEME && process.env.APP_SCHEME === 'https' || false) {
+    devServer.https = {
+      key: fs.readFileSync(process.env.KEY_PATH || ''),
+      cert: fs.readFileSync(process.env.CERT_PATH || '')
+    }
+  }
+  webpackConfig.devServer = devServer;
 }
 
 // Add webpack config (defined above)

@@ -59,6 +59,7 @@
     "browser-sync-webpack-plugin": "^2.3.0",
     "core-js": "^3.23.1",
     "css-loader": "^6.7.3",
+    "dotenv-webpack": "^8.1.1",
     "eslint": "^8.17.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-friendly-formatter": "^4.0.1",
