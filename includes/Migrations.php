@@ -10,47 +10,49 @@ namespace JensiAI;
 final class Migrations
 {
     /**
-     * The database charset.
-     *
-     * @var string
-     */
-    private $db_charset = 'utf8';
-
-    /**
-     * The database collate.
-     *
-     * @var string
-     */
-    private $db_collate = 'utf8_general_ci';
-
-    /**
      * Run the migration.
      *
-     * @param  string $prefix         application prefix
-     * @param  string $currentVersion the current version
+     * @param string $prefix application prefix
+     * @param string $currentVersion the current version
      * @return Migrations
      */
     public function run($prefix, $currentVersion)
     {
-        if (! current_user_can('activate_plugins')) {
-            return;
+        // Make sure has the correct permissions
+        if (!current_user_can('activate_plugins')) {
+            return $this;
         }
 
-        // Explicitly set the character set and collation when creating the tables
-        $this->db_charset = (defined('DB_CHARSET' && '' !== DB_CHARSET)) ? DB_CHARSET : 'utf8';
-        $this->db_collate = (defined('DB_COLLATE' && '' !== DB_COLLATE)) ? DB_COLLATE : 'utf8_general_ci';
+        global $wpdb;
+        $settings_table = "{$wpdb->prefix}jensi_ai_settings";
+        $lastVersion = '0.0.0';
+        $result = null;
+        if ($wpdb->get_var("SHOW TABLES LIKE '$settings_table'") === $settings_table) {
+            $result = $wpdb->get_row("SELECT * FROM $settings_table");
+            if ($result) {
+                $lastVersion = $result->last_migrated_version;
+            }
+        }
 
-        $lastVersion = get_option($prefix.'_last_migrated_version', '0.0.0');
-
+        // If current version is not greater than the installed, return
         if (version_compare($lastVersion, $currentVersion, '>=')) {
-            return;
+            return $this;
         }
 
+        // Apply migrations in order
         $this->applyMigration($lastVersion, '0.0.0', 'migration_0_0_0');
-        $this->applyMigration($lastVersion, '0.0.1', 'migration_0_0_1');
-        // TODO: add more migration methods
 
-        update_option($prefix.'_last_migrated_version', $currentVersion);
+        // $this->applyMigration($lastVersion, '0.0.1', 'migration_0_0_1');
+        // ...
+
+        // Update the last migrated version for future updates
+        if (!$result) {
+            // If table was just created, insert first row
+            $wpdb->insert($settings_table, ['last_migrated_version' => $currentVersion]);
+        } else {
+            // Update if table already present
+            $wpdb->update($settings_table, ['last_migrated_version' => $currentVersion], ['id' => $result->id]);
+        }
 
         return $this;
     }
@@ -58,9 +60,9 @@ final class Migrations
     /**
      * Function that help apply application migration.
      *
-     * @param  string $lastVersion    the migrated version
-     * @param  string $applyVersion   the migration to apply version
-     * @param  string $migration_func the migration function
+     * @param string $lastVersion the migrated version
+     * @param string $applyVersion the migration to apply version
+     * @param string $migration_func the migration function
      * @return void
      */
     public function applyMigration($lastVersion, $applyVersion, $migration_func)
@@ -68,32 +70,31 @@ final class Migrations
         if (version_compare($lastVersion, $applyVersion, '>=')) {
             return;
         }
-
         call_user_func([$this, $migration_func]);
     }
 
     /**
      * Database cleanup to run during plugin uninstall.
      *
-     * @param  string $prefix
-     * @param  array  $settings
+     * @param string $prefix
+     * @param array $settings
      * @return void
      */
     public function cleanUp($prefix, $settings)
     {
         // don't do anything if configured to not cleanup db
-        if (! isset($settings['cleanup_db_on_plugin_uninstall']) || ! $settings['cleanup_db_on_plugin_uninstall']) {
+        if (!isset($settings['cleanup_db_on_plugin_uninstall']) || !$settings['cleanup_db_on_plugin_uninstall']) {
             return;
         }
 
         global $wpdb;
 
-        // remove tables
-        // $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}jensi_ai_grid");
+        // Remove tables
+        $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}jensi_ai_jobs");
+        $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}jensi_ai_settings");
 
-        // remove options
-        delete_option($prefix.'_last_migrated_version');
-        delete_option($prefix.'_settings');
+        // Remove options
+        // delete_option($prefix . $option_name);
     }
 
     /**
@@ -103,7 +104,35 @@ final class Migrations
      */
     public function migration_0_0_0()
     {
-        // dummy method to demonstrate migration
+        global $wpdb;
+
+        $charset_collate = $wpdb->get_charset_collate();
+
+        require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+        $sqlQuery = "CREATE TABLE {$wpdb->prefix}jensi_ai_jobs (
+            `id` mediumint(9) NOT NULL AUTO_INCREMENT,
+            `name` VARCHAR(256) NOT NULL,
+            `post_id` BIGINT NOT NULL,
+            `type` VARCHAR(256) NOT NULL,
+            `content` LONGTEXT NULL,
+            `meta` LONGTEXT NULL,
+            `processed` TINYINT NOT NULL DEFAULT 0,
+            `failed` TINYINT NOT NULL DEFAULT 0,
+            `errors` MEDIUMTEXT NULL,
+            `modified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (id)
+        ) $charset_collate;
+
+        CREATE TABLE {$wpdb->prefix}jensi_ai_settings (
+            `id` mediumint(9) NOT NULL AUTO_INCREMENT,
+            `last_migrated_version` TEXT NOT NULL,
+            `settings` TEXT NULL,
+            `modified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (id)
+        ) $charset_collate;";
+        dbDelta($sqlQuery);
     }
 
     /**
@@ -113,22 +142,6 @@ final class Migrations
      */
     public function migration_0_0_1()
     {
-        global $wpdb;
-
-        require_once ABSPATH.'wp-admin/includes/upgrade.php';
-
-        /* $sqlQuery = "
-    CREATE TABLE {$wpdb->prefix}jensi_ai_grid (
-    `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
-    `name` VARCHAR(190) NOT NULL,
-    `config` TEXT NOT NULL,
-    `modified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (id),
-    UNIQUE KEY `name` (`name`)
-    ) CHARACTER SET '{$this->db_charset}' COLLATE '{$this->db_collate}';
-    ";
-
-    dbDelta($sqlQuery); */
+        // ...
     }
 }

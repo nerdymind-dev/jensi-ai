@@ -31,6 +31,12 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+// define the plugin version
+if (!defined('JENSI_AI_VERSION')) {
+    // NOTE: be sure change version in plugin details above as well...
+    define('JENSI_AI_VERSION', '1.0.0');
+}
+
 /*
 |--------------------------------------------------------------------------
 | Register The Auto Loader
@@ -44,15 +50,10 @@ if (!defined('ABSPATH')) {
 
 require __DIR__ . '/vendor/autoload.php';
 
-// Import WP file helpers
+// Import WP file helpers we'll be using
 require_once(ABSPATH . '/wp-admin/includes/media.php');
 require_once(ABSPATH . '/wp-admin/includes/file.php');
 require_once(ABSPATH . '/wp-admin/includes/image.php');
-
-if (!defined('JENSI_AI_VERSION')) {
-    // NOTE: be sure change version in plugin details above as well...
-    define('JENSI_AI_VERSION', '1.0.0');
-}
 
 if (!function_exists('write_log')) {
     function write_log($log)
@@ -70,7 +71,7 @@ if (!function_exists('write_log')) {
 /**
  * Returns the main instance to prevent the need to use globals.
  */
-$instance = \JensiAI\Main::get_instance(__FILE__, '1.0.0');
+$instance = \JensiAI\Main::get_instance(__FILE__, JENSI_AI_VERSION);
 $instance->run();
 
 /*

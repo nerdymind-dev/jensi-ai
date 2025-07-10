@@ -2,7 +2,7 @@
 
 namespace JensiAI\Api;
 
-use Mockery\Exception;
+use Exception;
 use JensiAI\QueueLoader;
 
 /**

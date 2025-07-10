@@ -77,7 +77,7 @@ class SettingController extends \WP_REST_Controller
      */
     public function get_endpoints()
     {
-        // example: vwr-live-catalog/v1/settings
+        // example: jensi-ai/v1/settings
         return esc_url_raw(
             // GET/POST
             rest_url($this->namespace . '/' . $this->rest_base)
@@ -281,7 +281,7 @@ class SettingController extends \WP_REST_Controller
                 case 'dropdownMultiselect':
                     $sanitized_value = [];
 
-                    if (!is_array($value)) {
+                    if (is_string($value)) {
                         $value = explode(',', $value);
                     }
 

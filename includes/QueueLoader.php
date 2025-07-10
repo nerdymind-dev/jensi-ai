@@ -2,7 +2,6 @@
 
 namespace JensiAI;
 
-use JensiAI\Api\PersonasController;
 use JensiAI\Api\SettingController;
 
 /**
@@ -55,7 +54,6 @@ class QueueLoader
                 'post_id' => $post->ID,
                 'content' => $post->post_content,
                 'type' => $section->type,
-                // 'persona_id' => (int)$section->persona_id, // not using personas, will be something else, leaving as example
                 // 'processed' => false // populated by default...
             ]);
             if ($result === false) {

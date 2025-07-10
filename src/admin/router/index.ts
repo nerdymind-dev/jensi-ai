@@ -12,11 +12,6 @@ const routes: RouteRecordRaw[] = [
     component: AdminDashboard
   },
   {
-    name: 'personas',
-    path: '/personas',
-    component: AdminPersonas
-  },
-  {
     name: 'settings',
     path: '/settings',
     component: AdminSettings

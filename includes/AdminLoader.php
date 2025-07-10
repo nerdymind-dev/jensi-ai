@@ -36,8 +36,8 @@ class AdminLoader
         $slug = $this->prefix;
 
         $hook = add_menu_page(
-            esc_html(__('Sage AI Spinner', $this->prefix)),
-            esc_html(__('Sage AI Spinner', $this->prefix)),
+            esc_html(__('JENSi AI', $this->prefix)),
+            esc_html(__('JENSi AI', $this->prefix)),
             $capability,
             $slug,
             [$this, 'plugin_page'],
@@ -46,21 +46,6 @@ class AdminLoader
         );
 
         if (current_user_can($capability)) {
-            add_submenu_page(
-                $slug,
-                esc_html(__('Configuration', $this->prefix)),
-                esc_html(__('Configuration', $this->prefix)),
-                $capability,
-                $slug,
-                [$this, 'plugin_page']
-            );
-            add_submenu_page(
-                $slug,
-                esc_html(__('Personas', $this->prefix)),
-                esc_html(__('Personas', $this->prefix)),
-                $capability,
-                "admin.php?page={$slug}#/personas"
-            );
             add_submenu_page(
                 $slug,
                 esc_html(__('Queue', $this->prefix)),
@@ -92,7 +77,6 @@ class AdminLoader
      */
     public function enqueue_scripts()
     {
-        wp_enqueue_style($this->prefix . '-bootstrap');
         wp_enqueue_style($this->prefix . '-admin');
         wp_enqueue_script($this->prefix . '-admin');
     }
@@ -109,62 +93,21 @@ class AdminLoader
 
         // instantiate controllers
         $settingController = new Api\SettingController();
-        $personasController = new Api\PersonasController();
-        $configController = new Api\ConfigController();
         $queueController = new Api\QueueController();
 
         // output data for use on client-side
         // https://wordpress.stackexchange.com/questions/344537/authenticating-with-rest-api
-        $appVars = apply_filters('sage_ai_spinner/admin_app_vars', [
+        $appVars = apply_filters('jensi_ai/admin_app_vars', [
             'rest' => [
                 'endpoints' => [
                     'settings' => $settingController->get_endpoints(),
-                    'personas' => $personasController->get_endpoints(),
-                    'configs' => $configController->get_endpoints(),
                     'queue' => $queueController->get_endpoints(),
                 ],
                 'nonce' => wp_create_nonce('wp_rest'),
             ],
             'nonce' => wp_create_nonce('wp_rest'),
-            'personas' => $personasController->get_all_personas(),
-            'configs' => $configController->get_all_configs(),
-            'contentTypes' => [
-                [
-                    'id' => 'general',
-                    'title' => 'General',
-                    'disabled' => false
-                ],
-                [
-                    'id' => 'li',
-                    'title' => 'LinkedIn',
-                    'disabled' => false
-                ],
-                [
-                    'id' => 'ig',
-                    'title' => 'Instagram',
-                    'disabled' => false
-                ],
-                [
-                    'id' => 'fb',
-                    'title' => 'Facebook',
-                    'disabled' => false
-                ],
-                [
-                    'id' => 'tw',
-                    'title' => 'Twitter',
-                    'disabled' => false
-                ]
-            ],
-            'endpoints' => [
-                [
-                    'id' => 'chat',
-                    'title' => 'Chat'
-                ],
-                [
-                    'id' => 'completions',
-                    'title' => 'Completions'
-                ]
-            ],
+            // 'contentTypes' => [],
+            // 'endpoints' => [],
             'settings' => $settingController->get_settings_raw(),
             'settingStructure' => $settingController->get_settings_structure(true),
             'prefix' => $this->prefix,

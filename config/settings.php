@@ -1,13 +1,56 @@
 <?php
 
 // don't call the file directly
-if (! defined('ABSPATH')) {
+if (!defined('ABSPATH')) {
     exit;
 }
 
-// this allow for using wordpress server-side translation
+// this allows for using WordPress server-side translation
 return [
     'sections' => [
+        'general' => __('General', \JensiAI\Main::PREFIX),
+        // 'extra' => __('Extra', \JensiAI\Main::PREFIX),
+        // 'advanced' => __('Advanced', \JensiAI\Main::PREFIX),
+        'debug' => __('Debugging', \JensiAI\Main::PREFIX),
+    ],
+    'options' => [
+        // General
+        'open_ai_api_key' => [
+            'name' => __('JENSi AI API key', \JensiAI\Main::PREFIX),
+            'description' => __('Your JENSi AI API key', \JensiAI\Main::PREFIX),
+            'section' => 'general',
+            'type' => 'text',
+            'default' => '',
+        ],
+    
+        // Extra
+        // ...
+
+        // Advanced
+        // ...
+
+        // Debugging
+        'cleanup_db_on_plugin_uninstall' => [
+            'name' => __('Cleanup database upon plugin uninstall', \JensiAI\Main::PREFIX),
+            'description' => __('When enabled the plugin will remove any database data upon plugin uninstall.', \JensiAI\Main::PREFIX),
+            'section' => 'debug',
+            'type' => 'toggle',
+            'default' => false,
+        ],
+        'enable_debug_messages' => [
+            'name' => __('Enable Debug Messages', \JensiAI\Main::PREFIX),
+            'description' => __('When enabled the plugin will output debug messages in the JavaScript console.', \JensiAI\Main::PREFIX),
+            'section' => 'debug',
+            'type' => 'toggle',
+            'default' => false,
+        ],
+    ]
+];
+
+
+// Example settings
+/*
+     'sections' => [
         'general'   => __('General', \JensiAI\Main::PREFIX),
         'advanced'  => __('Advanced', \JensiAI\Main::PREFIX),
         'debugging' => __('Debugging', \JensiAI\Main::PREFIX),
@@ -88,4 +131,6 @@ return [
             'default'         => ['post', 'page'],
         ],
     ],
-];
+    // ...
+
+ */

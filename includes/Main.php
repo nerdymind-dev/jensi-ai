@@ -2,6 +2,11 @@
 
 namespace JensiAI;
 
+use Exception;
+use Carbon\Carbon;
+use JensiAI\Api\ConfigController;
+use JensiAI\Api\SettingController;
+
 /**
  * Main class.
  *
@@ -57,6 +62,7 @@ final class Main
 
     /**
      * The plugin dir, default to empty string.
+     *
      * @var string
      */
     public static $PLUGINDIR = '';
@@ -103,8 +109,7 @@ final class Main
     {
         flush_rewrite_rules();
 
-        $setting_key = self::PREFIX.'_settings';
-        $settings = get_option($setting_key, []);
+        $settings = (new SettingController())->get_settings_raw();
         (new \JensiAI\Migrations())->cleanUp(self::PREFIX, $settings);
     }
 
@@ -120,6 +125,10 @@ final class Main
         register_deactivation_hook(self::$PLUGINFILE, [$this, 'deactivate_plugin']);
         register_uninstall_hook(self::$PLUGINFILE, [__CLASS__, 'uninstall_plugin']);
 
+        // Set up the CRON job
+        // add_filter('cron_schedules', [$this, 'jensi_ai_cron_schedules']);
+        // add_action('jensi_ai_queue', [$this, 'process_jensi_ai_queue']);
+
         add_action('plugins_loaded', [$this, 'plugins_loaded']);
 
         // setup cli
@@ -131,8 +140,377 @@ final class Main
         $plugin = plugin_basename(self::$PLUGINFILE);
         add_filter("plugin_action_links_$plugin", [$this, 'register_settings_link']);
 
+        // On post save check if we need to generate additional content
+        // add_action('save_post', [$this, 'jensi_ai_save_post']);
+        add_action('admin_notices', [$this, 'jensi_ai_admin_notices']);
+
+        // Add custom metabox to product pages
+        add_action('add_meta_boxes', [$this, 'jensi_ai_add_product_meta_boxes']);
+
         // Additional thing you can do: register post type, taxonomy, etc...
         return $this;
+    }
+
+    /**
+     * Register admin notices.
+     */
+    public function jensi_ai_admin_notices()
+    {
+        $transient = get_transient('jensi_ai_generating');
+        if ($transient !== false) {
+?>
+            <div class="notice notice-<?php echo $transient['status']; ?> is-dismissible">
+                <p><?php echo $transient['message']; ?></p>
+            </div>
+        <?php
+            delete_transient('jensi_ai_generating');
+        }
+    }
+
+    /**
+     * Register custom CRON interval
+     *
+     * @param $schedules
+     * @return mixed
+     */
+    function jensi_ai_cron_schedules($schedules)
+    {
+        // NOTE: need to update CRON timeout interval to be less than/equal to the shortest interval
+        // E.g.: `define('WP_CRON_LOCK_TIMEOUT', 30);`
+        if (!isset($schedules["every_half_minute"])) {
+            $schedules["every_half_minute"] = [
+                'interval' => 30,
+                'display' => __('Every 30 seconds')
+            ];
+        }
+        return $schedules;
+    }
+
+    /**
+     * @return void
+     */
+    public function process_jensi_ai_queue()
+    {
+        (new QueueLoader())->run();
+    }
+
+    /**
+     * If product, product image URL
+     *
+     * @param $post_id
+     * @return void
+     */
+    public function jensi_ai_save_post($post_id): void
+    {
+        if (get_post_type($post_id) !== 'post') {
+            return;
+        }
+        // $this->generate_post_ai_content($post_id);
+    }
+
+    /**
+     * On post save, check if we need to generate new content
+     *
+     * @param $post_id
+     * @return void
+     */
+    public function generate_post_ai_content($post_id)
+    {
+        $content = get_post_meta($post_id, '_jensi_ai_generated_content', true);
+        $liContent = get_post_meta($post_id, '_jensi_ai_li_generated_content', true);
+        $igContent = get_post_meta($post_id, '_jensi_ai_ig_generated_content', true);
+        $fbContent = get_post_meta($post_id, '_jensi_ai_fb_generated_content', true);
+        $twContent = get_post_meta($post_id, '_jensi_ai_tw_generated_content', true);
+
+        // Grab the post terms, and first valid config item
+        $terms = wp_get_post_categories($post_id, ['fields' => 'ids']);
+        $config = (new ConfigController())->get_config_for_terms($terms);
+        $sections = json_decode($config->sections) ?? [];
+
+        // Determine if any sections are empty and need content generation
+        $autoGenerating = [
+            'general' => false,
+            'li' => false,
+            'ig' => false,
+            'fb' => false,
+            'tw' => false
+        ];
+        foreach ($sections as $section) {
+            switch ($section->type) {
+                case 'general':
+                    $meta_content = $content;
+                    break;
+                case 'li':
+                    $meta_content = $liContent;
+                    break;
+                case 'ig':
+                    $meta_content = $igContent;
+                    break;
+                case 'fb':
+                    $meta_content = $fbContent;
+                    break;
+                case 'tw':
+                    $meta_content = $twContent;
+                    break;
+            }
+            if (empty(trim($meta_content))) {
+                $this->generate_content_for_post($post_id, $sections->type, $config);
+                $autoGenerating[$sections->type] = true;
+            }
+        }
+
+        if (isset($_POST['jensi_ai_nonce'])) {
+            if (!wp_verify_nonce(sanitize_key($_POST['jensi_ai_nonce']), 'jensi_ai_metabox_nonce')) {
+                return;
+            }
+
+            // Check if requesting ALL sections have content generated
+            $shouldGenerate = (bool)($_POST['jensi_ai_generate_on_save'] ?? false);
+            if ($shouldGenerate) {
+                $this->generate_content_for_post($post_id, null, $config);
+                return;
+            }
+
+            // Check if updating any specific section
+            if (!$autoGenerating['general'] && (bool)($_POST['jensi_ai_generate_general_on_save'] ?? false)) {
+                $this->generate_content_for_post($post_id, 'general', $config);
+                $autoGenerating['general'] = true;
+            }
+            if (!$autoGenerating['li'] && (bool)($_POST['jensi_ai_generate_li_on_save'] ?? false)) {
+                $this->generate_content_for_post($post_id, 'li', $config);
+                $autoGenerating['li'] = true;
+            }
+            if (!$autoGenerating['ig'] && (bool)($_POST['jensi_ai_generate_ig_on_save'] ?? false)) {
+                $this->generate_content_for_post($post_id, 'ig', $config);
+                $autoGenerating['ig'] = true;
+            }
+            if (!$autoGenerating['fb'] && (bool)($_POST['jensi_ai_generate_fb_on_save'] ?? false)) {
+                $this->generate_content_for_post($post_id, 'fb', $config);
+                $autoGenerating['fb'] = true;
+            }
+            if (!$autoGenerating['tw'] && (bool)($_POST['jensi_ai_generate_tw_on_save'] ?? false)) {
+                $this->generate_content_for_post($post_id, 'tw', $config);
+                $autoGenerating['tw'] = true;
+            }
+
+            /*
+             * Update the post meta with user added content.
+             * Only populate meta if auto generation is NOT toggled, and the content is set.
+             */
+            if (!$autoGenerating['general'] && isset($_POST['jensi_ai_generated_content'])) {
+                update_post_meta(
+                    $post_id,
+                    '_jensi_ai_generated_content',
+                    $_POST['jensi_ai_generated_content']
+                );
+            }
+            if (!$autoGenerating['li'] && isset($_POST['jensi_ai_li_generated_content'])) {
+                update_post_meta(
+                    $post_id,
+                    '_jensi_ai_li_generated_content',
+                    $_POST['jensi_ai_li_generated_content']
+                );
+            }
+            if (!$autoGenerating['ig'] && isset($_POST['jensi_ai_ig_generated_content'])) {
+                update_post_meta(
+                    $post_id,
+                    '_jensi_ai_ig_generated_content',
+                    $_POST['jensi_ai_ig_generated_content']
+                );
+            }
+            if (!$autoGenerating['fb'] && isset($_POST['jensi_ai_fb_generated_content'])) {
+                update_post_meta(
+                    $post_id,
+                    '_jensi_ai_fb_generated_content',
+                    $_POST['jensi_ai_fb_generated_content']
+                );
+            }
+            if (!$autoGenerating['tw'] && isset($_POST['jensi_ai_tw_generated_content'])) {
+                update_post_meta(
+                    $post_id,
+                    '_jensi_ai_tw_generated_content',
+                    $_POST['jensi_ai_tw_generated_content']
+                );
+            }
+        }
+    }
+
+    /**
+     * Generate content for post
+     *
+     * @param $post_id
+     * @param $type
+     * @param $config
+     * @return void
+     */
+    private function generate_content_for_post($post_id, $type, $config): void
+    {
+        // Get the post Object, so we can grab the current content
+        $post = get_post($post_id);
+
+        // If post and config set, queue it up!
+        if ($post && $config) {
+            (new QueueLoader())->store_job($post, $config, $type);
+            set_transient('jensi_ai_generating', [
+                'message' => 'AI content generation has been queued for this post! Please refresh after a minute or two to see the results.',
+                'status' => 'success'
+            ], 30);
+        }
+    }
+
+    /**
+     * Add product page custom metabox
+     *
+     * @return void
+     */
+    public function jensi_ai_add_product_meta_boxes()
+    {
+        add_meta_box(
+            'jensi_ai_generate',
+            'Sage AI Content Generation',
+            [$this, 'jensi_ai_echo_meta_box'],
+            'post',
+            'normal',
+            'high'
+        );
+    }
+
+    /**
+     * Output product AI metabox
+     *
+     * @param $post
+     * @return void
+     */
+    public function jensi_ai_echo_meta_box($post)
+    {
+        wp_nonce_field('jensi_ai_metabox_nonce', 'jensi_ai_nonce');
+        $content = get_post_meta($post->ID, '_jensi_ai_generated_content', true);
+        $liContent = get_post_meta($post->ID, '_jensi_ai_li_generated_content', true);
+        $igContent = get_post_meta($post->ID, '_jensi_ai_ig_generated_content', true);
+        $fbContent = get_post_meta($post->ID, '_jensi_ai_fb_generated_content', true);
+        $twContent = get_post_meta($post->ID, '_jensi_ai_tw_generated_content', true);
+        ?>
+        <style>
+            .jensi_ai_input_group_heading {
+                font-size: 16px;
+                margin-bottom: 35px;
+            }
+
+            .jensi_ai_input_group_info {
+                font-size: 12px;
+                color: #969696;
+            }
+
+            .jensi_ai_input_group {
+                margin-bottom: 20px;
+            }
+
+            .jensi_ai_meta_details {
+                font-size: 18px;
+            }
+
+            .jensi_ai_input_group .check {
+                display: block;
+                margin: 5px 0;
+                font-size: 12px;
+            }
+        </style>
+        <div class="jensi_ai_input_group_heading">
+            <p class="jensi_ai_meta_details">
+                Use the below options to generate (or re-generate) AI content on
+                post save.
+                <strong>This content will be automatically generated on post
+                    create if <a href="/wp-admin/admin.php?page=jensi_ai" target="_blank">configured to do so</a>
+                    .</strong>
+                This override will allow you to generate content on-demand.
+            </p>
+            <label class="selectit">
+                <input value="jensi_ai_generate_on_save" type="checkbox" name="jensi_ai_generate_on_save" id="jensi_ai_generate_on_save">
+                Generate new content for all configured types on save?
+            </label>
+            <hr />
+        </div>
+
+        <div class="jensi_ai_input_group">
+            <label class="">
+                Post content
+            </label>
+            <label class="selectit check">
+                <input value="jensi_ai_generate_general_on_save" type="checkbox" name="jensi_ai_generate_general_on_save" id="jensi_ai_generate_general_on_save">
+                Generate new Post content on save?
+            </label>
+            <textarea class="large-text" name="jensi_ai_generated_content" id="jensi_ai_generated_content" rows="10" cols="4" autocomplete="off">
+                <?php echo trim($content); ?>
+            </textarea>
+            <small class="jensi_ai_input_group_info">
+                Meta field: _jensi_ai_generated_content
+            </small>
+        </div>
+
+        <div class="jensi_ai_input_group">
+            <label class="">
+                LinkedIn content
+            </label>
+            <label class="selectit check">
+                <input value="jensi_ai_generate_li_on_save" type="checkbox" name="jensi_ai_generate_li_on_save" id="jensi_ai_generate_li_on_save">
+                Generate new LinkedIn content on save?
+            </label>
+            <textarea class="large-text" name="jensi_ai_li_generated_content" id="jensi_ai_li_generated_content" rows="4" cols="4" autocomplete="off">
+                <?php echo trim($liContent); ?>
+            </textarea>
+            <small class="jensi_ai_input_group_info">
+                Meta field: _jensi_ai_li_generated_content
+            </small>
+        </div>
+
+        <div class="jensi_ai_input_group">
+            <label class="">
+                Instagram content
+            </label>
+            <label class="selectit check">
+                <input value="jensi_ai_generate_ig_on_save" type="checkbox" name="jensi_ai_generate_ig_on_save" id="jensi_ai_generate_ig_on_save">
+                Generate new Instagram content on save?
+            </label>
+            <textarea class="large-text" name="jensi_ai_ig_generated_content" id="jensi_ai_ig_generated_content" rows="4" cols="4" autocomplete="off">
+                <?php echo trim($igContent); ?>
+            </textarea>
+            <small class="jensi_ai_input_group_info">
+                Meta field: _jensi_ai_ig_generated_content
+            </small>
+        </div>
+
+        <div class="jensi_ai_input_group">
+            <label class="">
+                Facebook content
+            </label>
+            <label class="selectit check">
+                <input value="jensi_ai_generate_fb_on_save" type="checkbox" name="jensi_ai_generate_fb_on_save" id="jensi_ai_generate_fb_on_save">
+                Generate new Facebook content on save?
+            </label>
+            <textarea class="large-text" name="jensi_ai_fb_generated_content" id="jensi_ai_fb_generated_content" rows="4" cols="4" autocomplete="off">
+                <?php echo trim($fbContent); ?>
+            </textarea>
+            <small class="jensi_ai_input_group_info">
+                Meta field: _jensi_ai_fb_generated_content
+            </small>
+        </div>
+
+        <div class="jensi_ai_input_group">
+            <label class="">
+                Twitter content
+            </label>
+            <label class="selectit check">
+                <input value="jensi_ai_generate_tw_on_save" type="checkbox" name="jensi_ai_generate_tw_on_save" id="jensi_ai_generate_tw_on_save">
+                Generate new Twitter content on save?
+            </label>
+            <textarea class="large-text" name="jensi_ai_tw_generated_content" id="jensi_ai_tw_generated_content" rows="4" cols="4" autocomplete="off">
+                <?php echo trim($twContent); ?>
+            </textarea>
+            <small class="jensi_ai_input_group_info">
+                Meta field: _jensi_ai_tw_generated_content
+            </small>
+        </div>
+<?php
     }
 
     /**
@@ -178,10 +556,8 @@ final class Main
      */
     public function activate_plugin()
     {
-        (new \JensiAI\Migrations())->run(self::PREFIX, $this->VERSION);
-
-        // set the current version to activate plugin
-        update_option(self::PREFIX.'_version', $this->VERSION);
+        (new \JensiAI\Migrations())
+            ->run(self::PREFIX, $this->VERSION);
     }
 
     /**
@@ -191,22 +567,23 @@ final class Main
     {
         flush_rewrite_rules();
 
-        // do stuff such as: shut off cron tasks, etc...
+        // clear saved options...
+        delete_option('jensi_ai_models');
 
-        // remove version number to deactivate plugin
-        delete_option(self::PREFIX.'_version');
+        // do stuff such as: shut off cron tasks, etc...
+        wp_clear_scheduled_hook('jensi_ai_queue');
     }
 
     /**
      * Register settings link that display on the plugins listing page.
      *
-     * @param  array $links
+     * @param array $links
      * @return array
      */
     public function register_settings_link($links)
     {
-        $settings_link = '<a href="admin.php?page='.self::PREFIX.'#/settings">';
-        $settings_link .= esc_html(__('Settings', self::PREFIX)).'</a>';
+        $settings_link = '<a href="admin.php?page=' . self::PREFIX . '#/settings">';
+        $settings_link .= esc_html(__('Settings', self::PREFIX)) . '</a>';
         array_unshift($links, $settings_link);
 
         return $links;
@@ -224,20 +601,20 @@ final class Main
 
         // initialize the various loader classes
         if ($this->is_request('admin')) {
-            $ctx = new \JensiAI\AdminLoader(self::PREFIX);
-            $this->container['admin'] = $ctx;
+            $this->container['admin'] = new \JensiAI\AdminLoader(self::PREFIX);
         }
 
         if ($this->is_request('frontend')) {
             $this->container['frontend'] = new \JensiAI\FrontendLoader(self::PREFIX);
         }
 
-        if ($this->is_request('ajax')) {
-            // $this->container['ajax'] =  new \JensiAI\AjaxLoader(self::PREFIX);
-        }
-
         // finally load api routes
         $this->container['api'] = new \JensiAI\ApiRoutes(self::PREFIX);
+
+        // Ensure CRON is scheduled
+        if (!wp_next_scheduled('jensi_ai_queue')) {
+            wp_schedule_event(time(), 'every_half_minute', 'jensi_ai_queue');
+        }
     }
 
     /**
@@ -250,14 +627,14 @@ final class Main
         load_plugin_textdomain(
             self::PREFIX,
             false,
-            dirname(plugin_basename(self::PLUGINFILE)).'/languages/'
+            dirname(plugin_basename(self::PREFIX)) . '/languages/'
         );
     }
 
     /**
      * What type of request is this?
      *
-     * @param  string $type admin, ajax, cron or frontend.
+     * @param string $type admin, ajax, cron or frontend.
      *
      * @return bool
      */
@@ -277,7 +654,7 @@ final class Main
                 return defined('DOING_CRON');
 
             case 'frontend':
-                return (! is_admin() || defined('DOING_AJAX')) && ! defined('DOING_CRON');
+                return (!is_admin() || defined('DOING_AJAX')) && !defined('DOING_CRON');
         }
     }
 
