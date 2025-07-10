@@ -1,6 +1,6 @@
-## Jensi AI 🤖
+## JENSi AI 🤖
 
-Companion plugin for the Jensi AI SaaS API. Connect your WordPress to Jensi AI for results using RAG.
+Companion plugin for the **JENSi AI** SaaS API. Connect your WordPress to **JENSi AI** for results using RAG.
 
 ### Requirements
 
