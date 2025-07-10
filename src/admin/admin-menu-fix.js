@@ -34,7 +34,7 @@ function menuFix(slug) {
     }
 
     if (menu) {
-      console.log(menu)
+      // console.log(menu)
       menu.parentElement.classList.add('current')
     }
   }

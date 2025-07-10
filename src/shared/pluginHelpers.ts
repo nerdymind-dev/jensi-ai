@@ -2,5 +2,7 @@ import { inject } from 'vue'
 
 export function getPluginUrl() {
   // @ts-ignore
-  return inject('pluginConfig', {}).pluginUrl || ''
+  const pluginConfig: any = inject('pluginConfig', {})
+
+  return pluginConfig.pluginUrl || ''
 }

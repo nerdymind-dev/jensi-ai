@@ -1,11 +1,12 @@
 const fs = require('fs')
 const path = require('path')
 const mix = require('laravel-mix')
-const webpack = require('webpack')
+//const webpack = require('webpack')
 const StylelintPlugin = require('stylelint-webpack-plugin')
 
 require('laravel-mix-tailwind')
 
+// Customize webpack config
 const webpackConfig = {
   externals: {
     'jquery': 'jQuery',
@@ -23,6 +24,26 @@ const webpackConfig = {
       fix: true,
     }),
   ],
+  module: {
+    exprContextCritical: false,
+    rules: [
+      // {
+      //   test: /\.(sass|scss)$/,
+      //   use: [
+      //     'style-loader',
+      //     'css-loader',
+      //     'postcss-loader',
+      //     {
+      //       loader: 'sass-loader',
+      //       options: {
+      //         // Prefer `dart-sass`
+      //         implementation: require('sass'),
+      //       },
+      //     },
+      //   ],
+      // }
+    ],
+  },
   resolve: {
     extensions: ['.js', '.json', '.vue', '.sass', '.scss', '.ts'],
     alias: {
@@ -31,12 +52,16 @@ const webpackConfig = {
     }
   },
   stats: {
-    children: true
+    children: false
   },
   devServer: {
     port: 31337   // in case your port 8080 and 31337 are taken, replace this
   }
 }
+
+/* Copy vendor libs */
+mix.copy('src/shared/vendor/vue.global.js', 'public/js/vendor')
+mix.copy('src/shared/vendor/vue.global.prod.js', 'public/js/vendor')
 
 /*
  |--------------------------------------------------------------------------
@@ -50,30 +75,33 @@ const webpackConfig = {
  */
 mix.setPublicPath('public/')
 
+// Add entry points
 mix.ts('src/admin/admin.ts', 'js')
   .vue({
     version: 3,
     extractStyles: true
   })
-
 mix.ts('src/frontend/frontend.ts', 'js')
   .vue({
     version: 3,
     extractStyles: true
   })
-
 mix.ts('src/frontview/frontview.ts', 'js')
   .vue({
     version: 3,
     extractStyles: true
   })
 
-// bare minimum packages: ['core-js', 'vue-router', '@vue/devtools-api']
+/*
+ * Extract the CSS from the Vue components.
+ * Bare minimum packages: ['core-js', 'vue-router', '@vue/devtools-api']
+ */
 mix.extract() // empty to extract all
 
-
+// PostCSS plugins to use
 const postcssPlugins = [
   require('autoprefixer'),
+  require('tailwindcss'),
   require('postcss-import'),
   require('postcss-preset-env')({ stage: 1 }),
   require('postcss-pxtorem')({
@@ -83,6 +111,7 @@ const postcssPlugins = [
   })
 ]
 
+// Add CSS
 mix.options({
     postCss: postcssPlugins
   })
@@ -99,39 +128,29 @@ mix.options({
     'css'
   )
 
-mix.tailwind().version()
-
+// If in production, version things and add source maps
 if (mix.inProduction()) {
   mix.sourceMaps()
+  mix.version()
+} else {
+  // For local dev specify HMR options
+  webpackConfig.devServer = {
+    host: "sageba.test",
+    https: {
+      key: fs.readFileSync(
+        "/Users/shaunparkison/Library/Application Support/Herd/config/valet/Certificates/sageba.test.key"
+      ),
+      cert: fs.readFileSync(
+        "/Users/shaunparkison/Library/Application Support/Herd/config/valet/Certificates/sageba.test.crt"
+      ),
+    },
+  };
 }
 
-mix.after(() => {
-  let manifest = JSON.parse(
-    fs.readFileSync('./public/mix-manifest.json').toString()
-  )
-
-  let adminHtml    = fs.readFileSync('./assets/admin.html').toString()
-  let frontendHtml = fs.readFileSync('./assets/frontend.html').toString()
-  let frontviewHtml = fs.readFileSync('./assets/frontview.html').toString()
-  for (let path of Object.keys(manifest)) {
-    adminHtml    = adminHtml.replace(path.replace(/^\//, ''), manifest[path].replace(/^\//, ''))
-    frontendHtml = frontendHtml.replace(path.replace(/^\//, ''), manifest[path].replace(/^\//, ''))
-    frontviewHtml = frontviewHtml.replace(path.replace(/^\//, ''), manifest[path].replace(/^\//, ''))
-  }
-
-  fs.writeFileSync('./public/admin.html', adminHtml)
-  fs.writeFileSync('./public/frontend.html', frontendHtml)
-  fs.writeFileSync('./public/frontview.html', frontviewHtml)
-})
-
+// Add webpack config (defined above)
 mix.webpackConfig(webpackConfig)
-  .browserSync({
-    serveStatic: ['./'],
-    serveStaticOptions: {
-      extensions: ['html'] // don't need to provide html extension, this create pretty urls
-    }
-  })
 
+// Override watch options
 mix.override((config) => {
   config.watchOptions = {
     ignored: [
