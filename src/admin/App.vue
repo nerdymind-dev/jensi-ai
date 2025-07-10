@@ -13,8 +13,6 @@ import SidebarLayout from '~src/admin/layouts/SidebarLayout.vue'
 import menuFix from './admin-menu-fix'
 import {
   CogIcon,
-  AdjustmentsHorizontalIcon,
-  UserGroupIcon,
   InformationCircleIcon,
   QueueListIcon
 } from '@heroicons/vue/24/outline'
@@ -22,8 +20,6 @@ import {
 const pluginConfig = inject('pluginConfig', {})
 
 const navigation = ref([
-  { name: 'Configuration', href: '/', icon: AdjustmentsHorizontalIcon },
-  { name: 'Personas', href: '/personas', icon: UserGroupIcon },
   { name: 'Queue', href: '/queue', icon: QueueListIcon },
   { name: 'Settings', href: '/settings', icon: CogIcon },
   { name: 'Help', href: '/help', icon: InformationCircleIcon },

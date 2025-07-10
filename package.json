@@ -1,5 +1,5 @@
 {
-  "name": "sage-ai-spinner",
+  "name": "jensi-ai",
   "version": "1.0.0",
   "description": "JENSi AI",
   "author": "Shaun Parkison, NerdyMind",
@@ -12,6 +12,7 @@
     "hot": "mix watch --hot --https",
     "watch-poll": "mix watch -- --watch-options-poll=1000",
     "prod": "npm run production",
+    "build": "mix --production",
     "production": "mix --production",
     "lint": "tslint --project ./tsconfig.json --config ./tslint.json && eslint bin/*.js src/**/*.vue && stylelint 'assets/*.css'",
     "lint-fix": "tslint --project ./tsconfig.json  --config ./tslint.json --fix && eslint --fix bin/*.js src/**/*.vue && stylelint --fix 'assets/*.css'",
@@ -45,6 +46,7 @@
     "@types/lodash": "^4.14.182",
     "@variantjs/core": "^0.0.90",
     "@variantjs/vue": "^0.0.22",
+    "@vue/cli-plugin-babel": "^5.0.8",
     "@vue/cli-plugin-unit-jest": "^5.0.4",
     "@vue/compiler-sfc": "^3.2.37",
     "@vue/test-utils": "^2.0.1",

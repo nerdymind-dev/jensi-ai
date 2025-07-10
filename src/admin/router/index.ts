@@ -2,7 +2,6 @@ import { createRouter, createWebHashHistory, RouteRecordRaw } from 'vue-router'
 import AdminDashboard from '~src/admin/views/AdminDashboard.vue'
 import AdminSettings from '~src/admin/views/AdminSettings.vue'
 import AdminInfo from '~src/admin/views/AdminInfo.vue'
-import AdminPersonas from '~src/admin/views/AdminPersonas.vue'
 import AdminQueue from '~src/admin/views/AdminQueue.vue'
 
 const routes: RouteRecordRaw[] = [
