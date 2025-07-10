@@ -81,10 +81,6 @@ class Assets
             ? \JensiAI\Main::$BASEURL . '/public'
             : 'https://localhost:8080';
 
-        $assets_url = \JensiAI\Main::$BASEURL . '/public';
-        $plugin_dir = \JensiAI\Main::$PLUGINDIR . '/public';
-        $prefix = ''; // defined('SCRIPT_DEBUG') && SCRIPT_DEBUG ? '.min' : '';
-
         $scripts = [
             $this->prefix . '-vuejs' => [
                 'src' => ($env !== 'local')
