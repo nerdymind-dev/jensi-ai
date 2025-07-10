@@ -1,10 +1,10 @@
 <?php
 
 /**
- * Plugin Name: Jensi AI
+ * Plugin Name: JENSi AI
  * Version: 1.0.0
  * Plugin URI: https://nerdymind.com/
- * Description: Jensi AI 🤖
+ * Description: JENSi AI 🤖
  * Author: Shaun Parkison (NerdyMind)
  * Author URI: 
  * Requires at least: 6.0
