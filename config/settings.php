@@ -15,7 +15,7 @@ return [
     ],
     'options' => [
         // General
-        'open_ai_api_key' => [
+        'jensi_ai_api_key' => [
             'name' => __('JENSi AI API key', \JensiAI\Main::PREFIX),
             'description' => __('Your JENSi AI API key', \JensiAI\Main::PREFIX),
             'section' => 'general',

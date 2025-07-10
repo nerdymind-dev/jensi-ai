@@ -140,12 +140,14 @@ final class Main
         $plugin = plugin_basename(self::$PLUGINFILE);
         add_filter("plugin_action_links_$plugin", [$this, 'register_settings_link']);
 
-        // On post save check if we need to generate additional content
-        // add_action('save_post', [$this, 'jensi_ai_save_post']);
+        // Add admin notices
         add_action('admin_notices', [$this, 'jensi_ai_admin_notices']);
 
-        // Add custom metabox to product pages
-        add_action('add_meta_boxes', [$this, 'jensi_ai_add_product_meta_boxes']);
+        // EXAMPLE: On post save check if we need to generate additional content
+        // add_action('save_post', [$this, 'jensi_ai_save_post']);
+
+        // EXAMPLE: Add custom metabox to product pages
+        // add_action('add_meta_boxes', [$this, 'jensi_ai_add_product_meta_boxes']);
 
         // Additional thing you can do: register post type, taxonomy, etc...
         return $this;
@@ -352,7 +354,7 @@ final class Main
         if ($post && $config) {
             (new QueueLoader())->store_job($post, $config, $type);
             set_transient('jensi_ai_generating', [
-                'message' => 'AI content generation has been queued for this post! Please refresh after a minute or two to see the results.',
+                'message' => 'Process has queued for this post! It will be imported into JENSi and added to your library.',
                 'status' => 'success'
             ], 30);
         }

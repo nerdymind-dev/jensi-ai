@@ -40,9 +40,9 @@ final class Migrations
         }
 
         // Apply migrations in order
-        $this->applyMigration($lastVersion, '0.0.0', 'migration_0_0_0');
+        $this->applyMigration($lastVersion, '0.0.1', 'migration_0_0_1');
 
-        // $this->applyMigration($lastVersion, '0.0.1', 'migration_0_0_1');
+        // $this->applyMigration($lastVersion, '0.0.2', 'migration_0_0_2');
         // ...
 
         // Update the last migrated version for future updates
@@ -98,11 +98,11 @@ final class Migrations
     }
 
     /**
-     * DB Migration for v0.0.0.
+     * DB Migration for v0.0.1.
      *
      * @return void
      */
-    public function migration_0_0_0()
+    public function migration_0_0_1()
     {
         global $wpdb;
 
@@ -136,12 +136,14 @@ final class Migrations
     }
 
     /**
-     * DB Migration for v0.0.1.
+     * DB Migration for v0.0.2.
      *
      * @return void
      */
-    public function migration_0_0_1()
+    public function migration_0_0_2()
     {
         // ...
     }
+
+    // ... Add more migration methods as needed
 }
