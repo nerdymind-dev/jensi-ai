@@ -76,41 +76,47 @@ class Assets
      */
     public function get_scripts()
     {
-        $assets_url = \JensiAI\Main::$BASEURL.'/public';
-        $plugin_dir = \JensiAI\Main::$PLUGINDIR.'/public';
+        $env = wp_get_environment_type();
+        $assets_url = ($env !== 'local')
+            ? \JensiAI\Main::$BASEURL . '/public'
+            : 'https://localhost:8080';
+
+        $assets_url = \JensiAI\Main::$BASEURL . '/public';
+        $plugin_dir = \JensiAI\Main::$PLUGINDIR . '/public';
         $prefix = ''; // defined('SCRIPT_DEBUG') && SCRIPT_DEBUG ? '.min' : '';
 
         $scripts = [
-            'vuejs'                      => [
-                'src'       => 'https://cdn.jsdelivr.net/npm/vue@latest/dist/vue.global.prod.js',
+            $this->prefix . '-vuejs' => [
+                'src' => ($env !== 'local')
+                    ? $assets_url . $this->mix('/js/vendor/vue.global.prod.js')
+                    : $assets_url . $this->mix('/js/vendor/vue.global.js'),
                 'in_footer' => true,
             ],
-            'bootstrap'                  => [
-                'src'       => 'https://cdn.jsdelivr.net/npm/bootstrap@latest/dist/js/bootstrap.min.js',
+            $this->prefix . '-manifest' => [
+                'src' => $assets_url . $this->mix('/js/manifest.js'),
+                'deps' => [
+                    $this->prefix . '-vuejs',
+                ],
                 'in_footer' => true,
             ],
-            $this->prefix.'-manifest'  => [
-                'src'       => $assets_url.$this->mix('/js/manifest.js'),
+            $this->prefix . '-vendor' => [
+                'src' => $assets_url . $this->mix('/js/vendor.js'),
+                'deps' => [$this->prefix . '-vuejs', $this->prefix . '-manifest'],
                 'in_footer' => true,
             ],
-            $this->prefix.'-vendor'    => [
-                'src'       => $assets_url.$this->mix('/js/vendor.js'),
-                'deps'      => ['vuejs', $this->prefix.'-manifest'],
+            $this->prefix . '-admin' => [
+                'src' => $assets_url . $this->mix('/js/admin.js'),
+                'deps' => [$this->prefix . '-vendor'],
                 'in_footer' => true,
             ],
-            $this->prefix.'-frontend'  => [
-                'src'       => $assets_url.$this->mix('/js/frontend.js'),
-                'deps'      => ['bootstrap', $this->prefix.'-vendor'],
+            $this->prefix . '-frontend'  => [
+                'src'       => $assets_url . $this->mix('/js/frontend.js'),
+                'deps'      => ['jquery', $this->prefix . '-vendor'],
                 'in_footer' => true,
             ],
-            $this->prefix.'-frontview' => [
-                'src'       => $assets_url.$this->mix('/js/frontview.js'),
-                'deps'      => ['bootstrap', $this->prefix.'-vendor'],
-                'in_footer' => true,
-            ],
-            $this->prefix.'-admin'     => [
-                'src'       => $assets_url.$this->mix('/js/admin.js'),
-                'deps'      => [$this->prefix.'-vendor'],
+            $this->prefix . '-frontview' => [
+                'src'       => $assets_url . $this->mix('/js/frontview.js'),
+                'deps'      => ['jquery', $this->prefix . '-vendor'],
                 'in_footer' => true,
             ],
         ];
@@ -125,20 +131,20 @@ class Assets
      */
     public function get_styles()
     {
-        $assets_url = \JensiAI\Main::$BASEURL.'/public';
+        $env = wp_get_environment_type();
+        $assets_url = ($env !== 'local')
+            ? \JensiAI\Main::$BASEURL . '/public'
+            : 'https://localhost:8080';
 
         $styles = [
-            $this->prefix.'-bootstrap' => [
-                'src' => 'https://cdn.jsdelivr.net/npm/bootstrap@latest/dist/css/bootstrap.min.css',
+            $this->prefix . '-frontend' => [
+                'src' => $assets_url . $this->mix('/css/frontend.css'),
             ],
-            $this->prefix.'-frontend'  => [
-                'src' => $assets_url.$this->mix('/css/frontend.css'),
+            $this->prefix . '-frontview' => [
+                'src' => $assets_url . $this->mix('/css/frontview.css'),
             ],
-            $this->prefix.'-frontview' => [
-                'src' => $assets_url.$this->mix('/css/frontview.css'),
-            ],
-            $this->prefix.'-admin'     => [
-                'src' => $assets_url.$this->mix('/css/admin.css'),
+            $this->prefix . '-admin' => [
+                'src' => $assets_url . $this->mix('/css/admin.css'),
             ],
         ];
 
@@ -157,14 +163,14 @@ class Assets
         static $manifests = [];
 
         if (empty($manifestDirectory)) {
-            $manifestDirectory = \JensiAI\Main::$PLUGINDIR.'/public';
+            $manifestDirectory = \JensiAI\Main::$PLUGINDIR . '/public';
         }
 
-        $manifestPath = $manifestDirectory.'/mix-manifest.json';
+        $manifestPath = $manifestDirectory . '/mix-manifest.json';
 
-        if (! isset($manifests[$manifestPath])) {
-            if (! is_file($manifestPath)) {
-                throw new \Exception('The Mix manifest does not exist in: '.$manifestPath);
+        if (!isset($manifests[$manifestPath])) {
+            if (!is_file($manifestPath)) {
+                throw new \Exception('The Mix manifest does not exist in: ' . $manifestPath);
             }
 
             $manifests[$manifestPath] = json_decode(file_get_contents($manifestPath), true);
@@ -172,7 +178,7 @@ class Assets
 
         $manifest = $manifests[$manifestPath];
 
-        if (! isset($manifest[$path])) {
+        if (!isset($manifest[$path])) {
             throw new \Exception("Unable to locate Mix file: {$path}.");
         }
 
