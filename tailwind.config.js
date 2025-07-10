@@ -6,7 +6,11 @@ module.exports = {
     './node_modules/@variantjs/core/src/config/**/*.ts'
   ],
   theme: {
-    extend: {},
+    extend: {
+      'zIndex': {
+        '9999': '9999'
+      }
+    },
     screens: {
       'sm': '600px',
       // => @media (min-width: 640px) { ... }
