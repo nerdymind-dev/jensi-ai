@@ -32,7 +32,7 @@
                       </div>
                       <div class="ml-3">
                         <p class="text-sm text-blue-700">
-                          Configurations are used to automate content generation. Based on the settings, when a new post is created, the automation will be triggered.
+                          Configurations are used to automate content syncs. Based on the settings, when a new post is created, the automation will be triggered.
                           If multiple configuration overlap, the most recent one will be used.
                         </p>
                       </div>

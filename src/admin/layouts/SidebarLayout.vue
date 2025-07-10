@@ -20,7 +20,7 @@
               <!-- Sidebar component, swap this element with another sidebar if you like -->
               <div class="flex grow flex-col gap-y-5 overflow-y-auto bg-white px-6 pb-2">
                 <div class="my-3 text-gray-900 shrink-0 items-center">
-                  <p class="text-lg font-medium">Sage AI Spinner</p>
+                  <p class="text-lg font-medium">JENSi AI</p>
                   <small>for WordPress</small>
                 </div>
                 <nav class="flex flex-1 flex-col">
@@ -56,7 +56,7 @@
       <!-- Sidebar component, swap this element with another sidebar if you like -->
       <div class="flex grow flex-col gap-y-5 overflow-y-auto bg-white px-6">
         <div class="my-3 text-gray-900 shrink-0 items-center">
-          <p class="text-lg font-medium">Sage AI Spinner</p>
+          <p class="text-lg font-medium">JENSi AI</p>
           <small>for WordPress</small>
         </div>
         <nav class="flex flex-1 flex-col">
