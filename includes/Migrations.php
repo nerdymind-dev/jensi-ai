@@ -92,6 +92,7 @@ final class Migrations
         // Remove tables
         $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}jensi_ai_jobs");
         $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}jensi_ai_settings");
+        $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}jensi_ai_spinner_configs");
 
         // Remove options
         // delete_option($prefix . $option_name);
@@ -131,6 +132,17 @@ final class Migrations
             `modified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
             PRIMARY KEY (id)
+        ) $charset_collate;
+
+        CREATE TABLE {$wpdb->prefix}jensi_ai_configs (
+            `id` mediumint(9) NOT NULL AUTO_INCREMENT,
+            `title` VARCHAR(255) NOT NULL,
+            `post_type` TEXT NOT NULL,
+            `terms` TEXT NULL,
+            `enabled` TINYINT NOT NULL DEFAULT 1,
+            `modified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (id)
         ) $charset_collate;";
         dbDelta($sqlQuery);
     }

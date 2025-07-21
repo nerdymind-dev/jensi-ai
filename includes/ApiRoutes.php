@@ -28,6 +28,7 @@ class ApiRoutes
         // instantiate and load all api routes
         (new Api\SettingController())->register_routes();
         (new Api\QueueController())->register_routes();
+        (new Api\ConfigController())->register_routes();
 
         /*
     // uncomment this to automatically return new nonce

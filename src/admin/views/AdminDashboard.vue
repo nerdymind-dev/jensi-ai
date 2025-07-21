@@ -56,17 +56,6 @@
                                 <MinusCircleIcon class="h-5 w-5 text-red-300" aria-hidden="true" />
                               </span>
                             </div>
-                            <p class="mt-3">
-                              Sections
-                            </p>
-                            <template v-for="section in JSON.parse(conf.sections || '[]')">
-                              <span class="mt-1 mr-1 inline-flex items-center gap-x-2 rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-700">
-                                <small>
-                                  {{ getType(section) }}
-                                </small>
-                                <strong>{{ getPersona(section) }}</strong>
-                              </span>
-                            </template>
                             <div class="my-3">
                               <p>
                                 Category
@@ -168,62 +157,6 @@
                   tags
                 />
               </div>
-              <div class="md:grid grid-cols-5">
-                <label
-                  class="col-span-2 block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4">
-                  Sections
-                  <sup class="text-red-400">*</sup>
-                </label>
-                <div class="col-span-3">
-                  <t-button @click="() => addSection(configFields)" variant="secondary">
-                    Add Section
-                  </t-button>
-                </div>
-              </div>
-              <div class="w-full">
-                <ul role="list" class="mt-3 grid grid-cols-1">
-                  <li v-for="(section, idx) in configFields.sections"
-                      class="col-span-1 flex rounded-md shadow">
-                    <div :class="['bg-gray-100', 'flex px-3 flex-shrink-0 items-center justify-center rounded-l-md text-sm font-medium']">
-                      <div>
-                        <label
-                          class="col-span-2 block font-bold md:text-left mb-3 md:mb-0 pr-4">
-                          Section
-                          <sup class="text-red-600">*</sup>
-                        </label>
-                        <t-select
-                          class="col-span-3"
-                          v-model="configFields.sections[idx].type"
-                          :options="availableOptions(configFields)"
-                          valueAttribute="id"
-                          textAttribute="title"
-                        />
-                      </div>
-                    </div>
-                    <div class="flex flex-1 items-center justify-between truncate rounded-r-md border-b border-r border-t border-gray-100 bg-white">
-                      <div class="flex-1 px-4 py-2">
-                        <label
-                          class="col-span-2 block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4">
-                          Persona
-                          <sup class="text-red-400">*</sup>
-                        </label>
-                        <t-select
-                          class="col-span-3"
-                          v-model="configFields.sections[idx].persona_id"
-                          :options="config.personas"
-                          valueAttribute="id"
-                          textAttribute="title"
-                        />
-                      </div>
-                      <div class="flex-shrink-0 pr-2">
-                        <button @click="removeSection(configFields, idx)" type="button" class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-red-100 text-red-400 hover:text-red-500 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2">
-                          <TrashIcon class="h-5 w-5" />
-                        </button>
-                      </div>
-                    </div>
-                  </li>
-                </ul>
-              </div>
             </div>
           </div>
         </template>
@@ -291,62 +224,6 @@
                   tags
                 />
               </div>
-              <div class="md:grid grid-cols-5">
-                <label
-                  class="col-span-2 block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4">
-                  Sections
-                  <sup class="text-red-400">*</sup>
-                </label>
-                <div class="col-span-3">
-                  <t-button @click="() => addSection(configFields)" variant="secondary">
-                    Add Section
-                  </t-button>
-                </div>
-              </div>
-              <div class="w-full">
-                <ul role="list" class="mt-3 grid grid-cols-1">
-                  <li v-for="(section, idx) in configFields.sections"
-                      class="col-span-1 flex rounded-md shadow">
-                    <div :class="['bg-gray-100', 'flex px-3 flex-shrink-0 items-center justify-center rounded-l-md text-sm font-medium']">
-                      <div>
-                        <label
-                          class="col-span-2 block font-bold md:text-left mb-3 md:mb-0 pr-4">
-                          Section
-                          <sup class="text-red-600">*</sup>
-                        </label>
-                        <t-select
-                          class="col-span-3"
-                          v-model="configFields.sections[idx].type"
-                          :options="availableOptions(configFields)"
-                          valueAttribute="id"
-                          textAttribute="title"
-                        />
-                      </div>
-                    </div>
-                    <div class="flex flex-1 items-center justify-between truncate rounded-r-md border-b border-r border-t border-gray-100 bg-white">
-                      <div class="flex-1 px-4 py-2">
-                        <label
-                          class="col-span-2 block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4">
-                          Persona
-                          <sup class="text-red-400">*</sup>
-                        </label>
-                        <t-select
-                          class="col-span-3"
-                          v-model="configFields.sections[idx].persona_id"
-                          :options="config.personas"
-                          valueAttribute="id"
-                          textAttribute="title"
-                        />
-                      </div>
-                      <div class="flex-shrink-0 pr-2">
-                        <button @click="removeSection(configFields, idx)" type="button" class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-red-100 text-red-400 hover:text-red-500 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2">
-                          <TrashIcon class="h-5 w-5" />
-                        </button>
-                      </div>
-                    </div>
-                  </li>
-                </ul>
-              </div>
             </div>
           </div>
         </template>
@@ -389,7 +266,6 @@ const defaultFields = {
   title: '',
   post_type: 'post',
   terms: [],
-  sections: [],
   enabled: true
 }
 const configFields = ref({ ...defaultFields })
@@ -409,16 +285,6 @@ const selectedConfig = ref(null)
 const hasLoaded = ref(false)
 const isSubmitting = ref(false)
 
-const availableOptions = (conf) => {
-  // Return values not currently set
-  return (config.contentTypes || []).map(ct => {
-    return {
-      ...ct,
-      disabled: conf.sections.findIndex(c => c.type === ct.id) !== -1
-    }
-  })
-}
-
 const canSubmit = computed(() => {
   if (isSubmitting.value) {
     return false
@@ -430,15 +296,6 @@ const canSubmit = computed(() => {
     return false
   }
   if (!configFields.value.terms || configFields.value.terms.length === 0) {
-    return false
-  }
-  if (!configFields.value.sections || configFields.value.sections.length === 0) {
-    return false
-  }
-  if (configFields.value.sections.filter(s => !s.persona_id || s.persona_id.length === 0).length) {
-    return false
-  }
-  if (configFields.value.sections.filter(s => !s.type || s.type.length === 0).length) {
     return false
   }
   return true
@@ -486,9 +343,6 @@ onBeforeMount(() => {
 const createConfig = () => {
   // Clear out any old data
   configFields.value = { ...defaultFields }
-  if (!configFields.value.sections.length) {
-    addSection(configFields.value)
-  }
   selectedConfig.value = null
   // Show create form
   showingCreateForm.value = true
@@ -504,10 +358,6 @@ const selectAndEditConfig = (config) => {
   // Flag the selected config and show update form
   configFields.value.title = config.title
   configFields.value.post_type = config.post_type
-  configFields.value.sections = JSON.parse(config.sections || "[]")
-  if (!configFields.value.sections.length) {
-    addSection(configFields.value)
-  }
   configFields.value.terms = JSON.parse(config.terms || "[]")
   configFields.value.enabled = config.enabled == 1
   selectedConfig.value = config
@@ -522,26 +372,6 @@ const closeEditForm = () => {
 
 const doUpdate = async (id) => {
   await doSave(id)
-}
-
-const addSection = (config) => {
-  config.sections.push({
-    type: null,
-    persona_id: null,
-  })
-}
-
-const removeSection = (config, idx) => {
-  swal.fire({
-    icon: 'warning',
-    title: 'Delete section?',
-    showCancelButton: true,
-    confirmButtonText: 'Delete',
-  }).then(async (result) => {
-    if (result.isConfirmed) {
-      config.sections.splice(idx, 1)
-    }
-  })
 }
 
 const doSave = async (id = null) => {

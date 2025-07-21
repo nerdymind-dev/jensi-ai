@@ -94,6 +94,7 @@ class AdminLoader
         // instantiate controllers
         $settingController = new Api\SettingController();
         $queueController = new Api\QueueController();
+        $configController = new Api\ConfigController();
 
         // output data for use on client-side
         // https://wordpress.stackexchange.com/questions/344537/authenticating-with-rest-api
@@ -102,18 +103,18 @@ class AdminLoader
                 'endpoints' => [
                     'settings' => $settingController->get_endpoints(),
                     'queue' => $queueController->get_endpoints(),
+                    'configs' => $configController->get_endpoints()
                 ],
                 'nonce' => wp_create_nonce('wp_rest'),
             ],
             'nonce' => wp_create_nonce('wp_rest'),
-            // 'contentTypes' => [],
-            // 'endpoints' => [],
+            'configs' => $configController->get_all_configs(),
             'settings' => $settingController->get_settings_raw(),
             'settingStructure' => $settingController->get_settings_structure(true),
             'prefix' => $this->prefix,
             'queueTable' => $queueController->queue_table(),
             'postTypes' => get_post_types([], 'names'),
-            'postTerms' => get_terms(['taxonomy' => 'category']),
+            'postTerms' => array_values(get_terms(['taxonomy' => 'category'])),
             'adminUrl' => admin_url('/'),
             'pluginUrl' => rtrim(\JensiAI\Main::$BASEURL, '/'),
             'pluginVersion' => JENSI_AI_VERSION
