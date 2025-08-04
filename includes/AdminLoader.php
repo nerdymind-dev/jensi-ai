@@ -117,6 +117,40 @@ class AdminLoader
             return post_type_supports($postType, 'title') && post_type_supports($postType, 'editor');
         });
 
+        // Get taxonomies for each post type, and a nested array of taxonomy terms
+        $taxonomies = [];
+        foreach ($postTypes as $postType) {
+            $taxonomiesForPostType = get_object_taxonomies($postType, 'names');
+            $taxonomies[$postType] = [
+                '_taxonomies' => []
+            ];
+            foreach ($taxonomiesForPostType as $taxonomy) {
+                // Exclude built-in taxonomies that are not useful
+                if (in_array($taxonomy, ['post_format', 'nav_menu', 'link_category', 'post_tag'])) {
+                    continue;
+                }
+            
+                // Ensure we only add each taxonomy once
+                if (!in_array($taxonomy, $taxonomies[$postType]['_taxonomies'])) {
+                    $taxonomies[$postType]['_taxonomies'][] = $taxonomy;
+                }
+
+                $terms = get_terms([
+                    'taxonomy' => $taxonomy,
+                    'hide_empty' => false,
+                ]);
+                if (!is_wp_error($terms)) {
+                    $taxonomies[$postType][$taxonomy] = array_map(function ($term) {
+                        return [
+                            'term_id' => $term->term_id,
+                            'name' => $term->name,
+                            'slug' => $term->slug,
+                        ];
+                    }, $terms);
+                }
+            }
+        }
+
         // output data for use on client-side
         // https://wordpress.stackexchange.com/questions/344537/authenticating-with-rest-api
         $appVars = apply_filters('jensi_ai/admin_app_vars', [
@@ -136,6 +170,7 @@ class AdminLoader
             'prefix' => $this->prefix,
             'queueTable' => $queueController->queue_table(),
             'postTypes' => $postTypes,
+            'postTerms' => $taxonomies,
             'adminUrl' => admin_url('/'),
             'pluginUrl' => rtrim(\JensiAI\Main::$BASEURL, '/'),
             'pluginVersion' => JENSI_AI_VERSION

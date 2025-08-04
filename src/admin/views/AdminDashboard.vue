@@ -39,26 +39,30 @@
                           class="col-span-1 flex flex-col justify-between divide-y divide-gray-200 rounded-lg bg-white shadow">
                         <div class="flex w-full items-center justify-between space-x-6 p-6">
                           <div class="flex-1">
-                            <div class="flex items-center space-x-2">
-                              <h3 class="truncate text-sm font-medium text-gray-900">
-                                {{ conf.title }}
-                              </h3>
-                              <span v-if="conf.enabled === '1'">
-                                <CheckCircleIcon class="h-5 w-5 text-green-400" aria-hidden="true" />
-                              </span>
-                              <span v-else>
-                                <MinusCircleIcon class="h-5 w-5 text-red-300" aria-hidden="true" />
-                              </span>
-                              <div class="inline-flex items-center rounded-full bg-gray-50 px-2 py-1 text-xs font-medium text-gray-600 ring-1 ring-gray-500/10 ring-inset">
-                                {{ conf.post_type }}
+                            <div class="flex items-center justify-between space-x-2">
+                              <div class="flex items-center space-x-3">
+                                <h3 class="truncate text-sm font-medium text-gray-900">
+                                  {{ conf.title }}
+                                </h3>
+                                <span v-if="conf.enabled === '1'">
+                                  <CheckCircleIcon class="h-5 w-5 text-green-400" aria-hidden="true" />
+                                </span>
+                                <span v-else>
+                                  <MinusCircleIcon class="h-5 w-5 text-red-300" aria-hidden="true" />
+                                </span>
+                              </div>
+                              <div>
+                                <div class="ml-auto inline-flex items-center rounded-full bg-gray-200 px-2 py-1 text-xs font-medium text-gray-600 ring-1 ring-gray-500/10 ring-inset">
+                                  {{ conf.post_type }}
+                                </div>
                               </div>
                             </div>
                             <div class="my-3">
                               <p>
-                                Taxonomy
+                                Taxonomy: <strong>{{ getTaxonomy(conf) }}</strong>
                               </p>
                               <p class="text-xs text-gray-500 whitespace-normal">
-                                {{ getTerms(conf) }}
+                                Terms: <strong>{{ getTerms(conf) }}</strong>
                               </p>
                             </div>
                           </div>
@@ -123,17 +127,6 @@
               <div class="md:grid grid-cols-5">
                 <label
                   class="col-span-2 block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4">
-                  Post Type
-                </label>
-                <div class="col-span-3">
-                  <span class="inline-flex items-center rounded-full bg-gray-50 px-2 py-1 text-xs font-medium text-gray-600 ring-1 ring-gray-500/10 ring-inset">
-                    {{ selectedConfig.post_type }}
-                  </span>
-                </div>
-              </div>
-              <div class="md:grid grid-cols-5">
-                <label
-                  class="col-span-2 block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4">
                   Title
                   <sup class="text-red-400">*</sup>
                 </label>
@@ -152,12 +145,34 @@
               <div class="md:grid grid-cols-5">
                 <label
                   class="col-span-2 block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4">
+                  Post Type
+                </label>
+                <div class="col-span-3">
+                  <span class="inline-flex items-center rounded-full bg-gray-200 px-2 py-1 text-xs font-medium text-gray-600 ring-1 ring-gray-500/10 ring-inset">
+                    {{ selectedConfig.post_type }}
+                  </span>
+                </div>
+              </div>
+              <div class="md:grid grid-cols-5">
+                <label
+                  class="col-span-2 block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4">
+                  Taxonomy
+                </label>
+                <div class="col-span-3">
+                  <span class="inline-flex items-center rounded-full bg-gray-200 px-2 py-1 text-xs font-medium text-gray-600 ring-1 ring-gray-500/10 ring-inset">
+                    {{ selectedConfig.taxonomy }}
+                  </span>
+                </div>
+              </div>
+              <div class="md:grid grid-cols-5">
+                <label
+                  class="col-span-2 block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4">
                   Terms
                 </label>
                 <t-rich-select
                   class="col-span-3"
                   v-model="configFields.terms"
-                  :options="config.postTerms[configFields.post_type] || []"
+                  :options="config.postTerms[configFields.post_type][configFields.taxonomy] || []"
                   valueAttribute="term_id"
                   textAttribute="name"
                   multiple
@@ -236,11 +251,10 @@
                 <t-rich-select
                   class="col-span-3"
                   v-model="configFields.taxonomy"
-                  :fetch-options="getTaxonomies"
-                  :options="[]"
+                  :options="config.postTerms[configFields.post_type]['_taxonomies'] || []"
                 />
               </div>
-              <div v-if="configFields.post_type" class="md:grid grid-cols-5">
+              <div v-if="configFields.taxonomy" class="md:grid grid-cols-5">
                 <label
                   class="col-span-2 block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4">
                   Terms
@@ -248,8 +262,7 @@
                 <t-rich-select
                   class="col-span-3"
                   v-model="configFields.terms"
-                  :fetch-options="getTermsForType"
-                  :options="[]"
+                  :options="config.postTerms[configFields.post_type][configFields.taxonomy] || []"
                   valueAttribute="term_id"
                   textAttribute="name"
                   multiple
@@ -276,7 +289,7 @@
 </template>
 
 <script setup>
-import {computed, inject, nextTick, onBeforeMount, ref, toRaw} from 'vue'
+import {computed, inject, nextTick, onBeforeMount, watch, ref, toRaw} from 'vue'
 import {TToggle, TButton, TInputGroup, TTextarea, TInput, TSelect, TRichSelect} from '@variantjs/vue'
 import {
   InformationCircleIcon,
@@ -297,7 +310,7 @@ const axios = inject('axios')
 const defaultFields = {
   title: '',
   post_type: 'post', // Default to 'post' type
-  taxonomy: 'category', // Default taxonomy
+  taxonomy: null, // Default taxonomy
   terms: [],
   enabled: true
 }
@@ -319,6 +332,20 @@ const selectedConfig = ref(null)
 const hasLoaded = ref(false)
 const isSubmitting = ref(false)
 
+watch(configFields, (newVal, oldVal) => {
+  if (newVal) {
+    const { post_type, taxonomy } = newVal
+    if (post_type && taxonomy) {
+      // Clear out taxonomy and terms if post_type or taxonomy changes
+      const availableTaxonomies = config.postTerms[post_type]['_taxonomies'] || [];
+      if (!availableTaxonomies.includes(taxonomy)) {
+        configFields.value.taxonomy = null;
+        configFields.value.terms = [];
+      }
+    }
+  }
+}, { deep: true, immediate: true })
+
 const canSubmit = computed(() => {
   if (isSubmitting.value) {
     return false
@@ -332,89 +359,23 @@ const canSubmit = computed(() => {
   return true
 })
 
-const getTaxonomies = async (search) => {
-  const postType = configFields.value.post_type || 'post'
-  try {
-    if (config.settings.enable_debug_messages) {
-      console.log(':: DEBUG :: fetching taxonomies for post type:', postType)
-    }
-    const rst = await axios.get(endpoints.value.configs.taxonomy, {
-      params: { search, post_type: postType }
-    })
-    if (config.settings.enable_debug_messages) {
-      console.log(':: DEBUG - Response ::', rst)
-    }
-    const { data = null, success = null } = rst?.data
-    if (success === false) {
-      if (config.settings.enable_debug_messages) {
-        console.error(':: DEBUG - Error ::', err)
-      }
-      return []
-    } else if (data && rst.status === 200) {
-      return data
-    } else {
-      return []
-    }
-  } catch (err) {
-    if (config.settings.enable_debug_messages) {
-      console.error(':: DEBUG - Error ::', err)
-    }
-    if (err?.code !== 'ERR_CANCELED') {
-      const text = err?.response?.data?.error || 'Server responded with an error'
-      swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text,
-        footer: '<div class="overflow-footer w-full">' + err.message + '</div>'
-      })
-    }
+const getTaxonomy = (conf) => {
+  // If no taxonomy is selected, return 'All Taxonomies' (as all will be included)
+  if (!conf.taxonomy) {
+    return 'All Taxonomies'
   }
-}
-
-const getTermsForType = async (search) => {
-  const postType = configFields.value.post_type || 'post'
-  const taxonomy = configFields.value.taxonomy || 'category'
-  try {
-    if (config.settings.enable_debug_messages) {
-      console.log(':: DEBUG :: fetching terms for taxonomy:', taxonomy, 'and post type:', postType)
-    }
-    const rst = await axios.get(endpoints.value.configs.taxonomy, {
-      params: { search, taxonomy, post_type: postType }
-    })
-    if (config.settings.enable_debug_messages) {
-      console.log(':: DEBUG - Response ::', rst)
-    }
-    const { data = null, success = null } = rst?.data
-    if (success === false) {
-      if (config.settings.enable_debug_messages) {
-        console.error(':: DEBUG - Error ::', err)
-      }
-      return []
-    } else if (data && rst.status === 200) {
-      return data
-    } else {
-      return []
-    }
-  } catch (err) {
-    if (config.settings.enable_debug_messages) {
-      console.error(':: DEBUG - Error ::', err)
-    }
-    if (err?.code !== 'ERR_CANCELED') {
-      const text = err?.response?.data?.error || 'Server responded with an error'
-      swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text,
-        footer: '<div class="overflow-footer w-full">' + err.message + '</div>'
-      })
-    }
-  }
+  
+  // Convert to uppercase first letter
+  return conf.taxonomy.charAt(0).toUpperCase() + conf.taxonomy.slice(1)
 }
 
 const getTerms = (conf) => {
+  if (!conf.taxonomy) {
+    return 'All Terms'
+  }
   const terms = JSON.parse(conf.terms || "[]")
   const selectedTerms = terms.map(term_id => {
-    const selected = (config.postTerms[conf.post_type] || []).find(cat => cat.term_id == term_id)
+    const selected = (config.postTerms[conf.post_type][conf.taxonomy] || []).find(cat => cat.term_id == term_id)
     if (selected) {
       return selected.name
     }
