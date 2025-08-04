@@ -25,7 +25,7 @@ export default (app: App, configName: string) => {
     background: '#fff',
     customClass: {
       popup: 'bg-white',
-      htmlContainer: 'bg-white text-left',
+      htmlContainer: 'bg-white text-center',
       title: 'bg-white text-lg font-bold text-gray-700',
       denyButton: 'mx-2 inline-flex items-center justify-center px-6 py-2 bg-red-600 border border-transparent rounded-md text-white tracking-widest hover:bg-red-500 focus:outline-none focus:border-red-600 focus:shadow-outline-red active:bg-red-600 disabled:opacity-25 transition ease-in-out duration-150',
       confirmButton: 'mx-2 inline-flex items-center px-6 py-2 bg-blue-500 border border-transparent rounded-md text-white tracking-widest hover:bg-blue-600 active:bg-blue-600 focus:outline-none focus:border-blue-600 focus:shadow-outline-blue disabled:opacity-25 transition ease-in-out duration-150',

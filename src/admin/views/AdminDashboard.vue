@@ -19,12 +19,6 @@
             <div class="inline-block min-w-full py-2 align-middle">
               <div class="">
                 <div class="pb-4">
-                  <!--Title-->
-                  <h2
-                    class="font-sans break-normal text-gray-600 pb-1 text-lg w-full text-left">
-                    AI configs
-                  </h2>
-
                   <div class="my-4 border-l-4 border-blue-400 bg-blue-50 p-4">
                     <div class="flex">
                       <div class="flex-shrink-0">
@@ -32,8 +26,8 @@
                       </div>
                       <div class="ml-3">
                         <p class="text-sm text-blue-700">
-                          Configurations are used to automate content syncs. Based on the settings, when a new post is created, the automation will be triggered.
-                          If multiple configuration overlap, the most recent one will be used.
+                          Configurations are used to automate content syncs. Based on the settings, when a new post is created, the sync will be triggered.
+                          If multiple configuration overlap, only the most recent one will be used.
                         </p>
                       </div>
                     </div>
@@ -55,10 +49,13 @@
                               <span v-else>
                                 <MinusCircleIcon class="h-5 w-5 text-red-300" aria-hidden="true" />
                               </span>
+                              <div class="inline-flex items-center rounded-full bg-gray-50 px-2 py-1 text-xs font-medium text-gray-600 ring-1 ring-gray-500/10 ring-inset">
+                                {{ conf.post_type }}
+                              </div>
                             </div>
                             <div class="my-3">
                               <p>
-                                Category
+                                Taxonomy
                               </p>
                               <p class="text-xs text-gray-500 whitespace-normal">
                                 {{ getTerms(conf) }}
@@ -126,6 +123,17 @@
               <div class="md:grid grid-cols-5">
                 <label
                   class="col-span-2 block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4">
+                  Post Type
+                </label>
+                <div class="col-span-3">
+                  <span class="inline-flex items-center rounded-full bg-gray-50 px-2 py-1 text-xs font-medium text-gray-600 ring-1 ring-gray-500/10 ring-inset">
+                    {{ selectedConfig.post_type }}
+                  </span>
+                </div>
+              </div>
+              <div class="md:grid grid-cols-5">
+                <label
+                  class="col-span-2 block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4">
                   Title
                   <sup class="text-red-400">*</sup>
                 </label>
@@ -144,13 +152,12 @@
               <div class="md:grid grid-cols-5">
                 <label
                   class="col-span-2 block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4">
-                  Category
-                  <sup class="text-red-400">*</sup>
+                  Terms
                 </label>
                 <t-rich-select
                   class="col-span-3"
                   v-model="configFields.terms"
-                  :options="config.postTerms"
+                  :options="config.postTerms[configFields.post_type] || []"
                   valueAttribute="term_id"
                   textAttribute="name"
                   multiple
@@ -211,13 +218,38 @@
               <div class="md:grid grid-cols-5">
                 <label
                   class="col-span-2 block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4">
-                  Category
+                  Post Type
                   <sup class="text-red-400">*</sup>
                 </label>
                 <t-rich-select
                   class="col-span-3"
+                  v-model="configFields.post_type"
+                  @input="() => configFields.terms = []"
+                  :options="config.postTypes || []"
+                />
+              </div>
+              <div v-if="configFields.post_type" class="md:grid grid-cols-5">
+                <label
+                  class="col-span-2 block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4">
+                  Taxonomy
+                </label>
+                <t-rich-select
+                  class="col-span-3"
+                  v-model="configFields.taxonomy"
+                  :fetch-options="getTaxonomies"
+                  :options="[]"
+                />
+              </div>
+              <div v-if="configFields.post_type" class="md:grid grid-cols-5">
+                <label
+                  class="col-span-2 block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4">
+                  Terms
+                </label>
+                <t-rich-select
+                  class="col-span-3"
                   v-model="configFields.terms"
-                  :options="config.postTerms"
+                  :fetch-options="getTermsForType"
+                  :options="[]"
                   valueAttribute="term_id"
                   textAttribute="name"
                   multiple
@@ -264,7 +296,8 @@ const axios = inject('axios')
 
 const defaultFields = {
   title: '',
-  post_type: 'post',
+  post_type: 'post', // Default to 'post' type
+  taxonomy: 'category', // Default taxonomy
   terms: [],
   enabled: true
 }
@@ -274,6 +307,7 @@ const endpoints = ref({
   configs: {
     all: '', // GET
     crud: '', // GET/POST/DELETE
+    taxonomy: '' // GET
   }
 })
 const config = inject('pluginConfig')
@@ -295,31 +329,92 @@ const canSubmit = computed(() => {
   if (!configFields.value.post_type || configFields.value.post_type.length === 0) {
     return false
   }
-  if (!configFields.value.terms || configFields.value.terms.length === 0) {
-    return false
-  }
   return true
 })
 
-const getType = (item) => {
-  const selectedType = (config.contentTypes || []).find(ct => ct.id == item.type)
-  if (selectedType) {
-    return selectedType.title
+const getTaxonomies = async (search) => {
+  const postType = configFields.value.post_type || 'post'
+  try {
+    if (config.settings.enable_debug_messages) {
+      console.log(':: DEBUG :: fetching taxonomies for post type:', postType)
+    }
+    const rst = await axios.get(endpoints.value.configs.taxonomy, {
+      params: { search, post_type: postType }
+    })
+    if (config.settings.enable_debug_messages) {
+      console.log(':: DEBUG - Response ::', rst)
+    }
+    const { data = null, success = null } = rst?.data
+    if (success === false) {
+      if (config.settings.enable_debug_messages) {
+        console.error(':: DEBUG - Error ::', err)
+      }
+      return []
+    } else if (data && rst.status === 200) {
+      return data
+    } else {
+      return []
+    }
+  } catch (err) {
+    if (config.settings.enable_debug_messages) {
+      console.error(':: DEBUG - Error ::', err)
+    }
+    if (err?.code !== 'ERR_CANCELED') {
+      const text = err?.response?.data?.error || 'Server responded with an error'
+      swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text,
+        footer: '<div class="overflow-footer w-full">' + err.message + '</div>'
+      })
+    }
   }
-  return 'N/A'
 }
 
-const getPersona = (item) => {
-  const selectedPersona = config.personas.find(p => p.id == item.persona_id)
-  if (selectedPersona) {
-    return selectedPersona.title
+const getTermsForType = async (search) => {
+  const postType = configFields.value.post_type || 'post'
+  const taxonomy = configFields.value.taxonomy || 'category'
+  try {
+    if (config.settings.enable_debug_messages) {
+      console.log(':: DEBUG :: fetching terms for taxonomy:', taxonomy, 'and post type:', postType)
+    }
+    const rst = await axios.get(endpoints.value.configs.taxonomy, {
+      params: { search, taxonomy, post_type: postType }
+    })
+    if (config.settings.enable_debug_messages) {
+      console.log(':: DEBUG - Response ::', rst)
+    }
+    const { data = null, success = null } = rst?.data
+    if (success === false) {
+      if (config.settings.enable_debug_messages) {
+        console.error(':: DEBUG - Error ::', err)
+      }
+      return []
+    } else if (data && rst.status === 200) {
+      return data
+    } else {
+      return []
+    }
+  } catch (err) {
+    if (config.settings.enable_debug_messages) {
+      console.error(':: DEBUG - Error ::', err)
+    }
+    if (err?.code !== 'ERR_CANCELED') {
+      const text = err?.response?.data?.error || 'Server responded with an error'
+      swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text,
+        footer: '<div class="overflow-footer w-full">' + err.message + '</div>'
+      })
+    }
   }
-  return '(none selected)'
 }
+
 const getTerms = (conf) => {
   const terms = JSON.parse(conf.terms || "[]")
   const selectedTerms = terms.map(term_id => {
-    const selected = config.postTerms.find(cat => cat.term_id == term_id)
+    const selected = (config.postTerms[conf.post_type] || []).find(cat => cat.term_id == term_id)
     if (selected) {
       return selected.name
     }
@@ -358,6 +453,7 @@ const selectAndEditConfig = (config) => {
   // Flag the selected config and show update form
   configFields.value.title = config.title
   configFields.value.post_type = config.post_type
+  configFields.value.taxonomy = config.taxonomy
   configFields.value.terms = JSON.parse(config.terms || "[]")
   configFields.value.enabled = config.enabled == 1
   selectedConfig.value = config

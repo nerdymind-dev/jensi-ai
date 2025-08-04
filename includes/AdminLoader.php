@@ -62,6 +62,13 @@ class AdminLoader
             );
             add_submenu_page(
                 $slug,
+                esc_html(__('Sync', $this->prefix)),
+                esc_html(__('Sync', $this->prefix)),
+                $capability,
+                "admin.php?page={$slug}#/sync"
+            );
+            add_submenu_page(
+                $slug,
                 esc_html(__('Help', $this->prefix)),
                 esc_html(__('Help', $this->prefix)),
                 $capability,
@@ -95,6 +102,20 @@ class AdminLoader
         $settingController = new Api\SettingController();
         $queueController = new Api\QueueController();
         $configController = new Api\ConfigController();
+        $syncController = new Api\SyncController();
+
+        // Get the post types
+        $postTypes = array_filter(get_post_types([], 'names'), function ($postType) {
+            // Filter out built-in post types and those that don't support title/editor
+            // Also exclude any post types that start with 'wp_' to avoid core post types
+            // like 'wp_block', 'wp_navigation', etc.
+            if (str_contains($postType, 'wp_') || in_array($postType, ['attachment', 'revision', 'nav_menu_item', 'custom_css', 'oembed_cache'])) {
+                return false;
+            }
+
+            // Only include post types that support title and editor
+            return post_type_supports($postType, 'title') && post_type_supports($postType, 'editor');
+        });
 
         // output data for use on client-side
         // https://wordpress.stackexchange.com/questions/344537/authenticating-with-rest-api
@@ -103,7 +124,8 @@ class AdminLoader
                 'endpoints' => [
                     'settings' => $settingController->get_endpoints(),
                     'queue' => $queueController->get_endpoints(),
-                    'configs' => $configController->get_endpoints()
+                    'configs' => $configController->get_endpoints(),
+                    'sync' => $syncController->get_endpoints(),
                 ],
                 'nonce' => wp_create_nonce('wp_rest'),
             ],
@@ -113,8 +135,7 @@ class AdminLoader
             'settingStructure' => $settingController->get_settings_structure(true),
             'prefix' => $this->prefix,
             'queueTable' => $queueController->queue_table(),
-            'postTypes' => get_post_types([], 'names'),
-            'postTerms' => array_values(get_terms(['taxonomy' => 'category'])),
+            'postTypes' => $postTypes,
             'adminUrl' => admin_url('/'),
             'pluginUrl' => rtrim(\JensiAI\Main::$BASEURL, '/'),
             'pluginVersion' => JENSI_AI_VERSION

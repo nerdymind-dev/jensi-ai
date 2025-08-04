@@ -3,6 +3,7 @@ import AdminDashboard from '~src/admin/views/AdminDashboard.vue'
 import AdminSettings from '~src/admin/views/AdminSettings.vue'
 import AdminInfo from '~src/admin/views/AdminInfo.vue'
 import AdminQueue from '~src/admin/views/AdminQueue.vue'
+import AdminSync from '~src/admin/views/AdminSync.vue'
 
 const routes: RouteRecordRaw[] = [
   {
@@ -14,6 +15,11 @@ const routes: RouteRecordRaw[] = [
     name: 'settings',
     path: '/settings',
     component: AdminSettings
+  },
+  {
+    name: 'sync',
+    path: '/sync',
+    component: AdminSync
   },
   {
     name: 'queue',

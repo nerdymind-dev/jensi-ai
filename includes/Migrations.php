@@ -138,6 +138,7 @@ final class Migrations
             `id` mediumint(9) NOT NULL AUTO_INCREMENT,
             `title` VARCHAR(255) NOT NULL,
             `post_type` TEXT NOT NULL,
+            `taxonomy` TEXT NULL,
             `terms` TEXT NULL,
             `enabled` TINYINT NOT NULL DEFAULT 1,
             `modified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

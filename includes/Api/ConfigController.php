@@ -86,6 +86,25 @@ class ConfigController extends \WP_REST_Controller
                 ],
             ]
         );
+        register_rest_route(
+            $this->namespace,
+            '/' . $this->rest_base . '/taxonomy',
+            [
+                [
+                    'methods' => \WP_REST_Server::READABLE,
+                    'callback' => [$this, 'get_taxonomy'],
+                    'permission_callback' => [$this, 'get_items_permissions_check'],
+                    'args' => [
+                        'post_type' => [
+                            // 'validate_callback' => function ($param, $request, $key) {
+                            //     return is_numeric($param);
+                            // },
+                            'required' => true
+                        ],
+                    ]
+                ],
+            ]
+        );
     }
 
     /**
@@ -98,14 +117,87 @@ class ConfigController extends \WP_REST_Controller
         // example: vwr-live-catalog/v1/configs
         return [
             'all' => esc_url_raw(
-            // GET
+                // GET
                 rest_url($this->namespace . '/' . $this->rest_base . '/all')
             ),
             'crud' => esc_url_raw(
-            // GET/POST/DELETE
+                // GET/POST/DELETE
                 rest_url($this->namespace . '/' . $this->rest_base . '/config')
             ),
+            'taxonomy' => esc_url_raw(
+                // GET
+                rest_url($this->namespace . '/' . $this->rest_base . '/taxonomy')
+            ),
         ];
+    }
+
+    /**
+     * Retrieves taxonomy.
+     *
+     * @param \WP_REST_Request $request Full details about the request.
+     *
+     * @return \WP_REST_Response|\WP_Error Response object on success, or WP_Error object on failure.
+     */
+    public function get_taxonomy($request)
+    {
+        // attempt to parse the json parameter
+        $params = $request->get_params();
+        $nonce = wp_create_nonce('wp_rest');
+
+        // update correct response
+        $response = [
+            'data' => null,
+            'success' => false,
+            'nonce' => $nonce,
+        ];
+        if (isset($params)) {
+            // Get the post type and taxonomy from the request
+            $search = $params['search'] ?? null;
+            $postType = $params['post_type'] ?? null;
+            $taxonomy = $params['taxonomy'] ?? null;
+
+            // Post type is required
+            if (!$postType) {
+                return rest_ensure_response($response);
+            }
+            if (!$taxonomy) {
+                // Get taxonomies registered for this specific post type
+                $taxonomies = get_object_taxonomies($postType, 'names');
+                dump($taxonomies);
+                if ($search) {
+                    // Filter taxonomies based on search term
+                    $taxonomies = array_filter($taxonomies, function ($tax) use ($search) {
+                        return str_contains($tax, $search);
+                    });
+                } else {
+                    $response['data'] = $taxonomies;
+                }
+                $response['data'] = $taxonomies;
+                $response['success'] = true;
+            } else {
+                // Get taxonomies registered for this specific post type
+                if ($search) {
+                    // Filter terms based on search term
+                    $terms = get_terms([
+                        'taxonomy' => $taxonomy,
+                        'hide_empty' => false,
+                        'search' => $search,
+                    ]);
+                } else {
+                    // Get all terms for the specified taxonomy
+                    $terms = get_terms([
+                        'taxonomy' => $taxonomy,
+                        'hide_empty' => false,
+                    ]);
+                }
+                if (!is_wp_error($terms) && !empty($terms)) {
+                    $postTerms = array_values($terms);
+                    $response['data'] = $postTerms;
+                    $response['success'] = true;
+                }
+            }
+        }
+        return rest_ensure_response($response);
     }
 
     /**
@@ -184,6 +276,7 @@ class ConfigController extends \WP_REST_Controller
                 $wpdb->insert($wpdb->prefix . $this->table_name, [
                     'title' => $params['title'] ?? null,
                     'post_type' => $params['post_type'] ?? null,
+                    'taxonomy' => $params['taxonomy'] ?? null,
                     'terms' => json_encode($params['terms'] ?? []),
                     'enabled' => $params['enabled'], // true/false, default true
                 ]);
@@ -200,6 +293,7 @@ class ConfigController extends \WP_REST_Controller
                     $updated = $wpdb->update($wpdb->prefix . $this->table_name, [
                         'title' => $params['title'] ?? null,
                         'post_type' => $params['post_type'] ?? null,
+                        'taxonomy' => $params['taxonomy'] ?? null,
                         'terms' => json_encode($params['terms'] ?? []),
                         'enabled' => $params['enabled'], // true/false, default true
                     ], ['id' => $result->id]);
@@ -286,7 +380,7 @@ class ConfigController extends \WP_REST_Controller
             case 'destroy':
                 return [
                     'id' => [
-                        'validate_callback' => function($param, $request, $key) {
+                        'validate_callback' => function ($param, $request, $key) {
                             return is_numeric($param);
                         },
                         'required' => true
@@ -295,18 +389,24 @@ class ConfigController extends \WP_REST_Controller
             case 'update':
                 return [
                     'title' => [
-                        'validate_callback' => function($param, $request, $key) {
+                        'validate_callback' => function ($param, $request, $key) {
                             return !empty($param);
                         },
                         'required' => true
                     ],
                     'post_type' => [
-                        'validate_callback' => function($param, $request, $key) {
+                        'validate_callback' => function ($param, $request, $key) {
                             return !empty($param);
                         },
                         'required' => true
                     ],
-                    // Should term be required?
+                    // Should taxonomy and term be required?
+                    // 'taxonomy' => [
+                    //     'validate_callback' => function($param, $request, $key) {
+                    //         return !empty($param);
+                    //     },
+                    //     'required' => true
+                    // ],
                     //'term_id' => [
                     //    'validate_callback' => function($param, $request, $key) {
                     //        return is_numeric($param);
