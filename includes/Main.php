@@ -218,144 +218,18 @@ final class Main
      */
     public function submit_post_for_ai($post_id)
     {
+        $controller = new ConfigController();
         $post_type = get_post_type($post_id);
         $terms = wp_get_post_categories($post_id, ['fields' => 'ids']);
-        $config = (new ConfigController())->get_config_for_terms($post_type, $terms);
+        $config = $controller->get_config_for_terms($post_type, $terms);
 
-        return;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        $content = get_post_meta($post_id, '_jensi_ai_generated_content', true);
-        $liContent = get_post_meta($post_id, '_jensi_ai_li_generated_content', true);
-        $igContent = get_post_meta($post_id, '_jensi_ai_ig_generated_content', true);
-        $fbContent = get_post_meta($post_id, '_jensi_ai_fb_generated_content', true);
-        $twContent = get_post_meta($post_id, '_jensi_ai_tw_generated_content', true);
-
-        // Grab the post terms, and first valid config item
-        $terms = wp_get_post_categories($post_id, ['fields' => 'ids']);
-        $config = (new ConfigController())->get_config_for_terms($terms);
-        $sections = json_decode($config->sections) ?? [];
-
-        // Determine if any sections are empty and need content generation
-        $autoGenerating = [
-            'general' => false,
-            'li' => false,
-            'ig' => false,
-            'fb' => false,
-            'tw' => false
-        ];
-        foreach ($sections as $section) {
-            switch ($section->type) {
-                case 'general':
-                    $meta_content = $content;
-                    break;
-                case 'li':
-                    $meta_content = $liContent;
-                    break;
-                case 'ig':
-                    $meta_content = $igContent;
-                    break;
-                case 'fb':
-                    $meta_content = $fbContent;
-                    break;
-                case 'tw':
-                    $meta_content = $twContent;
-                    break;
-            }
-            if (empty(trim($meta_content))) {
-                $this->generate_content_for_post($post_id, $sections->type, $config);
-                $autoGenerating[$sections->type] = true;
-            }
+        // If no config found, return
+        if (!$config) {
+            return;
         }
 
-        if (isset($_POST['jensi_ai_nonce'])) {
-            if (!wp_verify_nonce(sanitize_key($_POST['jensi_ai_nonce']), 'jensi_ai_metabox_nonce')) {
-                return;
-            }
-
-            // Check if requesting ALL sections have content generated
-            $shouldGenerate = (bool)($_POST['jensi_ai_generate_on_save'] ?? false);
-            if ($shouldGenerate) {
-                $this->generate_content_for_post($post_id, null, $config);
-                return;
-            }
-
-            // Check if updating any specific section
-            if (!$autoGenerating['general'] && (bool)($_POST['jensi_ai_generate_general_on_save'] ?? false)) {
-                $this->generate_content_for_post($post_id, 'general', $config);
-                $autoGenerating['general'] = true;
-            }
-            if (!$autoGenerating['li'] && (bool)($_POST['jensi_ai_generate_li_on_save'] ?? false)) {
-                $this->generate_content_for_post($post_id, 'li', $config);
-                $autoGenerating['li'] = true;
-            }
-            if (!$autoGenerating['ig'] && (bool)($_POST['jensi_ai_generate_ig_on_save'] ?? false)) {
-                $this->generate_content_for_post($post_id, 'ig', $config);
-                $autoGenerating['ig'] = true;
-            }
-            if (!$autoGenerating['fb'] && (bool)($_POST['jensi_ai_generate_fb_on_save'] ?? false)) {
-                $this->generate_content_for_post($post_id, 'fb', $config);
-                $autoGenerating['fb'] = true;
-            }
-            if (!$autoGenerating['tw'] && (bool)($_POST['jensi_ai_generate_tw_on_save'] ?? false)) {
-                $this->generate_content_for_post($post_id, 'tw', $config);
-                $autoGenerating['tw'] = true;
-            }
-
-            /*
-             * Update the post meta with user added content.
-             * Only populate meta if auto generation is NOT toggled, and the content is set.
-             */
-            if (!$autoGenerating['general'] && isset($_POST['jensi_ai_generated_content'])) {
-                update_post_meta(
-                    $post_id,
-                    '_jensi_ai_generated_content',
-                    $_POST['jensi_ai_generated_content']
-                );
-            }
-            if (!$autoGenerating['li'] && isset($_POST['jensi_ai_li_generated_content'])) {
-                update_post_meta(
-                    $post_id,
-                    '_jensi_ai_li_generated_content',
-                    $_POST['jensi_ai_li_generated_content']
-                );
-            }
-            if (!$autoGenerating['ig'] && isset($_POST['jensi_ai_ig_generated_content'])) {
-                update_post_meta(
-                    $post_id,
-                    '_jensi_ai_ig_generated_content',
-                    $_POST['jensi_ai_ig_generated_content']
-                );
-            }
-            if (!$autoGenerating['fb'] && isset($_POST['jensi_ai_fb_generated_content'])) {
-                update_post_meta(
-                    $post_id,
-                    '_jensi_ai_fb_generated_content',
-                    $_POST['jensi_ai_fb_generated_content']
-                );
-            }
-            if (!$autoGenerating['tw'] && isset($_POST['jensi_ai_tw_generated_content'])) {
-                update_post_meta(
-                    $post_id,
-                    '_jensi_ai_tw_generated_content',
-                    $_POST['jensi_ai_tw_generated_content']
-                );
-            }
-        }
+        // Queue up post for submission to JENSi AI
+        $this->generate_content_for_post($post_id, $post_type, $config);
     }
 
     /**
@@ -375,7 +249,7 @@ final class Main
         if ($post && $config) {
             (new QueueLoader())->store_job($post, $config, $type);
             set_transient('jensi_ai_generating', [
-                'message' => 'Process has queued for this post! It will be imported into JENSi AI and added to your library.',
+                'message' => 'Process has queued for this post! It will be imported into JENSi AI and added to your AI knowledge library.',
                 'status' => 'success'
             ], 30);
         }
@@ -390,7 +264,7 @@ final class Main
     {
         add_meta_box(
             'jensi_ai_generate',
-            'Sage AI Content Generation',
+            'JENSi AI Generation',
             [$this, 'jensi_ai_echo_meta_box'],
             'post',
             'normal',

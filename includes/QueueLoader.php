@@ -43,22 +43,16 @@ class QueueLoader
         global $wpdb;
 
         // One for each enabled social?
-        $sections = json_decode($config->sections);
         $errors = [];
-        foreach ($sections as $section) {
-            if ($type && $section->type !== $type) {
-                continue;
-            }
-            $result = $wpdb->insert($wpdb->prefix . $this->table_name, [
-                'name' => $post->post_title,
-                'post_id' => $post->ID,
-                'content' => $post->post_content,
-                'type' => $section->type,
-                // 'processed' => false // populated by default...
-            ]);
-            if ($result === false) {
-                $errors[] = $section;
-            }
+        $result = $wpdb->insert($wpdb->prefix . $this->table_name, [
+            'name' => $post->post_title,
+            'post_id' => $post->ID,
+            'content' => strip_tags($post->post_content),
+            'type' => $type,
+            // 'processed' => false // populated by default...
+        ]);
+        if ($result === false) {
+            $errors[] = 'Failed to insert job into queue table: ' . $wpdb->last_error;
         }
         return count($errors) === 0 ? true : $errors;
     }

@@ -26,8 +26,8 @@
                       </div>
                       <div class="ml-3">
                         <p class="text-sm text-blue-700">
-                          Configurations are used to automate content syncs. Based on the settings, when a new post is created, the sync will be triggered.
-                          If multiple configuration overlap, only the most recent one will be used.
+                          Configurations are used to automate content syncs. Based on the settings, when a new post is created or updated, the sync will be triggered.
+                          If multiple configuration overlap, only the most recent <strong>enabled</strong> one will be used.
                         </p>
                       </div>
                     </div>

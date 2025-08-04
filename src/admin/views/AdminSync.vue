@@ -24,7 +24,7 @@
                   <!--Card-->
                   <div class="p-8 mt-6 lg:mt-0 rounded shadow bg-white">
                     <div class="md:flex">
-                      Manually sync your posts and pages.
+                      Manually sync your posts, pages and media.
                     </div>
                   </div>
                   <!--/Card-->
