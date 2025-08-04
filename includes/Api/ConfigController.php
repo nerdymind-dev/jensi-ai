@@ -450,17 +450,29 @@ class ConfigController extends \WP_REST_Controller
     }
 
     /**
+     * Get config for given post type and terms
+     *
+     * @param $post_type
      * @param $terms
      * @return false|mixed|\stdClass
      */
-    public function get_config_for_terms($terms)
+    public function get_config_for_terms($post_type, $terms)
     {
         global $wpdb;
         $configs_table = $wpdb->prefix . $this->table_name;
-        $results = $wpdb->get_results("SELECT * FROM $configs_table WHERE `enabled` = TRUE ORDER BY `created` DESC");
+        $results = $wpdb->get_results("SELECT * FROM $configs_table WHERE `enabled` = TRUE AND `post_type` = '$post_type' ORDER BY `created` DESC");
         foreach ($results as $config) {
+            if (!$config->taxonomy) {
+                // If taxonomy is null, it means all terms are included
+                return $config;
+            }
             $configTerms = json_decode($config->terms, true);
+            if (empty($configTerms)) {
+                // If no terms are set, it means all terms are included
+                return $config;
+            }
             if (!empty(array_intersect($configTerms, $terms))) {
+                // If any of the terms match, return this config
                 return $config;
             }
         }

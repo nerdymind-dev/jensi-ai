@@ -144,7 +144,7 @@ final class Main
         add_action('admin_notices', [$this, 'jensi_ai_admin_notices']);
 
         // EXAMPLE: On post save check if we need to generate additional content
-        // add_action('save_post', [$this, 'jensi_ai_save_post']);
+        add_action('save_post', [$this, 'jensi_ai_save_post']);
 
         // EXAMPLE: Add custom metabox to product pages
         // add_action('add_meta_boxes', [$this, 'jensi_ai_add_product_meta_boxes']);
@@ -207,7 +207,7 @@ final class Main
         if (get_post_type($post_id) !== 'post') {
             return;
         }
-        // $this->generate_post_ai_content($post_id);
+        $this->submit_post_for_ai($post_id);
     }
 
     /**
@@ -216,8 +216,29 @@ final class Main
      * @param $post_id
      * @return void
      */
-    public function generate_post_ai_content($post_id)
+    public function submit_post_for_ai($post_id)
     {
+        $post_type = get_post_type($post_id);
+        $terms = wp_get_post_categories($post_id, ['fields' => 'ids']);
+        $config = (new ConfigController())->get_config_for_terms($post_type, $terms);
+
+        return;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         $content = get_post_meta($post_id, '_jensi_ai_generated_content', true);
         $liContent = get_post_meta($post_id, '_jensi_ai_li_generated_content', true);
         $igContent = get_post_meta($post_id, '_jensi_ai_ig_generated_content', true);
@@ -354,7 +375,7 @@ final class Main
         if ($post && $config) {
             (new QueueLoader())->store_job($post, $config, $type);
             set_transient('jensi_ai_generating', [
-                'message' => 'Process has queued for this post! It will be imported into JENSi and added to your library.',
+                'message' => 'Process has queued for this post! It will be imported into JENSi AI and added to your library.',
                 'status' => 'success'
             ], 30);
         }

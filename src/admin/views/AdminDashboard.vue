@@ -40,7 +40,7 @@
                         <div class="flex w-full items-center justify-between space-x-6 p-6">
                           <div class="flex-1">
                             <div class="flex items-center justify-between space-x-2">
-                              <div class="flex items-center space-x-3">
+                              <div class="flex items-center space-x-1">
                                 <h3 class="truncate text-sm font-medium text-gray-900">
                                   {{ conf.title }}
                                 </h3>
@@ -153,7 +153,7 @@
                   </span>
                 </div>
               </div>
-              <div class="md:grid grid-cols-5">
+              <div class="md:grid grid-cols-5" v-if="selectedConfig.taxonomy">
                 <label
                   class="col-span-2 block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4">
                   Taxonomy
@@ -164,7 +164,7 @@
                   </span>
                 </div>
               </div>
-              <div class="md:grid grid-cols-5">
+              <div class="md:grid grid-cols-5" v-if="selectedConfig.taxonomy">
                 <label
                   class="col-span-2 block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4">
                   Terms
@@ -362,7 +362,7 @@ const canSubmit = computed(() => {
 const getTaxonomy = (conf) => {
   // If no taxonomy is selected, return 'All Taxonomies' (as all will be included)
   if (!conf.taxonomy) {
-    return 'All Taxonomies'
+    return 'Any Taxonomy'
   }
   
   // Convert to uppercase first letter
@@ -371,7 +371,7 @@ const getTaxonomy = (conf) => {
 
 const getTerms = (conf) => {
   if (!conf.taxonomy) {
-    return 'All Terms'
+    return 'Any Term'
   }
   const terms = JSON.parse(conf.terms || "[]")
   const selectedTerms = terms.map(term_id => {
