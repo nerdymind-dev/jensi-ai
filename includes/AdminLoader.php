@@ -135,10 +135,13 @@ class AdminLoader
                     $taxonomies[$postType]['_taxonomies'][] = $taxonomy;
                 }
 
+                // Get terms for this taxonomy
                 $terms = get_terms([
                     'taxonomy' => $taxonomy,
-                    'hide_empty' => false,
+                    'hide_empty' => false, // Include terms even if they have no posts
                 ]);
+
+                // Store terms in a structured way
                 if (!is_wp_error($terms)) {
                     $taxonomies[$postType][$taxonomy] = array_map(function ($term) {
                         return [
