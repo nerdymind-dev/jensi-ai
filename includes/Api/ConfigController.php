@@ -163,7 +163,6 @@ class ConfigController extends \WP_REST_Controller
             if (!$taxonomy) {
                 // Get taxonomies registered for this specific post type
                 $taxonomies = get_object_taxonomies($postType, 'names');
-                dump($taxonomies);
                 if ($search) {
                     // Filter taxonomies based on search term
                     $taxonomies = array_filter($taxonomies, function ($tax) use ($search) {
