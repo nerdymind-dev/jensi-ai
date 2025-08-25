@@ -42,8 +42,16 @@ class QueueLoader
     {
         global $wpdb;
 
-        // One for each enabled social?
-        $errors = [];
+        $error = null;
+
+        // Check if post is already in queue
+        $existing = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}{$this->table_name} WHERE post_id = %d AND processed = 0", $post->ID));
+        if ($existing) {
+            // Delete the existing unprocessed job for this post
+            $wpdb->delete($wpdb->prefix . $this->table_name, ['id' => $existing->id]);
+        }
+
+        // Insert new job
         $result = $wpdb->insert($wpdb->prefix . $this->table_name, [
             'name' => $post->post_title,
             'post_id' => $post->ID,
@@ -52,9 +60,9 @@ class QueueLoader
             // 'processed' => false // populated by default...
         ]);
         if ($result === false) {
-            $errors[] = 'Failed to insert job into queue table: ' . $wpdb->last_error;
+            $error = 'Failed to insert job into queue table: ' . $wpdb->last_error;
         }
-        return count($errors) === 0 ? true : $errors;
+        return $error === null ? true : $error;
     }
 
     /**
@@ -91,6 +99,10 @@ class QueueLoader
                  */
 
                 // @TODO: Implement the logic to process the job.
+                dump([
+                    'message' => 'TEST QUEUE WORKING: not yet implemented...',
+                    'job' => $result
+                ]);
 
                 // If here, assume the queue job didn't complete successfully
                 $wpdb->update($queue_table, [

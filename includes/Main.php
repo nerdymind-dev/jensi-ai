@@ -247,9 +247,12 @@ final class Main
 
         // If post and config set, queue it up!
         if ($post && $config) {
+            // Add to queue
             (new QueueLoader())->store_job($post, $config, $type);
+
+            // Add admin notice that we've queued this post up
             set_transient('jensi_ai_generating', [
-                'message' => 'Process has queued for this post! It will be imported into JENSi AI and added to your AI knowledge library.',
+                'message' => "Process has queued for \"{$post->post_title}\"! It will be imported into JENSi AI and added to your AI knowledge library.",
                 'status' => 'success'
             ], 30);
         }
