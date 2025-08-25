@@ -50,7 +50,7 @@
                       <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Post</th>
                       <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Type</th>
                       <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Status</th>
-                      <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Failed</th>
+                      <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Success</th>
                       <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Queued At</th>
                       <th scope="col" class="relative py-3.5 pl-3 pr-4 sm:pr-6">
                         <span class="sr-only">Actions</span>
@@ -75,17 +75,17 @@
                           </a>
                         </td>
                         <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                          {{ getType(row) }}
+                          {{ row.type || 'N/A' }}
                         </td>
                         <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                           {{ row.processed === '1' ? 'Processed' : 'Queued' }}
                         </td>
                         <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                           <span v-if="row.failed === '1'" class="text-red-500">
-                            True
+                            False
                           </span>
                           <span v-else>
-                            False
+                            True
                           </span>
                         </td>
                         <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
@@ -302,22 +302,6 @@ const selectRow = (row) => {
 
 const isRowSelected = (row) => {
   return selectedRows.value[row.id] || false
-}
-
-const getType = (item) => {
-  const selectedType = (config.contentTypes || []).find(ct => ct.id == item.type)
-  if (selectedType) {
-    return selectedType.title
-  }
-  return 'N/A'
-}
-
-const getPersona = (item) => {
-  const selectedPersona = config.personas.find(p => p.id == item.persona_id)
-  if (selectedPersona) {
-    return selectedPersona.title
-  }
-  return '(none selected)'
 }
 
 const canReload = computed(() => {
