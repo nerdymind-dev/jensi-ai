@@ -197,7 +197,7 @@
               <div class="md:grid grid-cols-5">
                 <label
                   class="col-span-2 block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4">
-                  Create new config
+                  {{ dataSourceConfig.create_config ? 'Create new data source' : 'Select existing data source' }}
                 </label>
                 <div>
                   <t-toggle v-model="dataSourceConfig.create_config" />
@@ -231,7 +231,7 @@
                   <div class="md:grid grid-cols-5">
                   <label
                     class="col-span-2 block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4">
-                    Select existing config
+                    Current data sources
                     <sup class="text-red-400">*</sup>
                   </label>
                   <t-rich-select
