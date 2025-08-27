@@ -328,6 +328,9 @@ const canSubmit = computed(() => {
     if (!dataSourceConfig.value.config_id) {
       return false
     }
+    if (dataSourceConfig.value.config_id === settings.jensi_ai_data_source) {
+      return false
+    }
   }
   return true
 })

@@ -24,12 +24,22 @@ class QueueLoader
     private $table_name;
 
     /**
+     * The application settings.
+     *
+     * @var array
+     */
+    private $settings;
+
+    /**
      * Initialize this class.
      */
     public function __construct()
     {
         $this->prefix = \JensiAI\Main::PREFIX;
         $this->table_name = $this->prefix . '_jobs';
+
+        // Fetch the settings
+        $this->settings = (new SettingController())->get_settings_raw();
     }
 
     /**
@@ -94,9 +104,7 @@ class QueueLoader
             // Flag item as processed (so it doesn't get run again)
             $wpdb->update($queue_table, ['processed' => true], ['id' => $result->id]);
             try {
-                /**
-                 * Here is where you would implement the logic to process the job.
-                 */
+                
 
                 // @TODO: Implement the logic to process the job.
                 dump([
