@@ -548,7 +548,7 @@ const doLoad = async () => {
     try {
       const rst = await axios.get(endpoints.value.data_sources.get)
       if (rst.status === 200) {
-        currentDateSources.value = rst.data || []
+        currentDateSources.value = rst.data.data || []
         // if we have a selected data source, set it
         if (settings.jensi_ai_data_source) {
           const existing = currentDateSources.value.find((item) => item.id === settings.jensi_ai_data_source)

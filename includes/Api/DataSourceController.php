@@ -76,13 +76,25 @@ class DataSourceController extends \WP_REST_Controller
         // Register the /wp-json/ + get_endpoint() route
         register_rest_route(
             $this->namespace,
-            '/get',
+            '/' . $this->rest_base . '/get',
             [
                 [
                     'methods' => \WP_REST_Server::READABLE,
                     'callback' => [$this, 'get_data_sources'],
                     'permission_callback' => [$this, 'get_items_permissions_check'],
                     'args' => $this->get_collection_params('get'),
+                ],
+            ]
+        );
+        register_rest_route(
+            $this->namespace,
+            '/' . $this->rest_base . '/create',
+            [
+                [
+                    'methods' => \WP_REST_Server::CREATABLE,
+                    'callback' => [$this, 'create_data_source'],
+                    'permission_callback' => [$this, 'get_items_permissions_check'],
+                    'args' => $this->get_collection_params('create'),
                 ],
             ]
         );
@@ -101,11 +113,15 @@ class DataSourceController extends \WP_REST_Controller
                 // GET
                 rest_url($this->namespace . '/' . $this->rest_base . '/get')
             ),
+            'create' => esc_url_raw(
+                // POST
+                rest_url($this->namespace . '/' . $this->rest_base . '/create')
+            ),
         ];
     }
 
     /**
-     * Retrieves taxonomy.
+     * Retrieve data sources.
      *
      * @param \WP_REST_Request $request Full details about the request.
      *
@@ -123,14 +139,11 @@ class DataSourceController extends \WP_REST_Controller
             'success' => false,
             'nonce' => $nonce,
         ];
-
         if (!$this->token) {
             $response['data'] = 'No JENSi AI API token configured.';
-            return new \WP_Error('rest_api_error', __('No JENSi AI API token configured.'), ['status' => 500]);
-        }
-        if (isset($params)) {
+        } else {
             // get search param if provided
-            $search = $params['search'] ?? null;
+            $search = isset($params['search']) ? $params['search'] : null;
 
             // call the remote API to get data sources
             $url = $this->base_api . '/data-sources';
@@ -143,10 +156,11 @@ class DataSourceController extends \WP_REST_Controller
                     'Authorization' => 'Bearer ' . $this->token,
                 ],
                 'timeout' => 15,
+                'sslverify' => wp_get_environment_type() !== 'local',
             ]);
             if (is_wp_error($api_response)) {
                 $response['data'] = 'Failed to connect to JENSi AI API: ' . $api_response->get_error_message();
-                return new \WP_Error('rest_api_error', __('Failed to connect to JENSi AI API.'), ['status' => 500]);
+                return rest_ensure_response($response);
             }
             $code = wp_remote_retrieve_response_code($api_response);
             $body = wp_remote_retrieve_body($api_response);
@@ -164,6 +178,34 @@ class DataSourceController extends \WP_REST_Controller
             }
         }
         return rest_ensure_response($response);
+    }
+
+    /**
+     * Create data source.
+     *
+     * @param \WP_REST_Request $request Full details about the request.
+     *
+     * @return \WP_REST_Response|\WP_Error Response object on success, or WP_Error object on failure.
+     */
+    public function create_data_source($request)
+    {
+        // attempt to parse the json parameter
+        $params = $request->get_params();
+        $nonce = wp_create_nonce('wp_rest');
+
+        // update correct response
+        $response = [
+            'data' => null,
+            'success' => false,
+            'nonce' => $nonce,
+        ];
+
+        if (!$this->token) {
+            $response['data'] = 'No JENSi AI API token configured.';
+            return new \WP_Error('rest_api_error', __('No JENSi AI API token configured.'), ['status' => 500]);
+        }
+
+        // @TODO....
     }
 
     /**
@@ -199,9 +241,29 @@ class DataSourceController extends \WP_REST_Controller
     {
         switch ($route) {
             case 'get':
-                return [];
+                return [
+                    'search' => [
+                        'required' => false,
+                        'validate_callback' => function ($param, $request, $key) {
+                            return !empty($param);
+                        },
+                    ],
+                ];
             case 'create':
-                return [];
+                return [
+                    'name' => [
+                        'required' => true,
+                        'validate_callback' => function ($param, $request, $key) {
+                            return !empty($param);
+                        },
+                    ],
+                    'description' => [
+                        'required' => false,
+                        'validate_callback' => function ($param, $request, $key) {
+                            return !empty($param);
+                        },
+                    ],
+                ];
         }
         return [];
     }
