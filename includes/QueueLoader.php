@@ -24,11 +24,11 @@ class QueueLoader
     private $table_name;
 
     /**
-     * The application settings.
+     * The JENSi AI API base URL.
      *
-     * @var array
+     * @var string
      */
-    private $settings;
+    private $base_api;
 
     /**
      * Initialize this class.
@@ -38,8 +38,10 @@ class QueueLoader
         $this->prefix = \JensiAI\Main::PREFIX;
         $this->table_name = $this->prefix . '_jobs';
 
-        // Fetch the settings
-        $this->settings = (new SettingController())->get_settings_raw();
+        // Get the base API url
+        $this->base_api = wp_get_environment_type() === 'local'
+            ? 'https://jensi-ai.test/api'
+            : 'https://ai.jensi.com/api';
     }
 
     /**
@@ -104,24 +106,103 @@ class QueueLoader
             // Flag item as processed (so it doesn't get run again)
             $wpdb->update($queue_table, ['processed' => true], ['id' => $result->id]);
             try {
-                
+                // Load settings
+                $settings = (new SettingController())->get_settings_raw();
 
-                // @TODO: Implement the logic to process the job.
-                dump([
-                    'message' => 'TEST QUEUE WORKING: not yet implemented...',
-                    'job' => $result
+                // Make sure we have the required minimum for connecting to the API
+                if (!$settings['jensi_ai_api_key']) {
+                    $wpdb->update($queue_table, [
+                        'failed' => true,
+                        'errors' => json_encode([
+                            'message' => 'No API key configured',
+                            'trace' => '',
+                            'file' => __CLASS__,
+                            'line' => null
+                        ])
+                    ], ['id' => $result->id]);
+                }
+                if (!$settings['jensi_ai_data_source']) {
+                    $wpdb->update($queue_table, [
+                        'failed' => true,
+                        'errors' => json_encode([
+                            'message' => 'No data source configured',
+                            'trace' => '',
+                            'file' => __CLASS__,
+                            'line' => null
+                        ])
+                    ], ['id' => $result->id]);
+                }
+
+                // Process the job
+                $url = $this->base_api . '/data-sources/data';
+                $body = [
+                    'source_id' => $settings['jensi_ai_data_source'] ?? null,
+                    'url' => get_permalink($result->post_id),
+                    'data' => $result->content,
+                    'metadata' => [
+                        // Any custom data...
+                        'post_id' => $result->post_id,
+                        'type' => $result->type,
+                        'name' => $result->name,
+                    ],
+                    'attachments' => [], // Future use, include post attachments?
+                ];
+                $api_response = wp_remote_post($url, [
+                    'headers' => [
+                        'Accept' => 'application/json',
+                        'Content-Type' => 'application/json',
+                        'Authorization' => 'Bearer ' . $settings['jensi_ai_api_key'],
+                    ],
+                    'timeout' => 60, // give it a bit longer to process
+                    'body' => json_encode($body),
+                    'sslverify' => wp_get_environment_type() !== 'local',
                 ]);
+                if (is_wp_error($api_response)) {
+                    $wpdb->update($queue_table, [
+                        'failed' => true,
+                        'errors' => json_encode([
+                            'message' => $api_response->get_error_message(),
+                            'trace' => '',
+                            'file' => __CLASS__,
+                            'line' => null
+                        ])
+                    ], ['id' => $result->id]);
+                }
+                $code = wp_remote_retrieve_response_code($api_response);
+                $body = wp_remote_retrieve_body($api_response);
+                $data = json_decode($body, true);
+                if ($code !== 200) {
+                    $wpdb->update($queue_table, [
+                        'failed' => true,
+                        'errors' => json_encode([
+                            'message' => $data['message'] ?? __('JENSi AI API returned an error.'),
+                            'trace' => '',
+                            'file' => __CLASS__,
+                            'line' => null
+                        ])
+                    ], ['id' => $result->id]);
+                    return false;
+                } else {
+                    if (json_last_error() !== JSON_ERROR_NONE) {
+                        $wpdb->update($queue_table, [
+                            'failed' => true,
+                            'errors' => json_encode([
+                                'message' => 'Failed to parse JENSi AI API response: ' . json_last_error_msg(),
+                                'trace' => '',
+                                'file' => __CLASS__,
+                                'line' => null
+                            ])
+                        ], ['id' => $result->id]);
+                        return false;
+                    }
 
-                // If here, assume the queue job didn't complete successfully
-                $wpdb->update($queue_table, [
-                    'failed' => true,
-                    'errors' => json_encode([
-                        'message' => 'TEST QUEUE WORKING: not yet implemented...',
-                        'trace' => '',
-                        'file' => __CLASS__,
-                        'line' => null
-                    ])
-                ], ['id' => $result->id]);
+                    // Mark job as successful
+                    $wpdb->update($queue_table, [
+                        'failed' => false,
+                        'errors' => null
+                    ], ['id' => $result->id]);
+                    return true;
+                }
             } catch (\Exception $e) {
                 $wpdb->update($queue_table, [
                     'failed' => true,
