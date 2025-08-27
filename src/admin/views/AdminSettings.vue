@@ -418,7 +418,7 @@ const doSaveDataSource = async () => {
   } catch (err) {
     if (err?.code !== 'ERR_CANCELED') {
       console.log(err)
-      const text = err?.response?.data?.error || 'Server responded with an error'
+      const text = err?.response?.data?.message || 'Server responded with an error'
       swal.fire({
         icon: 'error',
         title: 'Error',
@@ -472,7 +472,7 @@ const doSave = async () => {
     }
   } catch (err) {
     if (err?.code !== 'ERR_CANCELED') {
-      const text = err?.response?.data?.error || 'Server responded with an error'
+      const text = err?.response?.data?.message || 'Server responded with an error'
       swal.fire({
         icon: 'error',
         title: 'Error',
@@ -559,7 +559,7 @@ const doLoad = async () => {
       }
     } catch (err) {
       if (err?.code !== 'ERR_CANCELED') {
-        const text = err?.response?.data?.error || 'Server responded with an error'
+        const text = err?.response?.data?.message || 'Server responded with an error'
         swal.fire({
           icon: 'error',
           title: 'Error',
