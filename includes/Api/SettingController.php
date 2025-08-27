@@ -77,7 +77,7 @@ class SettingController extends \WP_REST_Controller
      */
     public function get_endpoints()
     {
-        // example: jensi-ai/v1/settings
+        // example: /wp-json/jensi_ai/v1/settings
         return esc_url_raw(
             // GET/POST
             rest_url($this->namespace . '/' . $this->rest_base)
@@ -242,7 +242,7 @@ class SettingController extends \WP_REST_Controller
      * @param array $details
      * @param array $sanitized_settings
      * @param string $id
-     * @param object $value
+     * @param object|string $value
      * @return void
      */
     private function sanitize_value($details, &$sanitized_settings, $id, $value)
@@ -272,9 +272,11 @@ class SettingController extends \WP_REST_Controller
                     $sanitized_value = str_replace('&gt;', '>', $sanitized_value);
                     break;
                 case 'text':
+                case 'password':
                 case 'slider':
                 case 'number':
                 case 'color':
+                case 'config':
                 case 'dropdown':
                     $sanitized_value = trim(sanitize_text_field($value));
                     break;

@@ -102,6 +102,7 @@ class AdminLoader
         $settingController = new Api\SettingController();
         $queueController = new Api\QueueController();
         $configController = new Api\ConfigController();
+        $dataSourceController = new Api\DataSourceController();
         $syncController = new Api\SyncController();
 
         // Get the post types
@@ -129,7 +130,7 @@ class AdminLoader
                 if (in_array($taxonomy, ['post_format', 'nav_menu', 'link_category', 'post_tag'])) {
                     continue;
                 }
-            
+
                 // Ensure we only add each taxonomy once
                 if (!in_array($taxonomy, $taxonomies[$postType]['_taxonomies'])) {
                     $taxonomies[$postType]['_taxonomies'][] = $taxonomy;
@@ -162,6 +163,7 @@ class AdminLoader
                     'settings' => $settingController->get_endpoints(),
                     'queue' => $queueController->get_endpoints(),
                     'configs' => $configController->get_endpoints(),
+                    'data_sources' => $dataSourceController->get_endpoints(),
                     'sync' => $syncController->get_endpoints(),
                 ],
                 'nonce' => wp_create_nonce('wp_rest'),

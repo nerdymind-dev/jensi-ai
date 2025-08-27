@@ -114,7 +114,7 @@ class ConfigController extends \WP_REST_Controller
      */
     public function get_endpoints()
     {
-        // example: vwr-live-catalog/v1/configs
+        // example: jensi-ai/v1/configs
         return [
             'all' => esc_url_raw(
                 // GET

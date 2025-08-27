@@ -22,6 +22,11 @@ Axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest'
 
 const CancelSource = axios.CancelToken.source();
 Axios.interceptors.request.use((config: any) => {
+  // only modify if calling the WP API
+  if (!config.url.includes('/wp-json/')) {
+    return config
+  }
+
   progresses.push(useProgress().start())
 
   // set nonce
@@ -36,7 +41,7 @@ Axios.interceptors.request.use((config: any) => {
 Axios.interceptors.response.use((response: AxiosResponse) => {
   progresses.pop()?.finish()
 
-  // replace old nonce
+  // replace old nonce, if sent back
   if (response.headers['X-WP-Nonce']) {
     window.$appConfig.nonce = response.headers['X-WP-Nonce']
   }
