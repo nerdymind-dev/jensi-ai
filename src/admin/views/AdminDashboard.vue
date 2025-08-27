@@ -27,7 +27,7 @@
                       <div class="ml-3">
                         <p class="text-sm text-blue-700">
                           Configurations are used to automate content syncs. Based on the settings, when a new post is created or updated, the sync will be triggered.
-                          If multiple configuration overlap, only the most recent <strong>enabled</strong> one will be used.
+                          If multiple configuration overlap, only the most recent <strong>enabled</strong> one will be used to prevent double syncing.
                         </p>
                       </div>
                     </div>
@@ -366,7 +366,12 @@ const getTaxonomy = (conf) => {
   }
   
   // Convert to uppercase first letter
-  return conf.taxonomy.charAt(0).toUpperCase() + conf.taxonomy.slice(1)
+  let titleCase = conf.taxonomy.charAt(0).toUpperCase() + conf.taxonomy.slice(1);
+
+  // Replace underscores with spaces
+  titleCase = titleCase.replace(/_/g, ' ');
+
+  return titleCase;
 }
 
 const getTerms = (conf) => {
