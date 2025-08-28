@@ -96,127 +96,138 @@ class QueueLoader
         global $wpdb;
         $queue_table = $wpdb->prefix . $this->table_name;
         $statement = "SELECT * FROM $queue_table";
+        if (is_numeric($id)) {
+            $id = intval($id);
+            $id = "= $id";
+        } elseif (is_array($id)) {
+            $id = array_map('intval', $id);
+            $id = implode(',', $id);
+            $id = "IN ($id)";
+        } else {
+            $id = null;
+        }
         $where = $id
-            ? " WHERE `processed` = 0 AND `id` = $id"
+            ? " WHERE `processed` = 0 AND `id` $id"
             : " WHERE `processed` = 0";
         $orderBy = " ORDER BY `created` ASC";
-        $result = $wpdb->get_row($statement . $where . $orderBy);
+        $results = $wpdb->get_results($statement . $where . $orderBy);
+        if ($results) {
+            foreach ($results as $result) {
+                // Flag item as processed (so it doesn't get run again)
+                $wpdb->update($queue_table, ['processed' => true], ['id' => $result->id]);
+                try {
+                    // Load settings
+                    $settings = (new SettingController())->get_settings_raw();
 
-        if ($result) {
-            // Flag item as processed (so it doesn't get run again)
-            $wpdb->update($queue_table, ['processed' => true], ['id' => $result->id]);
-            try {
-                // Load settings
-                $settings = (new SettingController())->get_settings_raw();
-
-                // Make sure we have the required minimum for connecting to the API
-                if (!$settings['jensi_ai_api_key']) {
-                    $wpdb->update($queue_table, [
-                        'failed' => true,
-                        'errors' => json_encode([
-                            'message' => 'No API key configured',
-                            'trace' => '',
-                            'file' => __CLASS__,
-                            'line' => null
-                        ])
-                    ], ['id' => $result->id]);
-                }
-                if (!$settings['jensi_ai_data_source']) {
-                    $wpdb->update($queue_table, [
-                        'failed' => true,
-                        'errors' => json_encode([
-                            'message' => 'No data source configured',
-                            'trace' => '',
-                            'file' => __CLASS__,
-                            'line' => null
-                        ])
-                    ], ['id' => $result->id]);
-                }
-
-                // Process the job
-                $url = $this->base_api . '/data-sources/data';
-                $body = [
-                    'agent_id' => $settings['jensi_ai_agent'] ?? null,
-                    'source_id' => $settings['jensi_ai_data_source'] ?? null,
-                    'url' => get_permalink($result->post_id),
-                    'data' => $result->content,
-                    'metadata' => [
-                        // Any custom data...
-                        'post_id' => $result->post_id,
-                        'type' => $result->type,
-                        'name' => $result->name,
-                    ],
-                    'attachments' => [], // Future use, include post attachments?
-                ];
-                $api_response = wp_remote_post($url, [
-                    'headers' => [
-                        'Accept' => 'application/json',
-                        'Content-Type' => 'application/json',
-                        'Authorization' => 'Bearer ' . $settings['jensi_ai_api_key'],
-                    ],
-                    'timeout' => 60, // give it a bit longer to process
-                    'body' => json_encode($body),
-                    'sslverify' => wp_get_environment_type() !== 'local',
-                ]);
-                if (is_wp_error($api_response)) {
-                    $wpdb->update($queue_table, [
-                        'failed' => true,
-                        'errors' => json_encode([
-                            'message' => $api_response->get_error_message(),
-                            'trace' => '',
-                            'file' => __CLASS__,
-                            'line' => null
-                        ])
-                    ], ['id' => $result->id]);
-                }
-                $code = wp_remote_retrieve_response_code($api_response);
-                $body = wp_remote_retrieve_body($api_response);
-                $data = json_decode($body, true);
-                if ($code !== 200) {
-                    $wpdb->update($queue_table, [
-                        'failed' => true,
-                        'errors' => json_encode([
-                            'message' => $data['message'] ?? __('JENSi AI API returned an error.'),
-                            'trace' => '',
-                            'file' => __CLASS__,
-                            'line' => null
-                        ])
-                    ], ['id' => $result->id]);
-                    return false;
-                } else {
-                    if (json_last_error() !== JSON_ERROR_NONE) {
+                    // Make sure we have the required minimum for connecting to the API
+                    if (!$settings['jensi_ai_api_key']) {
                         $wpdb->update($queue_table, [
                             'failed' => true,
                             'errors' => json_encode([
-                                'message' => 'Failed to parse JENSi AI API response: ' . json_last_error_msg(),
+                                'message' => 'No API key configured',
+                                'trace' => '',
+                                'file' => __CLASS__,
+                                'line' => null
+                            ])
+                        ], ['id' => $result->id]);
+                    }
+                    if (!$settings['jensi_ai_data_source']) {
+                        $wpdb->update($queue_table, [
+                            'failed' => true,
+                            'errors' => json_encode([
+                                'message' => 'No data source configured',
+                                'trace' => '',
+                                'file' => __CLASS__,
+                                'line' => null
+                            ])
+                        ], ['id' => $result->id]);
+                    }
+
+                    // Process the job
+                    $url = $this->base_api . '/data-sources/data';
+                    $body = [
+                        'agent_id' => $settings['jensi_ai_agent'] ?? null,
+                        'source_id' => $settings['jensi_ai_data_source'] ?? null,
+                        'url' => get_permalink($result->post_id),
+                        'data' => $result->content,
+                        'metadata' => [
+                            // Any custom data...
+                            'post_id' => $result->post_id,
+                            'type' => $result->type,
+                            'name' => $result->name,
+                        ],
+                        'attachments' => [], // Future use, include post attachments?
+                    ];
+                    $api_response = wp_remote_post($url, [
+                        'headers' => [
+                            'Accept' => 'application/json',
+                            'Content-Type' => 'application/json',
+                            'Authorization' => 'Bearer ' . $settings['jensi_ai_api_key'],
+                        ],
+                        'timeout' => 60, // give it a bit longer to process
+                        'body' => json_encode($body),
+                        'sslverify' => wp_get_environment_type() !== 'local',
+                    ]);
+                    if (is_wp_error($api_response)) {
+                        $wpdb->update($queue_table, [
+                            'failed' => true,
+                            'errors' => json_encode([
+                                'message' => $api_response->get_error_message(),
+                                'trace' => '',
+                                'file' => __CLASS__,
+                                'line' => null
+                            ])
+                        ], ['id' => $result->id]);
+                    }
+                    $code = wp_remote_retrieve_response_code($api_response);
+                    $body = wp_remote_retrieve_body($api_response);
+                    $data = json_decode($body, true);
+                    if ($code !== 200) {
+                        $wpdb->update($queue_table, [
+                            'failed' => true,
+                            'errors' => json_encode([
+                                'message' => $data['message'] ?? __('JENSi AI API returned an error.'),
                                 'trace' => '',
                                 'file' => __CLASS__,
                                 'line' => null
                             ])
                         ], ['id' => $result->id]);
                         return false;
-                    }
+                    } else {
+                        if (json_last_error() !== JSON_ERROR_NONE) {
+                            $wpdb->update($queue_table, [
+                                'failed' => true,
+                                'errors' => json_encode([
+                                    'message' => 'Failed to parse JENSi AI API response: ' . json_last_error_msg(),
+                                    'trace' => '',
+                                    'file' => __CLASS__,
+                                    'line' => null
+                                ])
+                            ], ['id' => $result->id]);
+                            return false;
+                        }
 
-                    // Mark job as successful
+                        // Mark job as successful
+                        $wpdb->update($queue_table, [
+                            'failed' => false,
+                            'meta' => [
+                                'message' => $data['message'] ?? 'N/A'
+                            ],
+                            'errors' => null
+                        ], ['id' => $result->id]);
+                        return true;
+                    }
+                } catch (\Exception $e) {
                     $wpdb->update($queue_table, [
-                        'failed' => false,
-                        'meta' => [
-                            'message' => $data['message'] ?? 'N/A'
-                        ],
-                        'errors' => null
+                        'failed' => true,
+                        'errors' => json_encode([
+                            'message' => $e->getMessage(),
+                            'trace' => $e->getTraceAsString(),
+                            'file' => $e->getFile(),
+                            'line' => $e->getLine()
+                        ])
                     ], ['id' => $result->id]);
-                    return true;
                 }
-            } catch (\Exception $e) {
-                $wpdb->update($queue_table, [
-                    'failed' => true,
-                    'errors' => json_encode([
-                        'message' => $e->getMessage(),
-                        'trace' => $e->getTraceAsString(),
-                        'file' => $e->getFile(),
-                        'line' => $e->getLine()
-                    ])
-                ], ['id' => $result->id]);
             }
         }
         return false;

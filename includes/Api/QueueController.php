@@ -322,6 +322,8 @@ class QueueController extends \WP_REST_Controller
      */
     public function destroy_job(\WP_REST_Request $request)
     {
+        global $wpdb;
+
         // attempt to parse the json parameter
         $params = $request->get_json_params();
         $nonce = wp_create_nonce('wp_rest');
@@ -335,27 +337,20 @@ class QueueController extends \WP_REST_Controller
 
         if (isset($params)) {
             $id = $params['id'] ?? null;
-            $result = $id ? $this->get_job_object($id) : null;
-            if ($result) {
-                global $wpdb;
-                // Destroy the object
-                $result = $wpdb->delete($wpdb->prefix . $this->table_name, ['id' => $result->id]);
-                $response['success'] = $result !== false;
+            if (is_array($id)) {
+                $ids = implode(',', array_map('absint', $id));
+                $wpdb->query("DELETE FROM {$wpdb->prefix}{$this->table_name} WHERE ID IN($ids)");
+                $response['success'] = true;
+            } else {
+                $result = $id ? $this->get_job_object($id) : null;
+                if ($result) {
+                    // Destroy the object
+                    $result = $wpdb->delete($wpdb->prefix . $this->table_name, ['id' => $result->id]);
+                    $response['success'] = $result !== false;
+                }
             }
         }
-
         return rest_ensure_response($response);
-    }
-
-    /**
-     * @param $persona_id
-     * @return void
-     */
-    public function destroy_jobs_for_persona($persona_id)
-    {
-        global $wpdb;
-        $jobs_table = $wpdb->prefix . $this->table_name;
-        $wpdb->query("DELETE FROM $jobs_table WHERE `persona_id` = $persona_id");
     }
 
     /**
@@ -371,7 +366,7 @@ class QueueController extends \WP_REST_Controller
                 return [
                     'id' => [
                         'validate_callback' => function($param, $request, $key) {
-                            return is_numeric($param);
+                            return is_numeric($param) || is_array($param);
                         },
                         'required' => true
                     ]

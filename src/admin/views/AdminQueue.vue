@@ -13,6 +13,23 @@
               Recently queued items
             </p>
           </div>
+
+          <div v-if="bulkSelectedIds.length > 0" class="flex items-center gap-2 mr-2">
+            <!-- Bulk action bar -->
+            <t-button 
+            variant="danger" 
+            @click="doBulkDelete" 
+            :disabled="isLoading">
+              Delete Selected
+            </t-button>
+            <t-button
+             variant="primary" 
+             @click="doBulkProcess" 
+            :disabled="isLoading">
+              Process Selected
+            </t-button>
+          </div>
+
           <t-button
             variant="secondary"
             class="mr-2"
@@ -34,18 +51,15 @@
           <div class="overflow-x-auto">
             <div class="inline-block min-w-full py-2 align-middle">
               <div class="bg-white overflow-hidden shadow ring-1 ring-black ring-opacity-5 sm:rounded-lg relative">
-
                 <div v-if="isLoading" class="absolute transform rounded-md z-10 w-full h-full flex items-center justify-center bg-gray-200 bg-opacity-60">
                   <loader :loading="isLoading" />
                 </div>
-
                 <template v-if="queueTable && queueTable.rows.length">
-
                   <table class="min-w-full divide-y divide-gray-300">
                     <thead class="bg-gray-50">
                     <tr>
                       <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">
-                        <span class="sr-only">Details</span>
+                        <t-checkbox :checked="allRowsSelected" @change="toggleSelectAllRows" aria-label="Select all" />
                       </th>
                       <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Post</th>
                       <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Type</th>
@@ -57,17 +71,18 @@
                       </th>
                     </tr>
                     </thead>
-                    <tbody v-if="Array.isArray(queueTable.rows) && queueTable.rows.length" class="divide-y divide-gray-200 bg-white">
-                    <template v-for="(row, index) in queueTable.rows" :key="`queue_row_${index}`">
-                      <tr :class="{'bg-red-50': row.failed === '1'}">
-                        <td class="whitespace-normal py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
-                          <t-button v-if="row.processed === '1' && (row.meta || row.errors)" type="button" class="flex gap-1" variant="link" @click="selectRow(row)">
-                            Details
-                            <svg class="w-5 h-5" :class="{'rotate-180': isRowSelected(row)}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                              <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
-                            </svg>
-                          </t-button>
-                        </td>
+                  <tbody v-if="Array.isArray(queueTable.rows) && queueTable.rows.length" class="divide-y divide-gray-200 bg-white">
+                  <template v-for="(row, index) in queueTable.rows" :key="`queue_row_${index}`">
+                    <tr :class="{'bg-red-50': row.failed === '1'}">
+                      <td class="whitespace-normal py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
+                        <t-checkbox :checked="isRowBulkSelected(row)" @change="toggleBulkSelectRow(row)" aria-label="Select row" />
+                        <t-button v-if="row.processed === '1' && (row.meta || row.errors)" type="button" class="flex gap-1 ml-2" variant="link" @click="selectRow(row)">
+                          Details
+                          <svg class="w-5 h-5" :class="{'rotate-180': isRowSelected(row)}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
+                          </svg>
+                        </t-button>
+                      </td>
                         <td class="whitespace-normal w-80 px-3 py-4 text-sm font-medium text-gray-900">
                           <a :href="`/wp-admin/post.php?post=${row.post_id}&action=edit`" target="_blank"
                              class="hover:text-blue-500">
@@ -255,7 +270,145 @@ import moment from 'moment'
 
 import Breadcrumbs from '~src/shared/components/BreadcrumbNavigation.vue'
 import Loader from '~src/shared/components/LoadingIndicator.vue'
-import {TButton} from '@variantjs/vue'
+import {TButton, TCheckbox} from '@variantjs/vue'
+
+// Bulk select state
+const bulkSelected = ref({})
+const bulkSelectedIds = computed(() => Object.keys(bulkSelected.value).filter(id => bulkSelected.value[id]))
+const allRowsSelected = computed(() => {
+  if (!queueTable.value.rows || !queueTable.value.rows.length) return false
+  return queueTable.value.rows.every(row => bulkSelected.value[row.id])
+})
+
+function toggleBulkSelectRow(row) {
+  bulkSelected.value[row.id] = !bulkSelected.value[row.id]
+}
+
+function isRowBulkSelected(row) {
+  return !!bulkSelected.value[row.id]
+}
+
+function toggleSelectAllRows() {
+  if (allRowsSelected.value) {
+    // Unselect all
+    queueTable.value.rows.forEach(row => { bulkSelected.value[row.id] = false })
+  } else {
+    queueTable.value.rows.forEach(row => { bulkSelected.value[row.id] = true })
+  }
+}
+
+function clearBulkSelection() {
+  bulkSelected.value = {}
+}
+
+async function doBulkDelete() {
+  if (!bulkSelectedIds.value.length) return
+  const selectedRows = queueTable.value.rows.filter(row => bulkSelected.value[row.id])
+  swal.fire({
+    icon: 'warning',
+    title: 'Are you sure?',
+    text: `Delete ${bulkSelectedIds.value.length} job(s)? This action cannot be undone.`,
+    showCancelButton: true,
+    confirmButtonText: 'Delete',
+  }).then(async (result) => {
+    if (result.isConfirmed) {
+      isLoading.value = true
+      try {
+        if (config.settings.enable_debug_messages) {
+          console.log(':: DEBUG :: bulk deleting jobs', bulkSelectedIds.value)
+        }
+        const params = { id: bulkSelectedIds.value }
+        const rst = await axios.delete(endpoints.value.queue.job, { data: { ...params } })
+        if (config.settings.enable_debug_messages) {
+          console.log(':: DEBUG - Bulk Delete Response ::', rst)
+        }
+        const { success = null } = rst?.data
+        if (success === true && rst.status === 200) {
+          swal.fire({
+            position: 'top-end',
+            icon: 'success',
+            title: 'Selected jobs deleted successfully',
+            showConfirmButton: false,
+            timer: 1500
+          })
+          clearBulkSelection()
+          await getTableData(queueTable.value.first_page_url)
+        } else {
+          swal.fire({
+            position: 'top-end',
+            icon: 'error',
+            title: 'Unable to delete selected jobs, please try again later',
+            showConfirmButton: false,
+            timer: 1500
+          })
+        }
+      } catch (err) {
+        if (config.settings.enable_debug_messages) {
+          console.error(':: DEBUG - Bulk Delete Error ::', err)
+        }
+        if (err?.code !== 'ERR_CANCELED') {
+          const text = err?.response?.data?.error || 'Server responded with an error'
+          swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text,
+            footer: '<div class="overflow-footer w-full">' + err.message + '</div>'
+          })
+        }
+      } finally {
+        isLoading.value = false
+      }
+    }
+  })
+}
+
+async function doBulkProcess() {
+  if (!bulkSelectedIds.value.length) return
+  swal.fire({
+    icon: 'warning',
+    title: 'Are you sure?',
+    text: `Process ${bulkSelectedIds.value.length} job(s) now?`,
+    showCancelButton: true,
+    confirmButtonText: 'Process',
+  }).then(async (result) => {
+    if (result.isConfirmed) {
+      isLoading.value = true
+      try {
+        if (config.settings.enable_debug_messages) {
+          console.log(':: DEBUG :: bulk processing jobs', bulkSelectedIds.value)
+        }
+        // We'll process jobs one by one, sequentially
+        for (const id of bulkSelectedIds.value) {
+          await axios.post(endpoints.value.queue.process, { id })
+        }
+        swal.fire({
+          position: 'top-end',
+          icon: 'success',
+          title: 'Selected jobs processing started',
+          showConfirmButton: false,
+          timer: 1500
+        })
+        clearBulkSelection()
+        await getTableData(queueTable.value.first_page_url)
+      } catch (err) {
+        if (config.settings.enable_debug_messages) {
+          console.error(':: DEBUG - Bulk Process Error ::', err)
+        }
+        if (err?.code !== 'ERR_CANCELED') {
+          const text = err?.response?.data?.error || 'Server responded with an error'
+          swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text,
+            footer: '<div class="overflow-footer w-full">' + err.message + '</div>'
+          })
+        }
+      } finally {
+        isLoading.value = false
+      }
+    }
+  })
+}
 
 const win = inject('win')
 const swal = inject('swal')
@@ -326,6 +479,7 @@ const getTableData = async (link) => {
 
         // Update the uploaded files list
         queueTable.value = data.queueTable
+        clearBulkSelection()
       }
     } else {
       swal.fire({
