@@ -136,6 +136,7 @@ class QueueLoader
                 // Process the job
                 $url = $this->base_api . '/data-sources/data';
                 $body = [
+                    'agent_id' => $settings['jensi_ai_agent'] ?? null,
                     'source_id' => $settings['jensi_ai_data_source'] ?? null,
                     'url' => get_permalink($result->post_id),
                     'data' => $result->content,
@@ -199,6 +200,9 @@ class QueueLoader
                     // Mark job as successful
                     $wpdb->update($queue_table, [
                         'failed' => false,
+                        'meta' => [
+                            'message' => $data['message'] ?? 'N/A'
+                        ],
                         'errors' => null
                     ], ['id' => $result->id]);
                     return true;

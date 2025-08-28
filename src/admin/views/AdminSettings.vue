@@ -141,8 +141,26 @@
                             </div>
                           </div>
                         </div>
-                        <div v-else-if="item.type === 'config'" class="mx-3 mt-8 md:mt-6">
+                        <div v-else-if="item.type === 'config' && item.id === 'jensi_ai_agent'" class="mx-3 mt-8 md:mt-6">
                           <template v-if="settings.jensi_ai_api_key">
+                            <t-button
+                              variant="secondary"
+                              @click="showAgentModal = true"
+                            >
+                              {{ selectedAgent ? 'Change' : 'Select' }} Agent
+                            </t-button>
+                            <div v-if="selectedAgent" class="mt-3 p-3 border border-gray-200 rounded bg-gray-50">
+                              <p><strong>Name:</strong> {{ selectedAgent.name }}</p>
+                              <p v-if="selectedAgent.description"><strong>Description:</strong> {{ selectedAgent.description }}</p>
+                              <p><strong>ID:</strong> {{ getId(selectedAgent) }}</p>
+                            </div>
+                          </template>
+                          <template v-else>
+                            <p class="text-red-400">You must set your API key before selecting an agent.</p> 
+                          </template>
+                        </div>
+                        <div v-else-if="item.type === 'config' && item.id === 'jensi_ai_data_source'" class="mx-3 mt-8 md:mt-6">
+                          <template v-if="settings.jensi_ai_api_key && settings.jensi_ai_agent">
                             <t-button
                               variant="secondary"
                               @click="showDSModal = true"
@@ -152,11 +170,11 @@
                             <div v-if="selectedDataSource" class="mt-3 p-3 border border-gray-200 rounded bg-gray-50">
                               <p><strong>Name:</strong> {{ selectedDataSource.name }}</p>
                               <p v-if="selectedDataSource.description"><strong>Description:</strong> {{ selectedDataSource.description }}</p>
-                              <p><strong>ID:</strong> {{ selectedDataSource.id }}</p>
+                              <p><strong>ID:</strong> {{ getId(selectedDataSource) }}</p>
                             </div>
                           </template>
                           <template v-else>
-                            <p class="text-red-400">You must set your API key before selecting a data source.</p> 
+                            <p class="text-red-400">You must set your API key and select an agent before selecting a data source.</p> 
                           </template>
                         </div>
                         <div v-else>
@@ -178,16 +196,63 @@
       </div>
       
       <modal 
+        :show="showAgentModal"
+        type="info"
+        :custom-icon="true"
+        @close="showAgentModal = false">
+        <template #icon>
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
+            <path fill-rule="evenodd" d="M8.25 6.75a3.75 3.75 0 1 1 7.5 0 3.75 3.75 0 0 1-7.5 0ZM15.75 9.75a3 3 0 1 1 6 0 3 3 0 0 1-6 0ZM2.25 9.75a3 3 0 1 1 6 0 3 3 0 0 1-6 0ZM6.31 15.117A6.745 6.745 0 0 1 12 12a6.745 6.745 0 0 1 6.709 7.498.75.75 0 0 1-.372.568A12.696 12.696 0 0 1 12 21.75c-2.305 0-4.47-.612-6.337-1.684a.75.75 0 0 1-.372-.568 6.787 6.787 0 0 1 1.019-4.38Z" clip-rule="evenodd" />
+            <path d="M5.082 14.254a8.287 8.287 0 0 0-1.308 5.135 9.687 9.687 0 0 1-1.764-.44l-.115-.04a.563.563 0 0 1-.373-.487l-.01-.121a3.75 3.75 0 0 1 3.57-4.047ZM20.226 19.389a8.287 8.287 0 0 0-1.308-5.135 3.75 3.75 0 0 1 3.57 4.047l-.01.121a.563.563 0 0 1-.373.486l-.115.04c-.567.2-1.156.349-1.764.441Z" />
+          </svg>
+        </template>
+        <template #title>
+          JENSi AI Agents
+        </template>
+        <template #content>
+          <div class="w-full">
+            <div class="flex flex-col gap-3">
+              <div class="md:grid grid-cols-5">
+                <label
+                  class="col-span-2 block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4">
+                  Select an agent
+                  <sup class="text-red-400">*</sup>
+                </label>
+                <t-rich-select
+                  class="col-span-3"
+                  v-model="settings.jensi_ai_agent"
+                  :fetch-options="fetchAgentOptions"
+                  valueAttribute="id"
+                  textAttribute="name"
+                  :options="currentAgents"
+                />
+              </div>
+            </div>
+          </div>
+        </template>
+        <template #footer>
+          <t-button variant="secondary" @click.native="showAgentModal = false">
+            Nevermind
+          </t-button>
+          <t-button
+            class="ml-2" @click.native="(e) => doSaveAgent()"
+            :class="{ 'opacity-25': !agentCantSubmit || isSubmitting }"
+            :disabled="!agentCantSubmit || isSubmitting">
+            Save
+          </t-button>
+        </template>
+      </modal>
+
+      <modal 
         :show="showDSModal"
         type="info"
         :custom-icon="true"
         @close="showDSModal = false">
         <template #icon>
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
-            <path d="M17 2.75a.75.75 0 00-1.5 0v5.5a.75.75 0 001.5 0v-5.5zM17 15.75a.75.75 0 00-1.5 0v1.5a.75.75 0 001.5 0v-1.5zM3.75 15a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5a.75.75 0 01.75-.75zM4.5 2.75a.75.75 0 00-1.5 0v5.5a.75.75 0 001.5 0v-5.5zM10 11a.75.75 0 01.75.75v5.5a.75.75 0 01-1.5 0v-5.5A.75.75 0 0110 11zM10.75 2.75a.75.75 0 00-1.5 0v1.5a.75.75 0 001.5 0v-1.5zM10 6a2 2 0 100 4 2 2 0 000-4zM3.75 10a2 2 0 100 4 2 2 0 000-4zM16.25 10a2 2 0 100 4 2 2 0 000-4z" />
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
+            <path d="M5.566 4.657A4.505 4.505 0 0 1 6.75 4.5h10.5c.41 0 .806.055 1.183.157A3 3 0 0 0 15.75 3h-7.5a3 3 0 0 0-2.684 1.657ZM2.25 12a3 3 0 0 1 3-3h13.5a3 3 0 0 1 3 3v6a3 3 0 0 1-3 3H5.25a3 3 0 0 1-3-3v-6ZM5.25 7.5c-.41 0-.806.055-1.184.157A3 3 0 0 1 6.75 6h10.5a3 3 0 0 1 2.683 1.657A4.505 4.505 0 0 0 18.75 7.5H5.25Z" />
           </svg>
         </template>
-        >
         <template #title>
           JENSi AI Data Source
         </template>
@@ -237,10 +302,10 @@
                   <t-rich-select
                     class="col-span-3"
                     v-model="dataSourceConfig.config_id"
-                    :fetch-options="fetchOptions"
+                    :fetch-options="fetchDsOptions"
                     valueAttribute="id"
                     textAttribute="name"
-                    :options="currentDateSources"
+                    :options="currentDataSources"
                   />
                 </div>
               </template>
@@ -253,8 +318,8 @@
           </t-button>
           <t-button
             class="ml-2" @click.native="(e) => doSaveDataSource()"
-            :class="{ 'opacity-25': !canSubmit || isSubmitting }"
-            :disabled="!canSubmit || isSubmitting">
+            :class="{ 'opacity-25': !dsCanSubmit || isSubmitting }"
+            :disabled="!dsCanSubmit || isSubmitting">
             Save
           </t-button>
         </template>
@@ -302,9 +367,13 @@ const endpoints = ref({ settings: '', data_sources: '' })
 const config = inject('pluginConfig')
 const toggledPasswordFields = ref({})
 
+const showAgentModal = ref(false)
+const selectedAgent = ref(null)
+const currentAgents = ref([])
+
 const showDSModal = ref(false)
 const selectedDataSource = ref(null)
-const currentDateSources = ref([])
+const currentDataSources = ref([])
 const dataSourceConfig = ref({ ...defaultDsConfig })
 
 const hasChanged = computed(() => {
@@ -316,7 +385,17 @@ const hasChanged = computed(() => {
   return (a === b)
 })
 
-const canSubmit = computed(() => {
+const agentCantSubmit = computed(() => {
+  if (isSubmitting.value) {
+    return false
+  }
+  if (!settings.jensi_ai_agent) {
+    return false
+  }
+  return true
+})
+
+const dsCanSubmit = computed(() => {
   if (isSubmitting.value) {
     return false
   }
@@ -347,10 +426,18 @@ onBeforeMount(() => {
   }
 })
 
-const fetchOptions = async (q) => {
+const getId = (item) => {
+  // Return the last 8 characters of the id
+  if (item && item.id) {
+    return item.id.slice(-8)
+  }
+  return ''
+}
+
+const fetchAgentOptions = async (q) => {
   try {
     // Need to add the bearer token to the request
-    const rst = await axios.get(endpoints.value.data_sources.get, {
+    const rst = await axios.get(endpoints.value.agents.get, {
       params: {
         search: q
       },
@@ -374,20 +461,78 @@ const fetchOptions = async (q) => {
   return []
 }
 
+const fetchDsOptions = async (q) => {
+  try {
+    // Need to add the bearer token to the request
+    const rst = await axios.get(endpoints.value.data_sources.get, {
+      params: {
+        agent_id: settings.jensi_ai_agent,
+        search: q
+      },
+    })
+    if (rst.status === 200) {
+      return {
+        results: rst.data.data || []
+      }
+    }
+  } catch (err) {
+    if (err?.code !== 'ERR_CANCELED') {
+      const text = err?.response?.data?.error || 'Server responded with an error'
+      swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text,
+        footer: '<div class="overflow-footer w-full">' + err.message + '</div>'
+      })
+    }
+  }
+  return []
+}
+
+const doSaveAgent = async () => {
+  if (!agentCantSubmit.value) {
+    return
+  }
+
+  // Fetch the data sources for the selected agent
+  const options = await fetchDsOptions('')
+  console.log('options', options)
+  currentDataSources.value = options.results || []
+
+  // If the current selected data source is not in the list, clear it
+  if (settings.jensi_ai_data_source) {
+    const existing = currentDataSources.value.find((item) => item.id === settings.jensi_ai_data_source)
+    if (existing) {
+      selectedDataSource.value = existing
+    } else {
+      selectedDataSource.value = null
+      settings.jensi_ai_data_source = null
+    }
+  }
+
+  // Just save the settings
+  await doSave()
+
+  // Close the modal
+  showAgentModal.value = false
+}
+
 const doSaveDataSource = async () => {
-  if (!canSubmit.value) {
+  if (!dsCanSubmit.value) {
     return
   }
 
   isSubmitting.value = true
   try {
     if (dataSourceConfig.value.create_config) {
-      const rst = await axios.post(endpoints.value.data_sources.create, dataSourceConfig.value)
+      const rst = await axios.post(endpoints.value.data_sources.create, Object.assign(dataSourceConfig.value, {
+        agent_id: settings.jensi_ai_agent,
+      }))
       if (rst.status === 200) {
         const config = rst.data.data || null
         if (config) {
           // Set the selected data source
-          currentDateSources.value.push(config)
+          currentDataSources.value.push(config)
           selectedDataSource.value = config
           settings.jensi_ai_data_source = config.id
           
@@ -409,7 +554,7 @@ const doSaveDataSource = async () => {
     } else {
       // Just save the selected config id to the settings
       settings.jensi_ai_data_source = dataSourceConfig.value.config_id
-      selectedDataSource.value = currentDateSources.value.find((item) => item.id === dataSourceConfig.value.config_id)
+      selectedDataSource.value = currentDataSources.value.find((item) => item.id === dataSourceConfig.value.config_id)
 
       // Save the settings and close the modal
       await doSave()
@@ -548,15 +693,16 @@ const doLoad = async () => {
 
   // fetch available data sources
   if (settings.jensi_ai_api_key) {
+    // Fetch agents first
     try {
-      const rst = await axios.get(endpoints.value.data_sources.get)
+      const rst = await axios.get(endpoints.value.agents.get)
       if (rst.status === 200) {
-        currentDateSources.value = rst.data.data || []
+        currentAgents.value = rst.data.data || []
         // if we have a selected data source, set it
-        if (settings.jensi_ai_data_source) {
-          const existing = currentDateSources.value.find((item) => item.id === settings.jensi_ai_data_source)
+        if (settings.jensi_ai_agent) {
+          const existing = currentAgents.value.find((item) => item.id === settings.jensi_ai_agent)
           if (existing) {
-            selectedDataSource.value = existing
+            selectedAgent.value = existing
           }
         }
       }
@@ -569,6 +715,37 @@ const doLoad = async () => {
           text,
           footer: '<div class="overflow-footer w-full">' + err.message + '</div>'
         })
+      }
+    }
+
+    // If agent set, fetch it's data sources
+    if (settings.jensi_ai_agent && settings.jensi_ai_agent.length > 0) {
+        try {
+        const rst = await axios.get(endpoints.value.data_sources.get, {
+          params: {
+            agent_id: settings.jensi_ai_agent
+          },
+        })
+        if (rst.status === 200) {
+          currentDataSources.value = rst.data.data || []
+          // if we have a selected data source, set it
+          if (settings.jensi_ai_data_source) {
+            const existing = currentDataSources.value.find((item) => item.id === settings.jensi_ai_data_source)
+            if (existing) {
+              selectedDataSource.value = existing
+            }
+          }
+        }
+      } catch (err) {
+        if (err?.code !== 'ERR_CANCELED') {
+          const text = err?.response?.data?.message || 'Server responded with an error'
+          swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text,
+            footer: '<div class="overflow-footer w-full">' + err.message + '</div>'
+          })
+        }
       }
     }
   }

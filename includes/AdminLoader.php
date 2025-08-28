@@ -102,6 +102,7 @@ class AdminLoader
         $settingController = new Api\SettingController();
         $queueController = new Api\QueueController();
         $configController = new Api\ConfigController();
+        $agentController = new Api\AgentController();
         $dataSourceController = new Api\DataSourceController();
         $syncController = new Api\SyncController();
 
@@ -163,6 +164,7 @@ class AdminLoader
                     'settings' => $settingController->get_endpoints(),
                     'queue' => $queueController->get_endpoints(),
                     'configs' => $configController->get_endpoints(),
+                    'agents' => $agentController->get_endpoints(),
                     'data_sources' => $dataSourceController->get_endpoints(),
                     'sync' => $syncController->get_endpoints(),
                 ],

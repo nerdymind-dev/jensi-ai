@@ -139,17 +139,9 @@
                             </div>
                             <div class="mt-3 grid md:grid-cols-5 items-center gap-x-3">
                               <p class="text-gray-400 col-span-1">
-                                Generated Content:
+                                Results:
                               </p>
-                              <div class="col-span-4" v-html="JSON.parse(row.meta)?.generated || 'N/A'" />
-                            </div>
-                            <div class="mt-3 grid md:grid-cols-5 items-center gap-x-3">
-                              <p class="text-gray-400 col-span-1">
-                                Tokens used:
-                              </p>
-                              <p class="col-span-4 text-bold">
-                                {{ JSON.parse(row.meta)?.tokens || 'N/A' }}
-                              </p>
+                              <div class="col-span-4" v-html="row.meta || 'N/A'" />
                             </div>
                           </template>
                         </td>

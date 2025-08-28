@@ -22,6 +22,13 @@ return [
             'type' => 'password',
             'default' => '',
         ],
+        'jensi_ai_agent' => [
+            'name' => __('Agent', \JensiAI\Main::PREFIX),
+            'description' => __('Your JENSi AI agent', \JensiAI\Main::PREFIX),
+            'section' => 'general',
+            'type' => 'config',
+            'default' => '',
+        ],
         'jensi_ai_data_source' => [
             'name' => __('Data Source', \JensiAI\Main::PREFIX),
             'description' => __('Your JENSi AI data source', \JensiAI\Main::PREFIX),
@@ -29,7 +36,7 @@ return [
             'type' => 'config',
             'default' => '',
         ],
-    
+
         // Extra
         // ...
 

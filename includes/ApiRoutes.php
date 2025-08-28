@@ -31,6 +31,7 @@ class ApiRoutes
         (new Api\ConfigController())->register_routes();
         (new Api\SyncController())->register_routes();
         (new Api\DataSourceController())->register_routes();    
+        (new Api\AgentController())->register_routes();
 
         /*
     // uncomment this to automatically return new nonce
