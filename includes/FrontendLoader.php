@@ -30,7 +30,7 @@ class FrontendLoader
         $this->prefix = $prefix;
 
         // let say the prefix above is wp_awesome_plugin, then the shortcode becomes
-        // [wp-awesome-plugin-vue-app postfix='frontend']
+        // [jensi_ai-vue-app postfix='frontend']
         $this->id = str_replace('_', '-', $this->prefix.'-vue-app');
         add_shortcode($this->id, [$this, 'render_frontend']);
     }
