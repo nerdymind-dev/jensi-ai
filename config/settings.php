@@ -36,6 +36,13 @@ return [
             'type' => 'config',
             'default' => '',
         ],
+        'jensi_ai_chat_widget_enabled' => [
+            'name' => __('Enable Chat Widget', \JensiAI\Main::PREFIX),
+            'description' => __('Enable the floating chat widget on the front-end of your website', \JensiAI\Main::PREFIX),
+            'section' => 'general',
+            'type' => 'checkbox',
+            'default' => true,
+        ],
 
         // Extra
         // ...

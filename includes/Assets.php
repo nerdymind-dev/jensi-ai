@@ -115,6 +115,11 @@ class Assets
                 'deps'      => ['jquery', $this->prefix . '-vendor'],
                 'in_footer' => true,
             ],
+            $this->prefix . '-chat-widget' => [
+                'src'       => $assets_url . $this->mix('/js/chat-widget.js'),
+                'deps'      => [$this->prefix . '-vendor'],
+                'in_footer' => true,
+            ],
         ];
 
         return $scripts;
@@ -141,6 +146,9 @@ class Assets
             ],
             $this->prefix . '-admin' => [
                 'src' => $assets_url . $this->mix('/css/admin.css'),
+            ],
+            $this->prefix . '-chat-widget' => [
+                'src' => $assets_url . $this->mix('/css/chat-widget.css'),
             ],
         ];
 

@@ -506,6 +506,7 @@ final class Main
 
         if ($this->is_request('frontend')) {
             $this->container['frontend'] = new \JensiAI\FrontendLoader(self::PREFIX);
+            $this->container['chat_widget'] = new \JensiAI\ChatWidgetLoader(self::PREFIX);
         }
 
         // finally load api routes

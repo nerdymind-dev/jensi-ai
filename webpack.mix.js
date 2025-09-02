@@ -93,6 +93,11 @@ mix.ts('src/frontview/frontview.ts', 'js')
     version: 3,
     extractStyles: true
   })
+mix.ts('src/chat-widget/chat-widget.ts', 'js')
+  .vue({
+    version: 3,
+    extractStyles: true
+  })
 
 /*
  * Extract the CSS from the Vue components.
@@ -127,6 +132,10 @@ mix.options({
   )
   .postCss(
     'assets/frontview.css',
+    'css'
+  )
+  .postCss(
+    'assets/chat-widget.css',
     'css'
   )
 
