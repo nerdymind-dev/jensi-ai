@@ -526,7 +526,11 @@ const connectWebSocket = (websocketConfig: WebSocketConfig) => {
     
     // Listen for message streaming events
     channel.listen('.message.chunk', (data: any) => {
-      handleStreamingMessage(data)
+        if (data.is_complete) {
+            handleCompleteMessage(data)
+        } else {
+            handleStreamingMessage(data)
+        }
     })
   } catch (error) {
     console.error('Failed to connect to Laravel Echo:', error)
@@ -534,10 +538,6 @@ const connectWebSocket = (websocketConfig: WebSocketConfig) => {
 }
 
 const handleStreamingMessage = (data: any) => {
-if (data.is_complete) {
-    handleCompleteMessage(data)
-  }
-
   // Find or create assistant message
   let assistantMessage = messages.value.find(
     m => m.type === 'assistant' && m.id === data.message_id
