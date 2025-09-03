@@ -75,7 +75,7 @@
               {{ currentAgent?.name?.charAt(0).toUpperCase() || 'AI' }}
             </div>
             <div class="jensi-ai-chat-message-text">
-              {{ message.message }}
+              <span v-html="message.message"></span>
             </div>
           </div>
           <div class="jensi-ai-chat-message-time">

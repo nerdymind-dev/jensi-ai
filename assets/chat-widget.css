@@ -241,6 +241,16 @@
   border-radius: 18px;
 }
 
+.jensi-ai-chat-message-text p {
+  margin: 0;
+  padding: 0;
+}
+
+.jensi-ai-chat-message-text a {
+  color: var(--jensi-ai-color-primary);
+  text-decoration: underline;
+}
+
 .jensi-ai-chat-message--user .jensi-ai-chat-message-text {
   color: white;
   background: linear-gradient(135deg, var(--jensi-ai-color-primary) 0%, var(--jensi-ai-color-secondary) 100%);
