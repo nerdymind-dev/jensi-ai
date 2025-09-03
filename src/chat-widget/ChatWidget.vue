@@ -293,7 +293,7 @@ const getDefaultAgent = async (): Promise<Agent> => {
   // If we have a default agent ID from settings, try to fetch its details
   if (config.defaultAgentId) {
     try {
-      const response = await fetch(`${config.apiBaseUrl}/agents/get?search=`, {
+      const response = await fetch(`${config.apiBaseUrl}/agents/get?id=${config.defaultAgentId}`, {
         headers: {
           'X-WP-Nonce': config.nonce,
         }

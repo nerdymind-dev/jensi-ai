@@ -128,11 +128,15 @@ class AgentController extends \WP_REST_Controller
         } else {
             // get search param if provided
             $search = isset($params['search']) ? $params['search'] : null;
+            $id = isset($params['id']) ? $params['id'] : null;
 
             // call the remote API to get agents
             $url = $this->base_api . '/agents';
             if ($search) {
                 $url = add_query_arg('search', urlencode($search), $url);
+            }
+            if ($id) {
+                $url = add_query_arg('id', urlencode($id), $url);
             }
             $api_response = wp_remote_get($url, [
                 'headers' => [
@@ -201,7 +205,13 @@ class AgentController extends \WP_REST_Controller
                     'search' => [
                         'required' => false,
                         'validate_callback' => function ($param, $request, $key) {
-                            return !empty($param);
+                            return !empty($param) && is_string($param);
+                        },
+                    ],
+                    'id' => [
+                        'required' => false,
+                        'validate_callback' => function ($param, $request, $key) {
+                            return !empty($param) && is_string($param);
                         },
                     ],
                 ];
