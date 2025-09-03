@@ -177,7 +177,7 @@ class DataSourceController extends \WP_REST_Controller
                     $response['data'] = 'Failed to parse JENSi AI API response: ' . json_last_error_msg();
                     return new \WP_Error('rest_api_error', __('Failed to parse JENSi AI API response.'), ['status' => 500]);
                 }
-                $response['data'] = $data;
+                $response['data'] = $data['data'];
                 $response['success'] = true;
             }
         }
@@ -233,7 +233,7 @@ class DataSourceController extends \WP_REST_Controller
                     $response['data'] = 'Failed to parse JENSi AI API response: ' . json_last_error_msg();
                     return new \WP_Error('rest_api_error', __('Failed to parse JENSi AI API response.'), ['status' => 500]);
                 }
-                $response['data'] = $data;
+                $response['data'] = $data['data'];
                 $response['success'] = true;
             }
         }
