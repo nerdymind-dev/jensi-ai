@@ -208,6 +208,9 @@ class DataSourceController extends \WP_REST_Controller
         } else {
             // call the remote API to create data source
             $url = $this->base_api . '/data-sources';
+            if (empty($params['description'])) {
+               unset($params['description']);
+            }
             $api_response = wp_remote_post($url, [
                 'headers' => [
                     'Accept' => 'application/json',
@@ -223,7 +226,7 @@ class DataSourceController extends \WP_REST_Controller
             }
             $code = wp_remote_retrieve_response_code($api_response);
             $body = wp_remote_retrieve_body($api_response);
-            if ($code !== 200) {
+            if ($code !== 200 && $code !== 201) {
                 $data = json_decode($body, true);
                 $message = $data['message'] ?? __('JENSi AI API returned an error.');
                 return new \WP_Error($code, $message, $data);
@@ -233,7 +236,7 @@ class DataSourceController extends \WP_REST_Controller
                     $response['data'] = 'Failed to parse JENSi AI API response: ' . json_last_error_msg();
                     return new \WP_Error('rest_api_error', __('Failed to parse JENSi AI API response.'), ['status' => 500]);
                 }
-                $response['data'] = $data['data'];
+                $response['data'] = $data;
                 $response['success'] = true;
             }
         }

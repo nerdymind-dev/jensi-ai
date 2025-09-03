@@ -40,7 +40,7 @@ return [
             'name' => __('Enable Chat Widget', \JensiAI\Main::PREFIX),
             'description' => __('Enable the floating chat widget on the front-end of your website', \JensiAI\Main::PREFIX),
             'section' => 'general',
-            'type' => 'checkbox',
+            'type' => 'toggle',
             'default' => true,
         ],
 
