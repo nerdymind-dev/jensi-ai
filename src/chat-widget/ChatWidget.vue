@@ -223,6 +223,7 @@ const currentChat = ref<Chat | null>(null)
 const currentAgent = ref<Agent | null>(null)
 const messages = ref<Message[]>([])
 const echo = ref<any>(null)
+const isConnected = ref(false)
 const messagesContainer = ref<HTMLElement>()
 const messageInput = ref<HTMLInputElement>()
 
@@ -236,14 +237,14 @@ const config = reactive({
 
 // Computed
 const statusClass = computed(() => {
-  if (echo.value && echo.value.connector.pusher.connection.state === 'connected') {
+  if (isConnected.value) {
     return 'jensi-ai-chat-status--online'
   }
   return 'jensi-ai-chat-status--offline'
 })
 
 const statusText = computed(() => {
-  if (echo.value && echo.value.connector.pusher.connection.state === 'connected') {
+  if (isConnected.value) {
     return 'Online'
   }
   if (isLoading.value) {
@@ -287,6 +288,7 @@ const closeWidget = () => {
   if (echo.value) {
     echo.value.disconnect()
     echo.value = null
+    isConnected.value = false
   }
 }
 
@@ -482,6 +484,7 @@ const connectWebSocket = (websocketConfig: WebSocketConfig) => {
   // Disconnect existing Echo instance
   if (echo.value) {
     echo.value.disconnect()
+    isConnected.value = false
   }
   
   try {
@@ -508,14 +511,17 @@ const connectWebSocket = (websocketConfig: WebSocketConfig) => {
     // Listen for connection events
     echo.value.connector.pusher.connection.bind('connected', () => {
       console.log('Echo connected successfully')
+      isConnected.value = true
     })
     
     echo.value.connector.pusher.connection.bind('disconnected', () => {
       console.log('Echo disconnected')
+      isConnected.value = false
     })
     
     echo.value.connector.pusher.connection.bind('error', (error: any) => {
       console.error('Echo connection error:', error)
+      isConnected.value = false
     })
     
     // Subscribe to the chat channel
@@ -593,6 +599,7 @@ const clearChat = () => {
     if (echo.value) {
       echo.value.disconnect()
       echo.value = null
+      isConnected.value = false
     }
     
     initializeChat()
