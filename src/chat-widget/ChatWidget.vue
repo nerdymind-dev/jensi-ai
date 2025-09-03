@@ -122,6 +122,7 @@
             ref="messageInput"
             v-model="currentMessage"
             type="text"
+            id="message-input"
             placeholder="Type your message..."
             class="jensi-ai-chat-input"
             :disabled="isLoading"

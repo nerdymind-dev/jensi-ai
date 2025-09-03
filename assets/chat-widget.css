@@ -1,5 +1,14 @@
 /* JENSi AI Chat Widget Styles */
 
+:root {
+  --jensi-ai-color-primary: #667eea;
+  --jensi-ai-color-secondary: #764ba2;
+  --jensi-ai-color-background: white;
+  --jensi-ai-color-text: black;
+  --jensi-ai-rgb-primary: 102, 126, 234;
+  --jensi-ai-rgb-secondary: 118, 75, 162;
+}
+
 .jensi-ai-chat-widget {
   position: fixed;
   right: 20px;
@@ -16,7 +25,7 @@
   width: 60px;
   height: 60px;
   color: white;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--jensi-ai-color-primary) 0%, var(--jensi-ai-color-secondary) 100%);
   border: none;
   border-radius: 50%;
   box-shadow: 0 4px 12px rgb(0 0 0 / 15%);
@@ -35,15 +44,15 @@
 
 @keyframes jensi-ai-pulse {
   0% {
-    box-shadow: 0 0 0 0 rgb(102 126 234 / 70%);
+    box-shadow: 0 0 0 0 rgb(var(--jensi-ai-rgb-primary) / 70%);
   }
 
   70% {
-    box-shadow: 0 0 0 10px rgb(102 126 234 / 0%);
+    box-shadow: 0 0 0 10px rgb(var(--jensi-ai-rgb-primary) / 0%);
   }
 
   100% {
-    box-shadow: 0 0 0 0 rgb(102 126 234 / 0%);
+    box-shadow: 0 0 0 0 rgb(var(--jensi-ai-rgb-primary) / 0%);
   }
 }
 
@@ -97,7 +106,7 @@
   justify-content: space-between;
   padding: 20px;
   color: white;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--jensi-ai-color-primary) 0%, var(--jensi-ai-color-secondary) 100%);
 }
 
 .jensi-ai-chat-agent-info {
@@ -220,7 +229,7 @@
   color: white;
   font-weight: 600;
   font-size: 12px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--jensi-ai-color-primary) 0%, var(--jensi-ai-color-secondary) 100%);
   border-radius: 50%;
 }
 
@@ -234,7 +243,7 @@
 
 .jensi-ai-chat-message--user .jensi-ai-chat-message-text {
   color: white;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--jensi-ai-color-primary) 0%, var(--jensi-ai-color-secondary) 100%);
 }
 
 .jensi-ai-chat-message--assistant .jensi-ai-chat-message-text {
@@ -309,7 +318,7 @@
   color: white;
   font-weight: 600;
   font-size: 14px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--jensi-ai-color-primary) 0%, var(--jensi-ai-color-secondary) 100%);
   border-radius: 50%;
 }
 
@@ -351,7 +360,7 @@
 }
 
 .jensi-ai-chat-input:focus {
-  border-color: #667eea;
+  border-color: var(--jensi-ai-color-primary);
 }
 
 .jensi-ai-chat-input:disabled {
@@ -366,11 +375,14 @@
   width: 44px;
   height: 44px;
   color: white;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border: none;
   border-radius: 50%;
   cursor: pointer;
   transition: all 0.2s ease;
+}
+
+.jensi-ai-chat-send:not(:disabled) {
+  background: linear-gradient(135deg, var(--jensi-ai-color-primary) 0%, var(--jensi-ai-color-secondary) 100%);
 }
 
 .jensi-ai-chat-send:hover:not(:disabled) {
