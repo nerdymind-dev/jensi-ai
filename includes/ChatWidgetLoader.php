@@ -98,8 +98,8 @@ class ChatWidgetLoader
             : 'https://ai.jensi.com/api';
             
         $ws_base_url = $env === 'local'
-            ? 'wss://jensi-ai.test:8090'
-            : 'wss://ai.jensi.com:8090';
+            ? 'jensi-ai.test:8090'
+            : 'ai.jensi.com:8090';
 
         $config = [
             'apiBaseUrl' => rest_url($this->prefix . '/v1'),

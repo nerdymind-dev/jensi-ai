@@ -161,6 +161,18 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted, nextTick, watch } from 'vue'
+import Echo from 'laravel-echo'
+import Pusher from 'pusher-js'
+
+// Extend window interface for Pusher
+declare global {
+  interface Window {
+    Pusher: typeof Pusher
+  }
+}
+
+// Make Pusher available globally for Laravel Echo
+window.Pusher = Pusher
 
 // Types
 interface Message {
@@ -179,6 +191,13 @@ interface Agent {
   description?: string
 }
 
+interface WebSocketConfig {
+  channel: string
+  event: string
+  app_id: string
+  app_key: string
+}
+
 interface Chat {
   id: string
   agent_id: string
@@ -190,7 +209,7 @@ interface Chat {
   updated_at: string
   agent: Agent
   messages: Message[]
-  websocket_channel: string
+  websocket: WebSocketConfig
 }
 
 // State
@@ -203,7 +222,7 @@ const currentMessage = ref('')
 const currentChat = ref<Chat | null>(null)
 const currentAgent = ref<Agent | null>(null)
 const messages = ref<Message[]>([])
-const websocket = ref<WebSocket | null>(null)
+const echo = ref<any>(null)
 const messagesContainer = ref<HTMLElement>()
 const messageInput = ref<HTMLInputElement>()
 
@@ -217,14 +236,14 @@ const config = reactive({
 
 // Computed
 const statusClass = computed(() => {
-  if (websocket.value?.readyState === WebSocket.OPEN) {
+  if (echo.value && echo.value.connector.pusher.connection.state === 'connected') {
     return 'jensi-ai-chat-status--online'
   }
   return 'jensi-ai-chat-status--offline'
 })
 
 const statusText = computed(() => {
-  if (websocket.value?.readyState === WebSocket.OPEN) {
+  if (echo.value && echo.value.connector.pusher.connection.state === 'connected') {
     return 'Online'
   }
   if (isLoading.value) {
@@ -265,9 +284,9 @@ const openWidget = async () => {
 const closeWidget = () => {
   isOpen.value = false
   isOpening.value = false
-  if (websocket.value) {
-    websocket.value.close()
-    websocket.value = null
+  if (echo.value) {
+    echo.value.disconnect()
+    echo.value = null
   }
 }
 
@@ -344,7 +363,7 @@ const loadChat = async (chatId: string) => {
       messages.value = data.data.messages || []
       
       // Connect to websocket
-      connectWebSocket(data.data.websocket_channel)
+      connectWebSocket(data.data.websocket)
       
       // Scroll to bottom
       await nextTick()
@@ -425,7 +444,7 @@ const sendMessage = async () => {
         localStorage.setItem('jensi_ai_chat_id', sentMessage.chat_id)
         
         // Connect to websocket for streaming response
-        connectWebSocket(sentMessage.chat.websocket_channel)
+        connectWebSocket(sentMessage.chat.websocket)
       }
       
       // Show typing indicator
@@ -459,52 +478,61 @@ const sendMessage = async () => {
   }
 }
 
-const connectWebSocket = (channel: string) => {
-  if (websocket.value) {
-    websocket.value.close()
+const connectWebSocket = (websocketConfig: WebSocketConfig) => {
+  // Disconnect existing Echo instance
+  if (echo.value) {
+    echo.value.disconnect()
   }
   
-  const wsUrl = `${config.wsBaseUrl}/app/752188?protocol=7&client=js&version=8.4.0-rc2&flash=false`
-  
   try {
-    websocket.value = new WebSocket(wsUrl)
+    // Get host from config - remove protocol if present
+    const host = config.wsBaseUrl.replace(/^wss?:\/\//, '')
     
-    websocket.value.onopen = () => {
-      console.log('WebSocket connected')
-      // Subscribe to the chat channel
-      if (websocket.value && websocket.value.readyState === WebSocket.OPEN) {
-        websocket.value.send(JSON.stringify({
-          event: 'pusher:subscribe',
-          data: {
-            channel: channel
-          }
-        }))
-      }
-    }
+    // Create new Echo instance
+    echo.value = new Echo({
+      broadcaster: 'reverb',
+      key: websocketConfig.app_key,
+      wsHost: host.split(':')[0],
+      wsPort: host.includes(':') ? parseInt(host.split(':')[1]) : 80,
+      wssPort: host.includes(':') ? parseInt(host.split(':')[1]) : 443,
+      forceTLS: config.wsBaseUrl.startsWith('wss'),
+      enabledTransports: ['ws', 'wss'],
+    })
     
-    websocket.value.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data)
-        
-        if (data.event === 'message.streaming') {
-          handleStreamingMessage(data.data)
-        } else if (data.event === 'message.complete') {
-          handleCompleteMessage(data.data)
-        }
-      } catch (error) {
-        console.error('Error parsing WebSocket message:', error)
-      }
-    }
+    console.log('Connecting to Laravel Echo with config:', {
+      key: websocketConfig.app_key,
+      host: host,
+      channel: websocketConfig.channel
+    })
     
-    websocket.value.onclose = () => {
-      console.log('WebSocket disconnected')
-    }
+    // Listen for connection events
+    echo.value.connector.pusher.connection.bind('connected', () => {
+      console.log('Echo connected successfully')
+    })
     
-    websocket.value.onerror = (error) => {
-      console.error('WebSocket error:', error)
-    }
+    echo.value.connector.pusher.connection.bind('disconnected', () => {
+      console.log('Echo disconnected')
+    })
+    
+    echo.value.connector.pusher.connection.bind('error', (error: any) => {
+      console.error('Echo connection error:', error)
+    })
+    
+    // Subscribe to the chat channel
+    const channel = echo.value.channel(websocketConfig.channel)
+    
+    // Listen for message streaming events
+    channel.listen('.message.streaming', (data: any) => {
+      handleStreamingMessage(data)
+    })
+    
+    // Listen for message complete events  
+    channel.listen('.message.complete', (data: any) => {
+      handleCompleteMessage(data)
+    })
+    
   } catch (error) {
-    console.error('Failed to connect to WebSocket:', error)
+    console.error('Failed to connect to Laravel Echo:', error)
   }
 }
 
@@ -562,9 +590,9 @@ const clearChat = () => {
     messages.value = []
     currentChat.value = null
     
-    if (websocket.value) {
-      websocket.value.close()
-      websocket.value = null
+    if (echo.value) {
+      echo.value.disconnect()
+      echo.value = null
     }
     
     initializeChat()
