@@ -296,7 +296,6 @@ const initializeChat = async () => {
   try {
     // Check for saved chat ID
     const savedChatId = localStorage.getItem('jensi_ai_chat_id')
-    
     if (savedChatId) {
       // Try to load existing chat
       await loadChat(savedChatId)
@@ -320,7 +319,6 @@ const getDefaultAgent = async (): Promise<Agent> => {
           'X-WP-Nonce': config.nonce,
         }
       })
-      
       if (response.ok) {
         const data = await response.json()
         if (data.success && data.data) {
@@ -356,7 +354,6 @@ const loadChat = async (chatId: string) => {
     if (!response.ok) {
       throw new Error('Failed to load chat')
     }
-    
     const data = await response.json()
     
     if (data.success) {
@@ -528,21 +525,19 @@ const connectWebSocket = (websocketConfig: WebSocketConfig) => {
     const channel = echo.value.channel(websocketConfig.channel)
     
     // Listen for message streaming events
-    channel.listen('.message.streaming', (data: any) => {
+    channel.listen('.message.chunk', (data: any) => {
       handleStreamingMessage(data)
     })
-    
-    // Listen for message complete events  
-    channel.listen('.message.complete', (data: any) => {
-      handleCompleteMessage(data)
-    })
-    
   } catch (error) {
     console.error('Failed to connect to Laravel Echo:', error)
   }
 }
 
 const handleStreamingMessage = (data: any) => {
+if (data.is_complete) {
+    handleCompleteMessage(data)
+  }
+
   // Find or create assistant message
   let assistantMessage = messages.value.find(
     m => m.type === 'assistant' && m.id === data.message_id
@@ -565,8 +560,8 @@ const handleStreamingMessage = (data: any) => {
   }
   
   // Append streamed content
-  assistantMessage.message += data.content || ''
-  
+  assistantMessage.message += data.chunk || ''
+
   // Scroll to bottom
   nextTick(() => scrollToBottom())
 }
@@ -578,8 +573,8 @@ const handleCompleteMessage = (data: any) => {
   )
   
   if (assistantMessage) {
-    assistantMessage.message = data.message
-    assistantMessage.updated_at = data.updated_at
+    assistantMessage.message = data.full_message
+    assistantMessage.updated_at = data.timestamp
   }
   
   isTyping.value = false
