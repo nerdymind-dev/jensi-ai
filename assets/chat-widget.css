@@ -246,8 +246,17 @@
   padding: 0;
 }
 
+.jensi-ai-chat-message-text span {
+  display: inline-flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  row-gap: 1rem;
+}
+
 .jensi-ai-chat-message-text a {
   color: var(--jensi-ai-color-primary);
+  font-weight: bold;
   text-decoration: underline;
 }
 
