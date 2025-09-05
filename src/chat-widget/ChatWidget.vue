@@ -193,7 +193,6 @@ interface Agent {
 
 interface WebSocketConfig {
   channel: string
-  event: string
   app_id: string
   app_key: string
 }
