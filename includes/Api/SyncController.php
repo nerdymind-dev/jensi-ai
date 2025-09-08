@@ -80,7 +80,7 @@ class SyncController extends \WP_REST_Controller
     }
 
     /**
-     * Process first queued item.
+     * Queue up all valid posts for syncing with the AI service.
      *
      * @param \WP_REST_Request $request Full details about the request.
      *
@@ -92,6 +92,9 @@ class SyncController extends \WP_REST_Controller
         $params = $request->get_params();
 
         // @TODO...
+
+        dump('SyncController::sync() called with params:');
+        dump($params);
 
         $nonce = wp_create_nonce('wp_rest');
         $response = rest_ensure_response([

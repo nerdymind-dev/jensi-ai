@@ -48,13 +48,6 @@ class AdminLoader
         if (current_user_can($capability)) {
             add_submenu_page(
                 $slug,
-                esc_html(__('Settings', $this->prefix)),
-                esc_html(__('Settings', $this->prefix)),
-                $capability,
-                "admin.php?page={$slug}#/settings"
-            );
-            add_submenu_page(
-                $slug,
                 esc_html(__('Sync', $this->prefix)),
                 esc_html(__('Sync', $this->prefix)),
                 $capability,
@@ -66,6 +59,13 @@ class AdminLoader
                 esc_html(__('Queue', $this->prefix)),
                 $capability,
                 "admin.php?page={$slug}#/queue"
+            );
+            add_submenu_page(
+                $slug,
+                esc_html(__('Settings', $this->prefix)),
+                esc_html(__('Settings', $this->prefix)),
+                $capability,
+                "admin.php?page={$slug}#/settings"
             );
             add_submenu_page(
                 $slug,
