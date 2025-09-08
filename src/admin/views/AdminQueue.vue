@@ -33,7 +33,7 @@
           <t-button
             variant="secondary"
             class="mr-2"
-            :class="{ 'opacity-25': !canReload }"
+            :class="{ 'opacity-25 cursor-not-allowed': !canReload }"
             :disabled="!canReload"
             @click="reloadData">
             Reload Table
@@ -41,7 +41,7 @@
 
           <t-button
             variant="secondary"
-            :class="{ 'opacity-25': !canReload }"
+            :class="{ 'opacity-25 cursor-not-allowed': !canReload }"
             :disabled="!canReload"
             @click="() => doProcessQueue()">
             Process Next Job
@@ -186,7 +186,7 @@
                         <button
                           class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
                           type="button"
-                          :class="{ 'opacity-25': !queueTable.prev_page_url }"
+                          :class="{ 'opacity-25 cursor-not-allowed': !queueTable.prev_page_url }"
                           :disabled="!queueTable.prev_page_url"
                           @click="getTableData(queueTable.prev_page_url)"
                         >
@@ -221,7 +221,7 @@
                         <button
                           class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
                           type="button"
-                          :class="{ 'opacity-25': !queueTable.next_page_url }"
+                          :class="{ 'opacity-25 cursor-not-allowed': !queueTable.next_page_url }"
                           :disabled="!queueTable.next_page_url"
                           @click="getTableData(queueTable.next_page_url)"
                         >

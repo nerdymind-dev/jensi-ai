@@ -188,7 +188,7 @@
           </t-button>
           <t-button
             class="ml-2" @click.native="(e) => doUpdate(selectedConfig.id)"
-            :class="{ 'opacity-25': !canSubmit || isSubmitting }"
+            :class="{ 'opacity-25 cursor-not-allowed': !canSubmit || isSubmitting }"
             :disabled="!canSubmit || isSubmitting">
             Update Config
           </t-button>
@@ -278,7 +278,7 @@
           </t-button>
           <t-button
             class="ml-2" @click.native="(e) => doSave()"
-            :class="{ 'opacity-25': !canSubmit || isSubmitting }"
+            :class="{ 'opacity-25 cursor-not-allowed': !canSubmit || isSubmitting }"
             :disabled="!canSubmit || isSubmitting">
             Create Config
           </t-button>

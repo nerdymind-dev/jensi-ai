@@ -14,7 +14,7 @@
           <t-button
             variant="secondary"
             class="mr-2"
-            :class="{ 'opacity-25': !hasLoaded && isLoading }"
+            :class="{ 'opacity-25 cursor-not-allowed': !hasLoaded && isLoading }"
             :disabled="!hasLoaded || isLoading"
             @click="doSync">
             Sync All
@@ -66,7 +66,11 @@
                         <div>
                           <div class="-mt-px flex divide-x divide-gray-200">
                             <div class="flex w-0 flex-1">
-                              <button @click="(e) => doSync(conf)" type="button" class="relative -mr-px inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-bl-lg border border-transparent py-4 text-sm font-semibold text-gray-900">
+                              <button 
+                                :disabled="conf.enabled !== '1' || isLoading"
+                                @click="(e) => doSync(conf)" type="button"
+                                :class="{ 'opacity-25 cursor-not-allowed': conf.enabled !== '1' || isLoading }"
+                                class="relative -mr-px inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-bl-lg border border-transparent py-4 text-sm font-semibold text-gray-900">
                                 Sync Now
                               </button>
                             </div>
@@ -90,6 +94,12 @@
 import {ref, inject, onBeforeMount, nextTick} from 'vue'
 import Breadcrumbs from '~src/shared/components/BreadcrumbNavigation.vue'
 import {TButton} from '@variantjs/vue'
+
+import {
+  InformationCircleIcon,
+  CheckCircleIcon,
+  MinusCircleIcon,
+} from '@heroicons/vue/24/outline'
 
 const win = inject('win')
 const swal = inject('swal')

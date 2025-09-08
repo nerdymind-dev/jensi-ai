@@ -236,7 +236,7 @@
           </t-button>
           <t-button
             class="ml-2" @click.native="(e) => doSaveAgent()"
-            :class="{ 'opacity-25': !agentCantSubmit || isSubmitting }"
+            :class="{ 'opacity-25 cursor-not-allowed': !agentCantSubmit || isSubmitting }"
             :disabled="!agentCantSubmit || isSubmitting">
             Save
           </t-button>
@@ -318,7 +318,7 @@
           </t-button>
           <t-button
             class="ml-2" @click.native="(e) => doSaveDataSource()"
-            :class="{ 'opacity-25': !dsCanSubmit || isSubmitting }"
+            :class="{ 'opacity-25 cursor-not-allowed': !dsCanSubmit || isSubmitting }"
             :disabled="!dsCanSubmit || isSubmitting">
             Save
           </t-button>
