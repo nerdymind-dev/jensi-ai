@@ -204,9 +204,14 @@ final class Main
      */
     public function jensi_ai_save_post($post_id): void
     {
-        if (get_post_type($post_id) !== 'post') {
+        // Only consider posts that aren't draft
+        $status = get_post_status($post_id);
+        if ($status === 'draft' || $status === 'auto-draft' || $status === 'inherit') {
             return;
         }
+
+        // Support multiple post types, but if we want to restrict, that can be done here
+        // E.g.: $post_type = get_post_type($post_id);
         $this->submit_post_for_ai($post_id);
     }
 
