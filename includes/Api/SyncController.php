@@ -2,6 +2,8 @@
 
 namespace JensiAI\Api;
 
+use JensiAI\QueueLoader;
+
 /**
  * Backend configs controller.
  */
@@ -91,15 +93,90 @@ class SyncController extends \WP_REST_Controller
         // attempt to parse the json parameter
         $params = $request->get_params();
 
-        // @TODO...
+        // See if we're running all, or just for a specific config
+        $config_id = $params['id'] ?? null;
 
-        dump('SyncController::sync() called with params:');
-        dump($params);
+        // Init the config controller
+        $controller = new ConfigController();
+        $configs = $config_id
+            ? [$controller->get_config_object($config_id)]
+            : $controller->get_all_configs();
+
+        // Get all matching entries for each config
+        $post_ids = [];
+        $posts_to_sync = [];
+        foreach ($configs as $config) {
+            if (empty($config) || empty($config->id)) {
+                continue;
+            }
+
+            // Get posts matching this config
+            $post_type = $config->post_type;
+            $taxonomy = $config->taxonomy; // or null/empty for all
+            $terms = $config->terms; // array of term IDs, or null/empty for all
+
+            // Build the query args
+            $args = [
+                'post_type' => $post_type,
+                'post_status' => 'publish', // only published posts
+                'numberposts' => -1,
+                'fields' => 'ID,post_title,post_date,post_content,post_type,post_status',
+            ];
+
+            // Add taxonomy query if needed
+            if (!empty($taxonomy)) {
+                $args['tax_query'] = [
+                    [
+                        'taxonomy' => $taxonomy,
+                        'field' => 'term_id',
+                    ],
+                ];
+                if (!empty($terms) && is_array($terms)) {
+                    $args['tax_query'][0]['terms'] = $terms;
+                    $args['tax_query'][0]['operator'] = 'IN';
+                } else {
+                    $args['tax_query'][0]['operator'] = 'EXISTS';
+                }
+            }
+
+            // Don't include existing posts that have already been fetched
+            if (!empty($post_ids)) {
+                $args['post__not_in'] = $post_ids;
+            }
+
+            $posts = get_posts($args);
+            foreach ($posts as $post) {
+                // Keep track of processed posts
+                $post_ids[] = $post->ID;
+
+                // Add to sync list as a simple object
+                $posts_to_sync[] = (object)[
+                    'ID' => $post->ID,
+                    'post_title' => $post->post_title,
+                    'post_date' => $post->post_date,
+                    'post_content' => $post->post_content,
+                    'post_type' => $post->post_type,
+                    'post_status' => $post->post_status,
+                ];
+            }
+        }
+
+        // Setup the queue for each post
+        $loader = new QueueLoader();
+        $errors = [];
+        foreach ($posts_to_sync as $post) {
+            // Queue each post for syncing
+            $result = $loader->store_job($post, $post->post_type);
+            if ($result !== true) {
+                $errors[] = $result;
+            }
+        }
 
         $nonce = wp_create_nonce('wp_rest');
         $response = rest_ensure_response([
             'data' => [],
-            'success' => true,
+            'errors' => $errors,
+            'success' => empty($errors),
             'nonce' => $nonce,
         ]);
         return rest_ensure_response($response);

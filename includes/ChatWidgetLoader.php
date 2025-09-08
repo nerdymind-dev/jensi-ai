@@ -93,9 +93,11 @@ class ChatWidgetLoader
         
         // Get API URLs based on environment
         $env = wp_get_environment_type();
-        $api_base_url = $env === 'local' 
-            ? 'https://jensi-ai.test/api' 
-            : 'https://ai.jensi.com/api';
+
+        // Not currently used, calling internal WP REST API instead
+        // $api_base_url = $env === 'local' 
+        //     ? 'https://jensi-ai.test/api' 
+        //     : 'https://ai.jensi.com/api';
             
         $ws_base_url = $env === 'local'
             ? 'jensi-ai.test:8090'

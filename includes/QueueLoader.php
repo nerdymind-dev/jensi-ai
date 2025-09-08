@@ -46,11 +46,10 @@ class QueueLoader
 
     /**
      * @param $post
-     * @param $config
      * @param null|string $type
      * @return array|true
      */
-    public function store_job($post, $config, $type = null)
+    public function store_job($post, $type = null)
     {
         global $wpdb;
 

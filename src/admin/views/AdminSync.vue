@@ -16,7 +16,7 @@
             class="mr-2"
             :class="{ 'opacity-25 cursor-not-allowed': !hasLoaded && isLoading }"
             :disabled="!hasLoaded || isLoading"
-            @click="doSync">
+            @click="() => doSync()">
             Sync All
           </t-button>
         </div>
@@ -128,9 +128,10 @@ onBeforeMount(() => {
 })
 
 const doSync = async (cf = null) => {
+  const title = cf ? `Sync Configuration: ${cf.title}` : 'Sync All Configurations'
   swal.fire({
     icon: 'warning',
-    title: 'Are you sure?',
+    title,
     text: cf 
       ? 'This will process all valid pages, posts and media that match the select configuration. This action cannot be undone.' 
       : 'This will process all valid pages, posts and media that are currently configured for syncing with the JENSi AI service. This action cannot be undone.',

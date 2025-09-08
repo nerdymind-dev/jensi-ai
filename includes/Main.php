@@ -234,7 +234,7 @@ final class Main
         }
 
         // Queue up post for submission to JENSi AI
-        $this->generate_content_for_post($post_id, $post_type, $config);
+        $this->generate_content_for_post($post_id, $post_type);
     }
 
     /**
@@ -245,15 +245,15 @@ final class Main
      * @param $config
      * @return void
      */
-    private function generate_content_for_post($post_id, $type, $config): void
+    private function generate_content_for_post($post_id, $type): void
     {
         // Get the post Object, so we can grab the current content
         $post = get_post($post_id);
 
         // If post and config set, queue it up!
-        if ($post && $config) {
+        if ($post) {
             // Add to queue
-            (new QueueLoader())->store_job($post, $config, $type);
+            (new QueueLoader())->store_job($post, $type);
 
             // Add admin notice that we've queued this post up
             set_transient('jensi_ai_generating', [
@@ -290,10 +290,6 @@ final class Main
     {
         wp_nonce_field('jensi_ai_metabox_nonce', 'jensi_ai_nonce');
         $content = get_post_meta($post->ID, '_jensi_ai_generated_content', true);
-        $liContent = get_post_meta($post->ID, '_jensi_ai_li_generated_content', true);
-        $igContent = get_post_meta($post->ID, '_jensi_ai_ig_generated_content', true);
-        $fbContent = get_post_meta($post->ID, '_jensi_ai_fb_generated_content', true);
-        $twContent = get_post_meta($post->ID, '_jensi_ai_tw_generated_content', true);
         ?>
         <style>
             .jensi_ai_input_group_heading {
@@ -322,12 +318,7 @@ final class Main
         </style>
         <div class="jensi_ai_input_group_heading">
             <p class="jensi_ai_meta_details">
-                Use the below options to generate (or re-generate) AI content on
-                post save.
-                <strong>This content will be automatically generated on post
-                    create if <a href="/wp-admin/admin.php?page=jensi_ai" target="_blank">configured to do so</a>
-                    .</strong>
-                This override will allow you to generate content on-demand.
+                TODO
             </p>
             <label class="selectit">
                 <input value="jensi_ai_generate_on_save" type="checkbox" name="jensi_ai_generate_on_save" id="jensi_ai_generate_on_save">
@@ -349,70 +340,6 @@ final class Main
             </textarea>
             <small class="jensi_ai_input_group_info">
                 Meta field: _jensi_ai_generated_content
-            </small>
-        </div>
-
-        <div class="jensi_ai_input_group">
-            <label class="">
-                LinkedIn content
-            </label>
-            <label class="selectit check">
-                <input value="jensi_ai_generate_li_on_save" type="checkbox" name="jensi_ai_generate_li_on_save" id="jensi_ai_generate_li_on_save">
-                Generate new LinkedIn content on save?
-            </label>
-            <textarea class="large-text" name="jensi_ai_li_generated_content" id="jensi_ai_li_generated_content" rows="4" cols="4" autocomplete="off">
-                <?php echo trim($liContent); ?>
-            </textarea>
-            <small class="jensi_ai_input_group_info">
-                Meta field: _jensi_ai_li_generated_content
-            </small>
-        </div>
-
-        <div class="jensi_ai_input_group">
-            <label class="">
-                Instagram content
-            </label>
-            <label class="selectit check">
-                <input value="jensi_ai_generate_ig_on_save" type="checkbox" name="jensi_ai_generate_ig_on_save" id="jensi_ai_generate_ig_on_save">
-                Generate new Instagram content on save?
-            </label>
-            <textarea class="large-text" name="jensi_ai_ig_generated_content" id="jensi_ai_ig_generated_content" rows="4" cols="4" autocomplete="off">
-                <?php echo trim($igContent); ?>
-            </textarea>
-            <small class="jensi_ai_input_group_info">
-                Meta field: _jensi_ai_ig_generated_content
-            </small>
-        </div>
-
-        <div class="jensi_ai_input_group">
-            <label class="">
-                Facebook content
-            </label>
-            <label class="selectit check">
-                <input value="jensi_ai_generate_fb_on_save" type="checkbox" name="jensi_ai_generate_fb_on_save" id="jensi_ai_generate_fb_on_save">
-                Generate new Facebook content on save?
-            </label>
-            <textarea class="large-text" name="jensi_ai_fb_generated_content" id="jensi_ai_fb_generated_content" rows="4" cols="4" autocomplete="off">
-                <?php echo trim($fbContent); ?>
-            </textarea>
-            <small class="jensi_ai_input_group_info">
-                Meta field: _jensi_ai_fb_generated_content
-            </small>
-        </div>
-
-        <div class="jensi_ai_input_group">
-            <label class="">
-                Twitter content
-            </label>
-            <label class="selectit check">
-                <input value="jensi_ai_generate_tw_on_save" type="checkbox" name="jensi_ai_generate_tw_on_save" id="jensi_ai_generate_tw_on_save">
-                Generate new Twitter content on save?
-            </label>
-            <textarea class="large-text" name="jensi_ai_tw_generated_content" id="jensi_ai_tw_generated_content" rows="4" cols="4" autocomplete="off">
-                <?php echo trim($twContent); ?>
-            </textarea>
-            <small class="jensi_ai_input_group_info">
-                Meta field: _jensi_ai_tw_generated_content
             </small>
         </div>
 <?php
