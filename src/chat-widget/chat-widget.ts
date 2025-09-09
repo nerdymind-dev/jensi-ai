@@ -1,6 +1,7 @@
 import { createApp } from 'vue'
 import ChatWidget from './ChatWidget.vue'
 import installShared from '~src/shared'
+import { Vue3ProgressPlugin } from '@marcoschulte/vue3-progress';
 
 /**
  * Chat Widget Entry Point
@@ -21,6 +22,10 @@ document.addEventListener('DOMContentLoaded', () => {
   // Install shared utilities
   installShared(app, 'jensi_ai_chat_widget_config')
   
+  app.use(Vue3ProgressPlugin, {
+    // ...
+  })
+
   // Mount the app
   app.mount('#jensi-ai-chat-widget')
 })

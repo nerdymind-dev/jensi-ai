@@ -160,7 +160,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted, nextTick, watch } from 'vue'
+import { ref, inject, reactive, computed, onMounted, nextTick, watch } from 'vue'
 import Echo from 'laravel-echo'
 import Pusher from 'pusher-js'
 
@@ -173,6 +173,9 @@ declare global {
 
 // Make Pusher available globally for Laravel Echo
 window.Pusher = Pusher
+
+const axios = inject('axios') as any
+const win = inject('win') as any
 
 // Types
 interface Message {
@@ -295,7 +298,7 @@ const initializeChat = async () => {
   try {
     // Check for saved chat ID
     const savedChatId = localStorage.getItem('jensi_ai_chat_id')
-    if (savedChatId) {
+    if (savedChatId && savedChatId !== undefined) {
       // Try to load existing chat
       await loadChat(savedChatId)
     } else {
@@ -313,18 +316,11 @@ const getDefaultAgent = async (): Promise<Agent> => {
   // If we have a default agent ID from settings, try to fetch its details
   if (config.defaultAgentId) {
     try {
-      const response = await fetch(`${config.apiBaseUrl}/agents/get?id=${config.defaultAgentId}`, {
-        headers: {
-          'X-WP-Nonce': config.nonce,
-        }
-      })
-      if (response.ok) {
-        const data = await response.json()
-        if (data.success && data.data) {
-          const agent = data.data.find((a: Agent) => a.id === config.defaultAgentId)
-          if (agent) {
-            return agent
-          }
+      const response = await axios.get(`${config.apiBaseUrl}/agents/get?id=${config.defaultAgentId}`)
+      if (response.data.success && response.data.data) {
+        const agent = response.data.data.find((a: Agent) => a.id === config.defaultAgentId)
+        if (agent) {
+          return agent
         }
       }
     } catch (error) {
@@ -344,31 +340,22 @@ const loadChat = async (chatId: string) => {
   isLoading.value = true
   
   try {
-    const response = await fetch(`${config.apiBaseUrl}/chat/${chatId}`, {
-      headers: {
-        'X-WP-Nonce': config.nonce,
-      }
-    })
-    
-    if (!response.ok) {
+    const response = await axios.get(`${config.apiBaseUrl}/chat/${chatId}`)
+  
+    if (!response.data.success) {
       throw new Error('Failed to load chat')
-    }
-    const data = await response.json()
+    }    
+
+    currentChat.value = response.data.data
+    currentAgent.value = response.data.data.agent
+    messages.value = response.data.data.messages || []
     
-    if (data.success) {
-      currentChat.value = data.data
-      currentAgent.value = data.data.agent
-      messages.value = data.data.messages || []
-      
-      // Connect to websocket
-      connectWebSocket(data.data.websocket)
-      
-      // Scroll to bottom
-      await nextTick()
-      scrollToBottom()
-    } else {
-      throw new Error(data.message || 'Failed to load chat')
-    }
+    // Connect to websocket
+    connectWebSocket(response.data.data.websocket)
+    
+    // Scroll to bottom
+    await nextTick()
+    scrollToBottom()
   } catch (error) {
     console.error('Error loading chat:', error)
     // Clear invalid chat ID and start fresh
@@ -415,44 +402,30 @@ const sendMessage = async () => {
       throw new Error('No agent or chat configured')
     }
     
-    const response = await fetch(`${config.apiBaseUrl}/chat/send-message`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-WP-Nonce': config.nonce,
-      },
-      body: JSON.stringify(payload),
-    })
-    
-    if (!response.ok) {
+    const response = await axios.post(`${config.apiBaseUrl}/chat/send-message`, payload)
+
+    if (!response.data.success) {
       throw new Error('Failed to send message')
     }
     
-    const data = await response.json()
+    // Update user message with real ID
+    const sentMessage = response.data.data
+    userMessage.id = sentMessage.id
+    userMessage.chat_id = sentMessage.chat_id
     
-    if (data.success) {
-      // Update user message with real ID
-      const sentMessage = data.data
-      userMessage.id = sentMessage.id
-      userMessage.chat_id = sentMessage.chat_id
+    // Save chat info
+    if (!currentChat.value) {
+      currentChat.value = sentMessage.chat
+      localStorage.setItem('jensi_ai_chat_id', sentMessage.chat_id)
       
-      // Save chat info
-      if (!currentChat.value) {
-        currentChat.value = sentMessage.chat
-        localStorage.setItem('jensi_ai_chat_id', sentMessage.chat_id)
-        
-        // Connect to websocket for streaming response
-        connectWebSocket(sentMessage.chat.websocket)
-      }
-      
-      // Show typing indicator
-      isTyping.value = true
-      await nextTick()
-      scrollToBottom()
-      
-    } else {
-      throw new Error(data.message || 'Failed to send message')
+      // Connect to websocket for streaming response
+      connectWebSocket(sentMessage.chat.websocket)
     }
+    
+    // Show typing indicator
+    isTyping.value = true
+    await nextTick()
+    scrollToBottom()
   } catch (error) {
     console.error('Error sending message:', error)
     // Remove the failed message
@@ -619,6 +592,10 @@ onMounted(() => {
     Object.assign(config, wpConfig)
   }
   
+  if (!win.$appConfig.nonce) {
+    win.$appConfig.nonce = config.nonce
+  }
+
   // Set pulse animation to stop after a few seconds
   setTimeout(() => {
     shouldPulse.value = false

@@ -114,7 +114,7 @@ class ChatController extends \WP_REST_Controller
     public function send_message($request)
     {
         $params = $request->get_params();
-        
+
         if (!$this->token) {
             return new \WP_Error('no_api_token', __('No JENSi AI API token configured.'), ['status' => 500]);
         }
@@ -176,7 +176,7 @@ class ChatController extends \WP_REST_Controller
     public function get_chat($request)
     {
         $chat_id = $request->get_param('chat_id');
-        
+
         if (!$this->token) {
             return new \WP_Error('no_api_token', __('No JENSi AI API token configured.'), ['status' => 500]);
         }
@@ -219,7 +219,7 @@ class ChatController extends \WP_REST_Controller
     public function create_chat($request)
     {
         $params = $request->get_params();
-        
+
         if (!$this->token) {
             return new \WP_Error('no_api_token', __('No JENSi AI API token configured.'), ['status' => 500]);
         }
@@ -271,9 +271,15 @@ class ChatController extends \WP_REST_Controller
      */
     public function check_public_permissions($request)
     {
-        // For now, allow public access to chat endpoints
-        // In a production environment, you might want to add rate limiting,
-        // CSRF protection, or other security measures
+        // Check for CSRF to make sure request is valid
+        $nonce = $request->get_header('X-WP-Nonce') ?: $request->get_param('_wpnonce');
+        if (!$nonce || !wp_verify_nonce($nonce, 'wp_rest')) {
+            return new \WP_Error('rest_forbidden', __('Invalid nonce.'), ['status' => 403]);
+        }
+
+        // since success, we respond with next nonce
+        header('X-WP-Nonce: ' . wp_create_nonce('wp_rest'));
+
         return true;
     }
 
