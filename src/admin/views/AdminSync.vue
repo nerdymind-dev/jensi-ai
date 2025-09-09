@@ -1,6 +1,6 @@
 <template>
   <div>
-    <breadcrumbs :links="getCrumbs()" />
+    <!-- <breadcrumbs :links="getCrumbs()" /> -->
 
     <section>
       <div class="">
@@ -14,8 +14,8 @@
           <t-button
             variant="secondary"
             class="mr-2"
-            :class="{ 'opacity-25 cursor-not-allowed': !hasLoaded && isLoading }"
-            :disabled="!hasLoaded || isLoading"
+            :class="{ 'opacity-25 cursor-not-allowed': !hasLoaded || isLoading || !hasConfigs }"
+            :disabled="!hasLoaded || isLoading || !hasConfigs"
             @click="() => doSync()">
             Sync All
           </t-button>
@@ -32,7 +32,20 @@
                       </div>
                       <div class="ml-3">
                         <p class="text-sm text-blue-700">
-                          Use the buttons below to manually sync content with the JENSi AI service. You can sync all content that is currently configured for syncing, or you can sync individual configurations.
+                          Sync will happen automatically when content is updated matching any <strong>Configuration</strong> using the WP-Cron system. You do not need to manually sync unless you want to force an immediate update.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="my-4 border-l-4 border-yellow-400 bg-yellow-50 p-4">
+                    <div class="flex">
+                      <div class="flex-shrink-0">
+                        <ExclamationTriangleIcon class="h-5 w-5 text-yellow-400" aria-hidden="true" />
+                      </div>
+                      <div class="ml-3">
+                        <p class="text-sm text-yellow-700">
+                          Use the <strong>Sync Now</strong> button on each configuration card to sync content for that specific configuration.
+                          You can also use the <strong>Sync All</strong> button at the top to sync content for all configurations.
                         </p>
                       </div>
                     </div>
@@ -91,7 +104,7 @@
 </template>
 
 <script setup>
-import {ref, inject, onBeforeMount, nextTick} from 'vue'
+import {ref, inject, onBeforeMount, nextTick, computed} from 'vue'
 import Breadcrumbs from '~src/shared/components/BreadcrumbNavigation.vue'
 import {TButton} from '@variantjs/vue'
 
@@ -99,6 +112,7 @@ import {
   InformationCircleIcon,
   CheckCircleIcon,
   MinusCircleIcon,
+  ExclamationTriangleIcon
 } from '@heroicons/vue/24/outline'
 
 const win = inject('win')
@@ -114,6 +128,10 @@ const endpoints = ref({
 })
 
 const config = inject('pluginConfig')
+
+const hasConfigs = computed(() => {
+  return currentConfigs.value && Array.isArray(currentConfigs.value) && currentConfigs.value.length > 0
+})
 
 onBeforeMount(() => {
   if (document.readyState === 'complete') {

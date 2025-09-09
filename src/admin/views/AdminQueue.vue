@@ -1,6 +1,6 @@
 <template>
   <div>
-    <breadcrumbs :links="getCrumbs()" />
+    <!-- <breadcrumbs :links="getCrumbs()" /> -->
 
     <section v-if="hasLoaded">
       <div class="">
@@ -41,8 +41,8 @@
 
           <t-button
             variant="secondary"
-            :class="{ 'opacity-25 cursor-not-allowed': !canReload }"
-            :disabled="!canReload"
+            :class="{ 'opacity-25 cursor-not-allowed': !canReload || !hasItems }"
+            :disabled="!canReload || !hasItems"
             @click="() => doProcessQueue()">
             Process Next Job
           </t-button>
@@ -50,8 +50,8 @@
           <t-button
             variant="secondary"
             class="ml-2"
-            :class="{ 'opacity-25 cursor-not-allowed': !canReload }"
-            :disabled="!canReload"
+            :class="{ 'opacity-25 cursor-not-allowed': !canReload || !hasItems }"
+            :disabled="!canReload || !hasItems"
             @click="doProcessAll">
             Process All Jobs
           </t-button>
@@ -296,6 +296,10 @@ const bulkSelectedIds = computed(() => Object.keys(bulkSelected.value).filter(id
 const allRowsSelected = computed(() => {
   if (!queueTable.value.rows || !queueTable.value.rows.length) return false
   return queueTable.value.rows.every(row => bulkSelected.value[row.id])
+})
+
+const hasItems = computed(() => {
+  return queueTable.value && Array.isArray(queueTable.value.rows) && queueTable.value.rows.length > 0
 })
 
 const endpoints = ref({

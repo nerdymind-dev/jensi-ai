@@ -1,6 +1,6 @@
 <template>
   <div>
-    <breadcrumbs :links="getCrumbs()" />
+    <!-- <breadcrumbs :links="getCrumbs()" /> -->
 
     <section>
       <div class="">
