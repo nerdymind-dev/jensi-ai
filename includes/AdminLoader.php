@@ -106,6 +106,14 @@ class AdminLoader
         $dataSourceController = new Api\DataSourceController();
         $syncController = new Api\SyncController();
 
+        // Get API URLs based on environment
+        $env = wp_get_environment_type();
+
+        // Link to the correct API base URL
+        $api_url = $env === 'local'
+            ? 'https://jensi-ai.test'
+            : 'https://ai.jensi.com';
+
         // Get the post types
         $postTypes = array_filter(get_post_types([], 'names'), function ($postType) {
             // Filter out built-in post types and those that don't support title/editor
@@ -169,6 +177,7 @@ class AdminLoader
                     'sync' => $syncController->get_endpoints(),
                 ],
                 'nonce' => wp_create_nonce('wp_rest'),
+                'api_url' => $api_url,
             ],
             'nonce' => wp_create_nonce('wp_rest'),
             'configs' => $configController->get_all_configs(),

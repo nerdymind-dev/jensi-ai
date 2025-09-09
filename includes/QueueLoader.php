@@ -87,7 +87,7 @@ class QueueLoader
     }
 
     /**
-     * @param $id
+     * @param int|null $id
      * @return bool
      */
     public function process_job($id = null)
@@ -98,10 +98,6 @@ class QueueLoader
         if (is_numeric($id)) {
             $id = intval($id);
             $id = "= $id";
-        } elseif (is_array($id)) {
-            $id = array_map('intval', $id);
-            $id = implode(',', $id);
-            $id = "IN ($id)";
         } else {
             $id = null;
         }
@@ -109,15 +105,20 @@ class QueueLoader
             ? " WHERE `processed` = 0 AND `id` $id"
             : " WHERE `processed` = 0";
         $orderBy = " ORDER BY `created` ASC";
+
+        // Load settings
+        $settings = (new SettingController())->get_settings_raw();
+
+        // The API endpoint
+        $url = $this->base_api . '/data-sources/data';
+
+        // Get queued items
         $results = $wpdb->get_results($statement . $where . $orderBy);
         if ($results) {
             foreach ($results as $result) {
                 // Flag item as processed (so it doesn't get run again)
                 $wpdb->update($queue_table, ['processed' => true], ['id' => $result->id]);
                 try {
-                    // Load settings
-                    $settings = (new SettingController())->get_settings_raw();
-
                     // Make sure we have the required minimum for connecting to the API
                     if (!$settings['jensi_ai_api_key']) {
                         $wpdb->update($queue_table, [
@@ -129,6 +130,7 @@ class QueueLoader
                                 'line' => null
                             ])
                         ], ['id' => $result->id]);
+                        continue;
                     }
                     if (!$settings['jensi_ai_data_source']) {
                         $wpdb->update($queue_table, [
@@ -140,10 +142,10 @@ class QueueLoader
                                 'line' => null
                             ])
                         ], ['id' => $result->id]);
+                        continue;
                     }
 
                     // Process the job
-                    $url = $this->base_api . '/data-sources/data';
                     $body = [
                         'agent_id' => $settings['jensi_ai_agent'] ?? null,
                         'source_id' => $settings['jensi_ai_data_source'] ?? null,
@@ -191,7 +193,6 @@ class QueueLoader
                                 'line' => null
                             ])
                         ], ['id' => $result->id]);
-                        return false;
                     } else {
                         if (json_last_error() !== JSON_ERROR_NONE) {
                             $wpdb->update($queue_table, [
@@ -203,7 +204,6 @@ class QueueLoader
                                     'line' => null
                                 ])
                             ], ['id' => $result->id]);
-                            return false;
                         }
 
                         // Mark job as successful
@@ -214,7 +214,6 @@ class QueueLoader
                             ],
                             'errors' => null
                         ], ['id' => $result->id]);
-                        return true;
                     }
                 } catch (\Exception $e) {
                     $wpdb->update($queue_table, [
@@ -229,6 +228,6 @@ class QueueLoader
                 }
             }
         }
-        return false;
+        return true;
     }
 }

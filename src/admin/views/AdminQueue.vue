@@ -46,6 +46,15 @@
             @click="() => doProcessQueue()">
             Process Next Job
           </t-button>
+
+          <t-button
+            variant="secondary"
+            class="ml-2"
+            :class="{ 'opacity-25 cursor-not-allowed': !canReload }"
+            :disabled="!canReload"
+            @click="doProcessAll">
+            Process All Jobs
+          </t-button>
         </div>
         <div class="mt-8 flow-root">
           <div class="overflow-x-auto">
@@ -61,7 +70,7 @@
                       <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">
                         <t-checkbox :checked="allRowsSelected" @change="toggleSelectAllRows" aria-label="Select all" />
                       </th>
-                      <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Post</th>
+                      <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Title</th>
                       <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Type</th>
                       <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Status</th>
                       <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Success</th>
@@ -272,12 +281,56 @@ import Breadcrumbs from '~src/shared/components/BreadcrumbNavigation.vue'
 import Loader from '~src/shared/components/LoadingIndicator.vue'
 import {TButton, TCheckbox} from '@variantjs/vue'
 
+const win = inject('win')
+const swal = inject('swal')
+const axios = inject('axios')
+
+const hasLoaded = ref(false)
+const isLoading = ref(false)
+const queueTable = ref({ rows: [] })
+const selectedRows = ref({})
+
 // Bulk select state
 const bulkSelected = ref({})
 const bulkSelectedIds = computed(() => Object.keys(bulkSelected.value).filter(id => bulkSelected.value[id]))
 const allRowsSelected = computed(() => {
   if (!queueTable.value.rows || !queueTable.value.rows.length) return false
   return queueTable.value.rows.every(row => bulkSelected.value[row.id])
+})
+
+const endpoints = ref({
+  queue: {
+    table: '',
+    job: '',
+    process: '',
+    process_all: '',
+  }
+})
+
+const config = inject('pluginConfig')
+
+onBeforeMount(() => {
+  if (document.readyState === 'complete') {
+    doLoad()
+  } else {
+    document.onreadystatechange = () => {
+      if (document.readyState === 'complete') {
+        doLoad()
+      }
+    }
+  }
+})
+
+const selectRow = (row) => {
+  selectedRows.value[row.id] = !selectedRows.value[row.id]
+}
+
+const isRowSelected = (row) => {
+  return selectedRows.value[row.id] || false
+}
+
+const canReload = computed(() => {
+  return !isLoading.value && queueTable.value.hasOwnProperty('first_page_url')
 })
 
 function toggleBulkSelectRow(row) {
@@ -362,6 +415,48 @@ async function doBulkDelete() {
   })
 }
 
+async function doProcessAll() {
+  const totalJobs = queueTable.value?.total || 0
+  if (totalJobs === 0) return
+  swal.fire({
+    icon: 'warning',
+    title: 'Are you sure?',
+    text: `Process all ${totalJobs} jobs now?`,
+    showCancelButton: true,
+    confirmButtonText: 'Process',
+  }).then(async (result) => {
+    if (result.isConfirmed) {
+      isLoading.value = true
+      try {
+        await axios.post(endpoints.value.queue.process_all)
+        swal.fire({
+          position: 'top-end',
+          icon: 'success',
+          title: 'Selected jobs processing started',
+          showConfirmButton: false,
+          timer: 1500
+        })
+        await getTableData(queueTable.value.first_page_url)
+      } catch (err) {
+        if (config.settings.enable_debug_messages) {
+          console.error(':: DEBUG - Bulk Process Error ::', err)
+        }
+        if (err?.code !== 'ERR_CANCELED') {
+          const text = err?.response?.data?.error || 'Server responded with an error'
+          swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text,
+            footer: '<div class="overflow-footer w-full">' + err.message + '</div>'
+          })
+        }
+      } finally {
+        isLoading.value = false
+      }
+    }
+  })
+}
+
 async function doBulkProcess() {
   if (!bulkSelectedIds.value.length) return
   swal.fire({
@@ -409,49 +504,6 @@ async function doBulkProcess() {
     }
   })
 }
-
-const win = inject('win')
-const swal = inject('swal')
-const axios = inject('axios')
-
-const hasLoaded = ref(false)
-const isLoading = ref(false)
-const queueTable = ref({ rows: [] })
-const selectedRows = ref({})
-
-const endpoints = ref({
-  queue: {
-    table: '',
-    job: '',
-    process: ''
-  }
-})
-
-const config = inject('pluginConfig')
-
-onBeforeMount(() => {
-  if (document.readyState === 'complete') {
-    doLoad()
-  } else {
-    document.onreadystatechange = () => {
-      if (document.readyState === 'complete') {
-        doLoad()
-      }
-    }
-  }
-})
-
-const selectRow = (row) => {
-  selectedRows.value[row.id] = !selectedRows.value[row.id]
-}
-
-const isRowSelected = (row) => {
-  return selectedRows.value[row.id] || false
-}
-
-const canReload = computed(() => {
-  return !isLoading.value && queueTable.value.hasOwnProperty('first_page_url')
-})
 
 const reloadData = async () => {
   if (queueTable.value?.first_page_url) {

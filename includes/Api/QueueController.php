@@ -101,6 +101,18 @@ class QueueController extends \WP_REST_Controller
                 ],
             ]
         );
+        register_rest_route(
+            $this->namespace,
+            '/' . $this->rest_base . '/process-all',
+            [
+                [
+                    'methods' => \WP_REST_Server::CREATABLE,
+                    'callback' => [$this, 'process_all_jobs'],
+                    'permission_callback' => [$this, 'get_items_permissions_check'],
+                    'args' => $this->get_collection_params(),
+                ],
+            ]
+        );
     }
 
     /**
@@ -123,7 +135,11 @@ class QueueController extends \WP_REST_Controller
             'process' => esc_url_raw(
             // POST
                 rest_url($this->namespace . '/' . $this->rest_base . '/process')
-            )
+            ),
+            'process_all' => esc_url_raw(
+            // POST
+                rest_url($this->namespace . '/' . $this->rest_base . '/process-all')
+            ),
         ];
     }
 
@@ -170,6 +186,28 @@ class QueueController extends \WP_REST_Controller
         $response = rest_ensure_response([
             'data' => [
                 'processed' => (new QueueLoader())->process_job($id)
+            ],
+            'success' => true,
+            'nonce' => $nonce,
+        ]);
+        return rest_ensure_response($response);
+    }
+
+    /**
+     * Process all queued items.
+     *
+     * @param \WP_REST_Request $request Full details about the request.
+     *
+     * @return \WP_REST_Response|\WP_Error Response object on success, or WP_Error object on failure.
+     */
+    public function process_all_jobs(\WP_REST_Request $request)
+    {
+        // attempt to parse the json parameter
+        $params = $request->get_params();
+        $nonce = wp_create_nonce('wp_rest');
+        $response = rest_ensure_response([  
+            'data' => [
+                'processed' => (new QueueLoader())->process_job() // Process all jobs
             ],
             'success' => true,
             'nonce' => $nonce,
