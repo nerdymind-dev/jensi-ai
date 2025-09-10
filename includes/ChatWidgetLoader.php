@@ -14,6 +14,8 @@ class ChatWidgetLoader
      */
     private $prefix;
 
+    private $settings;
+
     /**
      * Initialize this class.
      *
@@ -27,6 +29,9 @@ class ChatWidgetLoader
         if (!is_admin()) {
             add_action('wp_enqueue_scripts', [$this, 'enqueue_chat_widget']);
         }
+
+        // Get settings (used in multiple methods)
+        $this->settings = (new Api\SettingController())->get_settings_raw();
     }
 
     /**
@@ -36,13 +41,12 @@ class ChatWidgetLoader
      */
     public function enqueue_chat_widget()
     {
+        $settings = $this->settings;
+
         // Check if chat widget should be enabled
         if (!$this->should_load_widget()) {
             return;
         }
-
-        // Get settings to check if widget is enabled
-        $settings = (new Api\SettingController())->get_settings_raw();
 
         // Enqueue styles and scripts
         wp_enqueue_style($this->prefix . '-chat-widget');
@@ -78,8 +82,7 @@ class ChatWidgetLoader
      */
     private function should_load_widget()
     {
-        // Get settings to check if widget is enabled
-        $settings = (new Api\SettingController())->get_settings_raw();
+        $settings = $this->settings;
 
         // Check if API key is configured
         if (empty($settings['jensi_ai_api_key'])) {
@@ -108,7 +111,7 @@ class ChatWidgetLoader
      */
     private function get_widget_config()
     {
-        $settings = (new Api\SettingController())->get_settings_raw();
+        $settings = $this->settings;
 
         // Get API URLs based on environment
         $env = wp_get_environment_type();
