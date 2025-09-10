@@ -118,7 +118,10 @@
                           {{ row.processed === '1' ? 'Processed' : 'Queued' }}
                         </td>
                         <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                          <span v-if="row.failed === '1'" class="text-red-500">
+                          <span v-if="row.processed !== '1'">
+                            N/A
+                          </span>
+                          <span v-else-if="row.failed === '1'" class="text-red-500">
                             False
                           </span>
                           <span v-else>
