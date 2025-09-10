@@ -127,7 +127,7 @@ class ChatWidgetLoader
 
         $ws_base_url = $env === 'local'
             ? 'jensi-ai.test:8090'
-            : 'ai.jensi.com:8090';
+            : 'ai.jensi.com:443'; // Use port 443 for secure WebSocket (wss) in production
 
         $config = [
             'apiBaseUrl' => rest_url($this->prefix . '/v1'),
