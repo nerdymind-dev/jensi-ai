@@ -132,6 +132,7 @@ class ChatWidgetLoader
             'defaultAgentId' => $settings['jensi_ai_agent'] ?? '',
             'pluginUrl' => rtrim(\JensiAI\Main::$BASEURL, '/'),
             'welcomeMessage' => $settings['welcome_message'] ?? 'Hello! How can I assist you today?',
+            'avatarUrl' => !empty($settings['avatar_url']) ? esc_url($settings['avatar_url']) : '',
         ];
 
         // Allow filtering of configuration

@@ -31,7 +31,12 @@
       <div class="jensi-ai-chat-header">
         <div class="jensi-ai-chat-agent-info">
           <div class="jensi-ai-chat-agent-avatar">
-            {{ currentAgent?.name?.charAt(0).toUpperCase() || 'AI' }}
+            <template v-if="config.avatarUrl && config.avatarUrl.length > 0">
+              <img :src="config.avatarUrl" alt="Agent Avatar" />
+            </template>
+            <template v-else>
+              {{ currentAgent?.name?.charAt(0).toUpperCase() || 'AI' }}
+            </template>
           </div>
           <div>
             <h3 class="jensi-ai-chat-agent-name">
@@ -72,7 +77,12 @@
         >
           <div class="jensi-ai-chat-message-content">
             <div v-if="message.type === 'assistant'" class="jensi-ai-chat-message-avatar">
-              {{ currentAgent?.name?.charAt(0).toUpperCase() || 'AI' }}
+              <template v-if="config.avatarUrl && config.avatarUrl.length > 0">
+                <img :src="config.avatarUrl" alt="Agent Avatar" />
+              </template>
+              <template v-else>
+                {{ currentAgent?.name?.charAt(0).toUpperCase() || 'AI' }}
+              </template>
             </div>
             <div class="jensi-ai-chat-message-text">
               <span v-html="message.message"></span>
@@ -106,7 +116,12 @@
           class="jensi-ai-chat-welcome"
         >
           <div class="jensi-ai-chat-welcome-avatar">
-            {{ currentAgent?.name?.charAt(0).toUpperCase() || 'AI' }}
+            <template v-if="config.avatarUrl && config.avatarUrl.length > 0">
+              <img :src="config.avatarUrl" alt="Agent Avatar" />
+            </template>
+            <template v-else>
+              {{ currentAgent?.name?.charAt(0).toUpperCase() || 'AI' }}
+            </template>
           </div>
           <div class="jensi-ai-chat-welcome-content">
             <h4>Welcome!</h4>
@@ -235,6 +250,7 @@ const config = reactive({
   wsBaseUrl: '',
   defaultAgentId: '',
   welcomeMessage: 'How can I help you today?',
+  avatarUrl: '',
   nonce: '',
 })
 

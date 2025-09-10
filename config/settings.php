@@ -84,6 +84,13 @@ return [
             'format'      => 'hex',
             'default'     => '#000000',
         ],
+        'avatar_url'    => [
+            'name'        => __('Avatar URL', \JensiAI\Main::PREFIX),
+            'description' => __('The avatar image URL for the chat bot (leave empty for default)', \JensiAI\Main::PREFIX),
+            'section'     => 'widget',
+            'type'        => 'url',
+            'default'     => '',
+        ],
 
         // Extra
         // ...
