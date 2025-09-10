@@ -58,11 +58,15 @@ class ChatWidgetLoader
         $secondaryHex = $settings['secondary_color'] ?? '#764ba2';
         $backgroundHex = $settings['background_color'] ?? '#ffffff';
         $textHex = $settings['text_color'] ?? '#000000';
+        $bottomOffset = isset($settings['bottom_offset']) ? intval($settings['bottom_offset']) : 20;
+        $rightOffset = isset($settings['right_offset']) ? intval($settings['right_offset']) : 20;
         $custom_css = "
         :root {
             --jensi-ai-color-primary: " . $primaryHex . ";
             --jensi-ai-rgb-primary: " . implode(',', $primaryRgb) . ";
             --jensi-ai-color-secondary: " . $secondaryHex . ";
+            --jensi-ai-bottom-offset: " . $bottomOffset . "px;
+            --jensi-ai-right-offset: " . $rightOffset . "px;
             --jensi-ai-color-background: " . $backgroundHex . ";
             --jensi-ai-color-text: " . $textHex . ";
         }";

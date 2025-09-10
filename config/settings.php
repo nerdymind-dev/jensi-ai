@@ -45,12 +45,37 @@ return [
             'type' => 'toggle',
             'default' => true,
         ],
+        'avatar_url'    => [
+            'name'        => __('Avatar URL', \JensiAI\Main::PREFIX),
+            'description' => __('The avatar image URL for the chat bot (leave empty for default)', \JensiAI\Main::PREFIX),
+            'section'     => 'widget',
+            'type'        => 'url',
+            'default'     => '',
+        ],
         'welcome_message' => [
             'name'        => __('Welcome message', \JensiAI\Main::PREFIX),
             'description' => __('The welcome message shown when the chat widget is opened', \JensiAI\Main::PREFIX),
             'section'     => 'widget',
             'type'        => 'textarea',
             'default'     => 'Hello! How can I assist you today?',
+        ],
+        'bottom_offset' => [
+            'name'        => __('Bottom Offset', \JensiAI\Main::PREFIX),
+            'description' => __('The distance from the bottom of the screen to position the chat widget (in pixels)', \JensiAI\Main::PREFIX),
+            'section'     => 'widget',
+            'type'        => 'slider',
+            'min'         => 0,
+            'max'         => 200,
+            'default'     => 20,
+        ],
+        'right_offset'  => [
+            'name'        => __('Right Offset', \JensiAI\Main::PREFIX),
+            'description' => __('The distance from the right of the screen to position the chat widget (in pixels)', \JensiAI\Main::PREFIX),
+            'section'     => 'widget',
+            'type'        => 'slider',
+            'min'         => 0,
+            'max'         => 200,
+            'default'     => 20,
         ],
         'primary_color'   => [
             'name'        => __('Primary color', \JensiAI\Main::PREFIX),
@@ -83,13 +108,6 @@ return [
             'type'        => 'color',
             'format'      => 'hex',
             'default'     => '#000000',
-        ],
-        'avatar_url'    => [
-            'name'        => __('Avatar URL', \JensiAI\Main::PREFIX),
-            'description' => __('The avatar image URL for the chat bot (leave empty for default)', \JensiAI\Main::PREFIX),
-            'section'     => 'widget',
-            'type'        => 'url',
-            'default'     => '',
         ],
 
         // Extra
