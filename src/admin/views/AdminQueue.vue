@@ -14,48 +14,61 @@
             </p>
           </div>
 
-          <div v-if="bulkSelectedIds.length > 0" class="flex items-center gap-2 mr-2">
-            <!-- Bulk action bar -->
-            <t-button 
-            variant="danger" 
-            @click="doBulkDelete" 
-            :disabled="isLoading">
-              Delete Selected
-            </t-button>
+          <div class="flex flex-row flex-auto items-center justify-center md:justify-end">
             <t-button
-             variant="primary" 
-             @click="doBulkProcess" 
-            :disabled="isLoading">
-              Process Selected
+              variant="secondary"
+              class="mr-2"
+              :class="{ 'opacity-25 cursor-not-allowed': !canReload }"
+              :disabled="!canReload"
+              @click="reloadData">
+              Reload Table
+            </t-button>
+
+            <t-button
+              variant="secondary"
+              class="mr-2"
+              :class="{ 'opacity-25 cursor-not-allowed': !canReload || !hasItems }"
+              :disabled="!canReload || !hasItems"
+              @click="() => doProcessQueue()">
+              Process Next Job
+            </t-button>
+
+            <t-button
+              variant="danger"
+              class="mr-2"
+              :class="{ 'opacity-25 cursor-not-allowed': !canReload || !hasItems }"
+              :disabled="!canReload || !hasItems"
+              @click="doClearAll">
+              Clear All Jobs
+            </t-button>
+
+            <t-button
+              variant="primary"
+              class="mr-2"
+              :class="{ 'opacity-25 cursor-not-allowed': !canReload || !hasItems }"
+              :disabled="!canReload || !hasItems"
+              @click="doProcessAll">
+              Process All Jobs
             </t-button>
           </div>
+        </div>
 
-          <t-button
-            variant="secondary"
-            class="mr-2"
-            :class="{ 'opacity-25 cursor-not-allowed': !canReload }"
-            :disabled="!canReload"
-            @click="reloadData">
-            Reload Table
+        <div v-if="bulkSelectedIds.length > 0" class="flex items-center gap-2 mr-2">
+          <!-- Bulk action bar -->
+          <t-button 
+          variant="danger" 
+          @click="doBulkDelete"
+          :disabled="isLoading">
+            Delete Selected
           </t-button>
-
           <t-button
-            variant="secondary"
-            :class="{ 'opacity-25 cursor-not-allowed': !canReload || !hasItems }"
-            :disabled="!canReload || !hasItems"
-            @click="() => doProcessQueue()">
-            Process Next Job
-          </t-button>
-
-          <t-button
-            variant="secondary"
-            class="ml-2"
-            :class="{ 'opacity-25 cursor-not-allowed': !canReload || !hasItems }"
-            :disabled="!canReload || !hasItems"
-            @click="doProcessAll">
-            Process All Jobs
+            variant="primary" 
+            @click="doBulkProcess" 
+          :disabled="isLoading">
+            Process Selected
           </t-button>
         </div>
+
         <div class="mt-8 flow-root">
           <div class="overflow-x-auto">
             <div class="inline-block min-w-full py-2 align-middle">
@@ -308,6 +321,7 @@ const endpoints = ref({
     job: '',
     process: '',
     process_all: '',
+    clear_all: '',
   }
 })
 
@@ -362,7 +376,7 @@ async function doBulkDelete() {
   if (!bulkSelectedIds.value.length) return
   const selectedRows = queueTable.value.rows.filter(row => bulkSelected.value[row.id])
   swal.fire({
-    icon: 'warning',
+    icon: 'error',
     title: 'Are you sure?',
     text: `Delete ${bulkSelectedIds.value.length} job(s)? This action cannot be undone.`,
     showCancelButton: true,
@@ -427,7 +441,7 @@ async function doProcessAll() {
     title: 'Are you sure?',
     text: `Process all ${totalJobs} jobs now?`,
     showCancelButton: true,
-    confirmButtonText: 'Process',
+    confirmButtonText: 'Process All',
   }).then(async (result) => {
     if (result.isConfirmed) {
       isLoading.value = true
@@ -444,6 +458,49 @@ async function doProcessAll() {
       } catch (err) {
         if (config.settings.enable_debug_messages) {
           console.error(':: DEBUG - Bulk Process Error ::', err)
+        }
+        if (err?.code !== 'ERR_CANCELED') {
+          const text = err?.response?.data?.error || 'Server responded with an error'
+          swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text,
+            footer: '<div class="overflow-footer w-full">' + err.message + '</div>'
+          })
+        }
+      } finally {
+        isLoading.value = false
+      }
+    }
+  })
+}
+
+async function doClearAll() {
+  // clear_all
+  const totalJobs = queueTable.value?.total || 0
+  if (totalJobs === 0) return
+  swal.fire({
+    icon: 'error',
+    title: 'Are you sure?',
+    text: `Clear all ${totalJobs} jobs now? This action cannot be undone.`,
+    showCancelButton: true,
+    confirmButtonText: 'Clear All',
+  }).then(async (result) => {
+    if (result.isConfirmed) {
+      isLoading.value = true
+      try {
+        await axios.delete(endpoints.value.queue.clear_all)
+        swal.fire({
+          position: 'top-end',
+          icon: 'success',
+          title: 'All jobs cleared successfully',
+          showConfirmButton: false,
+          timer: 1500
+        })
+        await getTableData(queueTable.value.first_page_url)
+      } catch (err) {
+        if (config.settings.enable_debug_messages) {
+          console.error(':: DEBUG - Clear All Error ::', err)
         }
         if (err?.code !== 'ERR_CANCELED') {
           const text = err?.response?.data?.error || 'Server responded with an error'

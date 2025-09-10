@@ -113,6 +113,18 @@ class QueueController extends \WP_REST_Controller
                 ],
             ]
         );
+        register_rest_route(
+            $this->namespace,
+            '/' . $this->rest_base . '/clear-all',
+            [
+                [
+                    'methods' => \WP_REST_Server::DELETABLE,
+                    'callback' => [$this, 'destroy_all_jobs'],
+                    'permission_callback' => [$this, 'get_items_permissions_check'],
+                    'args' => [],
+                ],
+            ]
+        );
     }
 
     /**
@@ -125,20 +137,24 @@ class QueueController extends \WP_REST_Controller
         // example: vwr-live-catalog/v1/settings
         return [
             'table' => esc_url_raw(
-            // GET
+                // GET
                 rest_url($this->namespace . '/' . $this->rest_base . '/table')
             ),
             'job' => esc_url_raw(
-            // DELETE
+                // DELETE
                 rest_url($this->namespace . '/' . $this->rest_base . '/job')
             ),
             'process' => esc_url_raw(
-            // POST
+                // POST
                 rest_url($this->namespace . '/' . $this->rest_base . '/process')
             ),
             'process_all' => esc_url_raw(
-            // POST
+                // POST
                 rest_url($this->namespace . '/' . $this->rest_base . '/process-all')
+            ),
+            'clear_all' => esc_url_raw(
+                // DELETE
+                rest_url($this->namespace . '/' . $this->rest_base . '/clear-all')
             ),
         ];
     }
@@ -205,7 +221,7 @@ class QueueController extends \WP_REST_Controller
         // attempt to parse the json parameter
         $params = $request->get_params();
         $nonce = wp_create_nonce('wp_rest');
-        $response = rest_ensure_response([  
+        $response = rest_ensure_response([
             'data' => [
                 'processed' => (new QueueLoader())->process_job() // Process all jobs
             ],
@@ -392,6 +408,34 @@ class QueueController extends \WP_REST_Controller
     }
 
     /**
+     * Destroy all jobs.
+     *
+     * @param \WP_REST_Request $request Full details about the request.
+     *
+     * @return \WP_REST_Response|\WP_Error Response object on success, or WP_Error object on failure.
+     */
+    public function destroy_all_jobs(\WP_REST_Request $request)
+    {
+        global $wpdb;
+
+        // attempt to parse the json parameter
+        $params = $request->get_json_params();
+        $nonce = wp_create_nonce('wp_rest');
+
+        // update correct response
+        $response = [
+            'data' => $params,
+            'success' => false,
+            'nonce' => $nonce,
+        ];
+
+        $result = $wpdb->query("DELETE FROM {$wpdb->prefix}{$this->table_name}");
+        $response['success'] = $result !== false;
+
+        return rest_ensure_response($response);
+    }
+
+    /**
      * Retrieves the query params for the items collection.
      *
      * @return array Collection parameters.
@@ -403,7 +447,7 @@ class QueueController extends \WP_REST_Controller
             case 'destroy':
                 return [
                     'id' => [
-                        'validate_callback' => function($param, $request, $key) {
+                        'validate_callback' => function ($param, $request, $key) {
                             return is_numeric($param) || is_array($param);
                         },
                         'required' => true
@@ -412,7 +456,7 @@ class QueueController extends \WP_REST_Controller
             case 'table':
                 return [
                     'vpage' => [
-                        'validate_callback' => function($param, $request, $key) {
+                        'validate_callback' => function ($param, $request, $key) {
                             return is_numeric($param);
                         },
                         'required' => true
