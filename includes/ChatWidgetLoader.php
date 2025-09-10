@@ -119,23 +119,17 @@ class ChatWidgetLoader
 
         // Get API URLs based on environment
         $env = wp_get_environment_type();
-
-        // Not currently used, calling internal WP REST API instead
-        // $api_base_url = $env === 'local' 
-        //     ? 'https://jensi-ai.test/api' 
-        //     : 'https://ai.jensi.com/api';
-
         $ws_base_url = $env === 'local'
             ? 'jensi-ai.test:8090'
             : 'ai.jensi.com:443'; // Use port 443 for secure WebSocket (wss) in production
 
         $config = [
+            'nonce' => wp_create_nonce('wp_rest'),
             'apiBaseUrl' => rest_url($this->prefix . '/v1'),
             'wsBaseUrl' => $ws_base_url,
-            'nonce' => wp_create_nonce('wp_rest'),
             'defaultAgentId' => $settings['jensi_ai_agent'] ?? '',
-            'pluginUrl' => rtrim(\JensiAI\Main::$BASEURL, '/'),
             'welcomeMessage' => $settings['welcome_message'] ?? 'Hello! How can I assist you today?',
+            'pluginUrl' => rtrim(\JensiAI\Main::$BASEURL, '/'),
             'avatarUrl' => !empty($settings['avatar_url']) ? esc_url($settings['avatar_url']) : '',
         ];
 
