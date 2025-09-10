@@ -259,15 +259,21 @@ const statusClass = computed(() => {
   if (isConnected.value) {
     return 'jensi-ai-chat-status--online'
   }
+  if (messages.value.length === 0 && !isTyping.value) {
+    return 'jensi-ai-chat-status--waiting'
+  }
   return 'jensi-ai-chat-status--offline'
 })
 
 const statusText = computed(() => {
   if (isConnected.value) {
-    return 'Online'
+    return 'Connected'
   }
   if (isLoading.value) {
     return 'Connecting...'
+  }
+  if (messages.value.length === 0 && !isTyping.value) {
+    return 'Ready...'
   }
   return 'Offline'
 })

@@ -141,7 +141,8 @@
   opacity: 0.9;
 }
 
-.jensi-ai-chat-status--online::before {
+.jensi-ai-chat-status--online::before,
+.jensi-ai-chat-status--waiting::before {
   display: inline-block;
   width: 8px;
   height: 8px;
