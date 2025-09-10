@@ -89,7 +89,7 @@
                             style="height: 300px" />
                         </div>
                         <div v-else-if="item.type === 'color'">
-                          <color-input v-model="settings[item.id]" format="hex" />
+                          <color-input v-model="settings[item.id]" :format="item.format || 'hex'" class="ring ring-offset-1 rounded-lg ring-gray-200" />
                         </div>
                         <div v-else-if="item.type === 'file' || item.type === 'multifile'">
                           <label

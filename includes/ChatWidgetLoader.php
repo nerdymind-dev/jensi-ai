@@ -22,7 +22,7 @@ class ChatWidgetLoader
     public function __construct($prefix)
     {
         $this->prefix = $prefix;
-        
+
         // Only load on front-end, not admin
         if (!is_admin()) {
             add_action('wp_enqueue_scripts', [$this, 'enqueue_chat_widget']);
@@ -41,13 +41,32 @@ class ChatWidgetLoader
             return;
         }
 
+        // Get settings to check if widget is enabled
+        $settings = (new Api\SettingController())->get_settings_raw();
+
         // Enqueue styles and scripts
         wp_enqueue_style($this->prefix . '-chat-widget');
         wp_enqueue_script($this->prefix . '-chat-widget');
 
+        // Output custom styles based on settings
+        $primaryHex = $settings['primary_color'] ?? '#667eea';
+        $primaryRgb = sscanf($primaryHex, "#%02x%02x%02x");
+        $secondaryHex = $settings['secondary_color'] ?? '#764ba2';
+        $backgroundHex = $settings['background_color'] ?? '#ffffff';
+        $textHex = $settings['text_color'] ?? '#000000';
+        $custom_css = "
+        :root {
+            --jensi-ai-color-primary: " . $primaryHex . ";
+            --jensi-ai-rgb-primary: " . implode(',', $primaryRgb) . ";
+            --jensi-ai-color-secondary: " . $secondaryHex . ";
+            --jensi-ai-color-background: " . $backgroundHex . ";
+            --jensi-ai-color-text: " . $textHex . ";
+        }";
+        wp_add_inline_style($this->prefix . '-chat-widget', $custom_css);
+
         // Get widget configuration
         $config = $this->get_widget_config();
-        
+
         // Localize script with configuration
         wp_localize_script($this->prefix . '-chat-widget', 'jensi_ai_chat_widget_config', $config);
     }
@@ -61,7 +80,7 @@ class ChatWidgetLoader
     {
         // Get settings to check if widget is enabled
         $settings = (new Api\SettingController())->get_settings_raw();
-        
+
         // Check if API key is configured
         if (empty($settings['jensi_ai_api_key'])) {
             return false;
@@ -90,7 +109,7 @@ class ChatWidgetLoader
     private function get_widget_config()
     {
         $settings = (new Api\SettingController())->get_settings_raw();
-        
+
         // Get API URLs based on environment
         $env = wp_get_environment_type();
 
@@ -98,7 +117,7 @@ class ChatWidgetLoader
         // $api_base_url = $env === 'local' 
         //     ? 'https://jensi-ai.test/api' 
         //     : 'https://ai.jensi.com/api';
-            
+
         $ws_base_url = $env === 'local'
             ? 'jensi-ai.test:8090'
             : 'ai.jensi.com:8090';
@@ -109,6 +128,7 @@ class ChatWidgetLoader
             'nonce' => wp_create_nonce('wp_rest'),
             'defaultAgentId' => $settings['jensi_ai_agent'] ?? '',
             'pluginUrl' => rtrim(\JensiAI\Main::$BASEURL, '/'),
+            'welcomeMessage' => $settings['welcome_message'] ?? 'Hello! How can I assist you today?',
         ];
 
         // Allow filtering of configuration

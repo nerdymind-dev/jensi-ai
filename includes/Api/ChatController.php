@@ -102,6 +102,27 @@ class ChatController extends \WP_REST_Controller
                 ],
             ]
         );
+
+        // Get an agent's details
+        register_rest_route(
+            $this->namespace,
+            '/' . $this->rest_base . '/agent/(?P<agent_id>[a-f0-9\-]{36})',
+            [
+                [
+                    'methods' => \WP_REST_Server::READABLE,
+                    'callback' => [$this, 'get_agent_details'],
+                    'permission_callback' => [$this, 'check_public_permissions'],
+                    'args' => [
+                        'agent_id' => [
+                            'required' => true,
+                            'validate_callback' => function ($param) {
+                                return preg_match('/^[a-f0-9\-]{36}$/', $param);
+                            },
+                        ],
+                    ],
+                ],
+            ]
+        );
     }
 
     /**
@@ -252,6 +273,42 @@ class ChatController extends \WP_REST_Controller
         $data = json_decode($response_body, true);
 
         if ($code !== 201) {
+            $message = $data['message'] ?? __('JENSi AI API returned an error.');
+            return new \WP_Error('api_error', $message, ['status' => $code]);
+        }
+
+        return rest_ensure_response([
+            'success' => true,
+            'data' => $data,
+        ]);
+    }
+
+    public function get_agent_details($request)
+    {
+        $agent_id = $request->get_param('agent_id');
+
+        if (!$this->token) {
+            return new \WP_Error('no_api_token', __('No JENSi AI API token configured.'), ['status' => 500]);
+        }
+
+        $api_response = wp_remote_get($this->base_api . '/agents/' . $agent_id, [
+            'headers' => [
+                'Accept' => 'application/json',
+                'Authorization' => 'Bearer ' . $this->token,
+            ],
+            'timeout' => 15,
+            'sslverify' => wp_get_environment_type() !== 'local',
+        ]);
+
+        if (is_wp_error($api_response)) {
+            return new \WP_Error('api_error', __('Failed to connect to JENSi AI API.'), ['status' => 500]);
+        }
+
+        $code = wp_remote_retrieve_response_code($api_response);
+        $response_body = wp_remote_retrieve_body($api_response);
+        $data = json_decode($response_body, true);
+
+        if ($code !== 200) {
             $message = $data['message'] ?? __('JENSi AI API returned an error.');
             return new \WP_Error('api_error', $message, ['status' => $code]);
         }

@@ -1,14 +1,5 @@
 /* JENSi AI Chat Widget Styles */
 
-:root {
-  --jensi-ai-color-primary: #667eea;
-  --jensi-ai-color-secondary: #764ba2;
-  --jensi-ai-color-background: white;
-  --jensi-ai-color-text: black;
-  --jensi-ai-rgb-primary: 102, 126, 234;
-  --jensi-ai-rgb-secondary: 118, 75, 162;
-}
-
 .jensi-ai-chat-widget {
   position: fixed;
   right: 20px;
@@ -68,7 +59,7 @@
   width: 380px;
   height: 600px;
   overflow: hidden;
-  background: white;
+  background: var(--jensi-ai-color-background);
   border-radius: 16px;
   box-shadow: 0 10px 40px rgb(0 0 0 / 15%);
   transform: scale(0.95);

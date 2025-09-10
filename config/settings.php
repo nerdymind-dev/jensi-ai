@@ -10,7 +10,7 @@ return [
     'sections' => [
         'general' => __('General', \JensiAI\Main::PREFIX),
         // 'extra' => __('Extra', \JensiAI\Main::PREFIX),
-        // 'advanced' => __('Advanced', \JensiAI\Main::PREFIX),
+        'widget' => __('Chat Widget', \JensiAI\Main::PREFIX),
         'debug' => __('Debugging', \JensiAI\Main::PREFIX),
     ],
     'options' => [
@@ -36,12 +36,53 @@ return [
             'type' => 'config',
             'default' => '',
         ],
+
+        // Widget
         'jensi_ai_chat_widget_enabled' => [
             'name' => __('Enable Chat Widget', \JensiAI\Main::PREFIX),
             'description' => __('Enable the floating chat widget on the front-end of your website', \JensiAI\Main::PREFIX),
-            'section' => 'general',
+            'section' => 'widget',
             'type' => 'toggle',
             'default' => true,
+        ],
+        'welcome_message' => [
+            'name'        => __('Welcome message', \JensiAI\Main::PREFIX),
+            'description' => __('The welcome message shown when the chat widget is opened', \JensiAI\Main::PREFIX),
+            'section'     => 'widget',
+            'type'        => 'textarea',
+            'default'     => 'Hello! How can I assist you today?',
+        ],
+        'primary_color'   => [
+            'name'        => __('Primary color', \JensiAI\Main::PREFIX),
+            'description' => __('The primary color for the widget', \JensiAI\Main::PREFIX),
+            'section'     => 'widget',
+            'type'        => 'color',
+            'format'      => 'hex',
+            'default'     => '#667eea',
+        ],
+        'secondary_color' => [
+            'name'        => __('Secondary color', \JensiAI\Main::PREFIX),
+            'description' => __('The secondary color for the widget', \JensiAI\Main::PREFIX),
+            'section'     => 'widget',
+            'type'        => 'color',
+            'format'      => 'hex',
+            'default'     => '#764ba2',
+        ],
+        'background_color' => [
+            'name'        => __('Background color', \JensiAI\Main::PREFIX),
+            'description' => __('The background color for the widget', \JensiAI\Main::PREFIX),
+            'section'     => 'widget',
+            'type'        => 'color',
+            'format'      => 'hex',
+            'default'     => '#ffffff',
+        ],
+        'text_color'      => [
+            'name'        => __('Text color', \JensiAI\Main::PREFIX),
+            'description' => __('The text color for the widget', \JensiAI\Main::PREFIX),
+            'section'     => 'widget',
+            'type'        => 'color',
+            'format'      => 'hex',
+            'default'     => '#000000',
         ],
 
         // Extra

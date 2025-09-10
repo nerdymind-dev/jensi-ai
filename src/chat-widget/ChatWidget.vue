@@ -110,7 +110,7 @@
           </div>
           <div class="jensi-ai-chat-welcome-content">
             <h4>Welcome!</h4>
-            <p>{{ currentAgent?.description || 'How can I help you today?' }}</p>
+            <p>{{ config.welcomeMessage }}</p>
           </div>
         </div>
       </div>
@@ -234,6 +234,7 @@ const config = reactive({
   apiBaseUrl: '',
   wsBaseUrl: '',
   defaultAgentId: '',
+  welcomeMessage: 'How can I help you today?',
   nonce: '',
 })
 
@@ -316,9 +317,9 @@ const getDefaultAgent = async (): Promise<Agent> => {
   // If we have a default agent ID from settings, try to fetch its details
   if (config.defaultAgentId) {
     try {
-      const response = await axios.get(`${config.apiBaseUrl}/agents/get?id=${config.defaultAgentId}`)
+      const response = await axios.get(`${config.apiBaseUrl}/chat/agent/${config.defaultAgentId}`)
       if (response.data.success && response.data.data) {
-        const agent = response.data.data.find((a: Agent) => a.id === config.defaultAgentId)
+        const agent = response.data.data || null
         if (agent) {
           return agent
         }
@@ -471,20 +472,12 @@ const connectWebSocket = (websocketConfig: WebSocketConfig) => {
       enabledTransports: ['ws', 'wss'],
     })
     
-    console.log('Connecting to Laravel Echo with config:', {
-      key: websocketConfig.app_key,
-      host: host,
-      channel: websocketConfig.channel
-    })
-    
     // Listen for connection events
     echo.value.connector.pusher.connection.bind('connected', () => {
-      console.log('Echo connected successfully')
       isConnected.value = true
     })
     
     echo.value.connector.pusher.connection.bind('disconnected', () => {
-      console.log('Echo disconnected')
       isConnected.value = false
     })
     
