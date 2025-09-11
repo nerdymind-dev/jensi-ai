@@ -126,8 +126,8 @@ final class Main
         register_uninstall_hook(self::$PLUGINFILE, [__CLASS__, 'uninstall_plugin']);
 
         // Set up the CRON job
-        // add_filter('cron_schedules', [$this, 'jensi_ai_cron_schedules']);
-        // add_action('jensi_ai_queue', [$this, 'process_jensi_ai_queue']);
+        add_filter('cron_schedules', [$this, 'jensi_ai_cron_schedules']);
+        add_action('jensi_ai_queue', [$this, 'process_jensi_ai_queue']);
 
         add_action('plugins_loaded', [$this, 'plugins_loaded']);
 
@@ -178,11 +178,11 @@ final class Main
     function jensi_ai_cron_schedules($schedules)
     {
         // NOTE: need to update CRON timeout interval to be less than/equal to the shortest interval
-        // E.g.: `define('WP_CRON_LOCK_TIMEOUT', 30);`
-        if (!isset($schedules["every_half_minute"])) {
-            $schedules["every_half_minute"] = [
-                'interval' => 30,
-                'display' => __('Every 30 seconds')
+        // E.g.: `define('WP_CRON_LOCK_TIMEOUT', 10);`
+        if (!isset($schedules["every_ten_seconds"])) {
+            $schedules["every_ten_seconds"] = [
+                'interval' => 10,
+                'display' => __('Every 10 seconds')
             ];
         }
         return $schedules;
@@ -446,7 +446,7 @@ final class Main
 
         // Ensure CRON is scheduled
         if (!wp_next_scheduled('jensi_ai_queue')) {
-            wp_schedule_event(time(), 'every_half_minute', 'jensi_ai_queue');
+            wp_schedule_event(time(), 'every_ten_seconds', 'jensi_ai_queue');
         }
     }
 
