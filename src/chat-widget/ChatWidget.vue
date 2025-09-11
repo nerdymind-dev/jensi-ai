@@ -100,7 +100,12 @@
         >
           <div class="jensi-ai-chat-message-content">
             <div class="jensi-ai-chat-message-avatar">
-              {{ currentAgent?.name?.charAt(0).toUpperCase() || 'AI' }}
+              <template v-if="config.avatarUrl && config.avatarUrl.length > 0">
+                <img :src="config.avatarUrl" alt="Agent Avatar" />
+              </template>
+              <template v-else>
+                {{ currentAgent?.name?.charAt(0).toUpperCase() || 'AI' }}
+              </template>
             </div>
             <div class="jensi-ai-chat-typing-indicator">
               <span></span>
