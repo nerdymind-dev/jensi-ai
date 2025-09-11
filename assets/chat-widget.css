@@ -15,7 +15,7 @@
   justify-content: center;
   width: 60px;
   height: 60px;
-  color: white;
+  color: var(--jensi-ai-color-text-secondary);
   background: linear-gradient(135deg, var(--jensi-ai-color-primary) 0%, var(--jensi-ai-color-secondary) 100%);
   border: none;
   border-radius: 50%;
@@ -128,6 +128,7 @@
 
 .jensi-ai-chat-agent-name {
   margin: 0;
+  color: var(--jensi-ai-color-text-secondary);
   font-weight: 600;
   font-size: 16px;
   line-height: 1.2;
@@ -138,6 +139,7 @@
   gap: 6px;
   align-items: center;
   margin: 0;
+  color: var(--jensi-ai-color-text-secondary);
   font-size: 12px;
   opacity: 0.9;
 }
@@ -167,7 +169,7 @@
   justify-content: center;
   width: 32px;
   height: 32px;
-  color: white;
+  color: var(--jensi-ai-color-text-secondary);
   background: rgb(255 255 255 / 20%);
   border: none;
   border-radius: 8px;
@@ -269,13 +271,13 @@
 }
 
 .jensi-ai-chat-message--user .jensi-ai-chat-message-text {
-  color: white;
+  color: var(--jensi-ai-color-text-secondary);
   background: linear-gradient(135deg, var(--jensi-ai-color-primary) 0%, var(--jensi-ai-color-secondary) 100%);
 }
 
 .jensi-ai-chat-message--assistant .jensi-ai-chat-message-text {
-  color: #1f2937;
-  background: #f3f4f6;
+  color: var(--jensi-ai-color-text);
+  background: rgb(255 255 255 / 80%);
 }
 
 .jensi-ai-chat-message-time {
@@ -331,7 +333,7 @@
   align-items: flex-start;
   margin-bottom: 16px;
   padding: 20px;
-  background: #f9fafb;
+  background: rgb(243 244 246 / 80%);
   border-radius: 12px;
 }
 
@@ -359,14 +361,14 @@
 
 .jensi-ai-chat-welcome-content h4 {
   margin: 0 0 4px;
-  color: #1f2937;
+  color: var(--jensi-ai-color-text);
   font-weight: 600;
   font-size: 16px;
 }
 
 .jensi-ai-chat-welcome-content p {
   margin: 0;
-  color: #6b7280;
+  color: var(--jensi-ai-color-text);
   font-size: 14px;
   line-height: 1.4;
 }
@@ -374,7 +376,6 @@
 /* Input */
 .jensi-ai-chat-input-container {
   padding: 20px;
-  background: var(--jensi-ai-color-input-background);
   border-top: 1px solid #e5e7eb;
 }
 
@@ -388,6 +389,7 @@
   flex: 1;
   padding: 12px 16px;
   font-size: 14px;
+  background: rgb(255 255 255 / 80%);
   border: 2px solid #d1d5db;
   border-radius: 24px;
   outline: none !important;
@@ -401,7 +403,7 @@
 
 .jensi-ai-chat-input-form [type="text"]:disabled {
   color: #9ca3af;
-  background: #f9fafb;
+  background: rgb(255 255 255 / 60%);
 }
 
 .jensi-ai-chat-send {
@@ -461,7 +463,7 @@
   padding: 8px 16px;
   color: #6b7280;
   font-size: 12px;
-  background: none;
+  background: rgb(255 255 255 / 80%);
   border: 1px solid #d1d5db;
   border-radius: 16px;
   cursor: pointer;

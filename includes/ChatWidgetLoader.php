@@ -58,6 +58,7 @@ class ChatWidgetLoader
         $secondaryHex = $settings['secondary_color'] ?? '#764ba2';
         $backgroundHex = $settings['background_color'] ?? '#ffffff';
         $textHex = $settings['text_color'] ?? '#000000';
+        $secondaryTextHex = $settings['secondary_text_color'] ?? '#ffffff';
         $bottomOffset = isset($settings['bottom_offset']) ? intval($settings['bottom_offset']) : 20;
         $rightOffset = isset($settings['right_offset']) ? intval($settings['right_offset']) : 20;
         $custom_css = "
@@ -69,6 +70,7 @@ class ChatWidgetLoader
             --jensi-ai-right-offset: " . $rightOffset . "px;
             --jensi-ai-color-background: " . $backgroundHex . ";
             --jensi-ai-color-text: " . $textHex . ";
+            --jensi-ai-color-text-secondary: " . $secondaryTextHex . ";
         }";
         wp_add_inline_style($this->prefix . '-chat-widget', $custom_css);
 

@@ -109,6 +109,14 @@ return [
             'format'      => 'hex',
             'default'     => '#000000',
         ],
+        'secondary_text_color'      => [
+            'name'        => __('Secondary Text color', \JensiAI\Main::PREFIX),
+            'description' => __('The secondary text color for the widget (for user messages, and text using the primary color as the background)', \JensiAI\Main::PREFIX),
+            'section'     => 'widget',
+            'type'        => 'color',
+            'format'      => 'hex',
+            'default'     => '#ffffff',
+        ],
 
         // Extra
         // ...

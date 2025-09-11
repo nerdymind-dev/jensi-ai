@@ -32,7 +32,7 @@
                       </div>
                       <div class="ml-3">
                         <p class="text-sm text-blue-700">
-                          Sync will happen automatically when content is updated matching any <strong>Configuration</strong> using the WP-Cron system. You do not need to manually sync unless you want to force an immediate update.
+                          Sync will happen automatically when content is updated matching any <strong>Configuration</strong> using the WP-Cron system. You do not need to manually sync unless you want to force an immediate update, or are syncing for the first time.
                         </p>
                       </div>
                     </div>
