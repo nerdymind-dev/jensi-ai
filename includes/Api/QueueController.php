@@ -176,10 +176,19 @@ class QueueController extends \WP_REST_Controller
         $search = $params['q'] ?? null;
         $order = $params['vsort'] ?? null;
         $sort = $params['vorder'] ?? null;
+        $includeCompleted = $params['includeCompleted'] ?? false;
         $response = rest_ensure_response([
             'data' => [
-                'queueTable' => $this->queue_table($page, $perPage, $search, $order, $sort ?? 'DESC')
+                'queueTable' => $this->queue_table(
+                    $page,
+                    $perPage,
+                    $search,
+                    $order,
+                    $sort ?? 'DESC',
+                    $includeCompleted
+                )
             ],
+
             'success' => true,
             'nonce' => $nonce,
         ]);
@@ -246,24 +255,34 @@ class QueueController extends \WP_REST_Controller
         int $perPage = 15,
         string $search = null,
         string $order = null,
-        string $sort = 'DESC'
+        string $sort = 'DESC',
+        bool $includeCompleted = false
     ) {
         global $wpdb;
         try {
             $queue_table = $wpdb->prefix . $this->table_name;
             $query = "SELECT * FROM $queue_table";
-            $total_query = "SELECT COUNT(1) FROM ($query) AS combined_table";
-            $total = $wpdb->get_var($total_query);
-            $items_per_page = $perPage;
-            $p = $page;
-
+            $where = "";
+            if (!$includeCompleted) {
+                // Need to exclude completed jobs, but only if `failed` is not set to 1
+                // This way we can display failed jobs for re-processing and review
+                $where = " WHERE processed != 1 OR failed = 1";
+            }
             $orderBy = " ORDER BY created DESC";
             if ($order) {
                 $orderBy = sprintf(' ORDER BY %s %s', $order, $sort);
             }
             if ($search) {
-                $query .= sprintf(' WHERE name LIKE "%%%s%%"', $search);
+                $where .= empty($where)
+                    ? sprintf(" WHERE name LIKE '%%%s%%'", $search)
+                    : sprintf(" AND name LIKE '%%%s%%'", $search);
             }
+            $query .= $where;
+            $total_query = "SELECT COUNT(1) FROM ($query) AS combined_table";
+            $total = $wpdb->get_var($total_query);
+            $items_per_page = $perPage;
+            $p = $page;
+
             $offset = ($p * $items_per_page) - $items_per_page;
             $result = $wpdb->get_results($query . $orderBy . " LIMIT $offset, $items_per_page");
 
@@ -429,7 +448,7 @@ class QueueController extends \WP_REST_Controller
             'nonce' => $nonce,
         ];
 
-        $result = $wpdb->query("DELETE FROM {$wpdb->prefix}{$this->table_name}");
+        $result = $wpdb->query("DELETE FROM {$wpdb->prefix}{$this->table_name} WHERE processed = 0 AND failed != 1");
         $response['success'] = $result !== false;
 
         return rest_ensure_response($response);
