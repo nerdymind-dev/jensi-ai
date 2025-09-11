@@ -13,6 +13,14 @@
           <div class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
             <div class="flex items-center justify-end gap-3">
               <t-button
+                variant="outline"
+                :disabled="isSubmitting"
+                :data-rerendered="ui.actionKey"
+                @click="resetToDefaults()"
+              >
+                Reset to Defaults
+              </t-button>
+              <t-button
                 :disabled="hasChanged || isSubmitting"
                 :loading="isSubmitting"
                 :data-rerendered="ui.actionKey"
@@ -355,6 +363,8 @@ const defaultDsConfig = {
   type: 'wordpress',
 }
 
+const config = inject('pluginConfig')
+
 const oldSettings = {}
 const settings = reactive({ ...oldSettings })
 const ui = reactive({ actionKey: 0, loaded: false })
@@ -364,7 +374,7 @@ const hasLoaded = ref(false)
 const isSubmitting = ref(false)
 
 const endpoints = ref({ settings: '', data_sources: '' })
-const config = inject('pluginConfig')
+const settingsDefaults = ref({})
 const toggledPasswordFields = ref({})
 
 const showAgentModal = ref(false)
@@ -432,6 +442,18 @@ const getId = (item) => {
     return item.id.slice(-8)
   }
   return ''
+}
+
+const resetToDefaults = () => {
+  // Reset settings to defaults
+  Object.assign(settings, settingsDefaults.value)
+  swal.fire({
+    position: 'top-end',
+    icon: 'success',
+    title: 'Settings have been reset to defaults. Press "Save" to apply.',
+    showConfirmButton: false,
+    timer: 1500
+  })
 }
 
 const fetchAgentOptions = async (q) => {
@@ -690,6 +712,9 @@ const doLoad = async () => {
     oldSettings[key] = _settings[key]
     settings[key] = _settings[key]
   })
+
+  // Set defaults for settings reset
+  settingsDefaults.value = config.defaultSettings || {}
 
   // fetch available data sources
   if (settings.jensi_ai_api_key) {
