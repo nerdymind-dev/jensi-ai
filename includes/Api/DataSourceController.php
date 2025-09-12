@@ -139,6 +139,16 @@ class DataSourceController extends \WP_REST_Controller
             'success' => false,
             'nonce' => $nonce,
         ];
+
+        // See if we already have a cached value
+        $cache_key = 'jensi_ai_data_sources_' . md5(json_encode($params));
+        $cached = get_transient($cache_key);
+        if ($cached !== false) {
+            $response['data'] = $cached;
+            $response['success'] = true;
+            return rest_ensure_response($response);
+        }
+
         if (!$this->token) {
             return new \WP_Error('rest_api_error', __('No JENSi AI API token or agent configured, both are required to retrieve data sources.'), ['status' => 500]);
         } else {
@@ -179,6 +189,9 @@ class DataSourceController extends \WP_REST_Controller
                 }
                 $response['data'] = $data['data'];
                 $response['success'] = true;
+
+                // Cache response for next call (let's keep it short, 5 seconds)
+                set_transient($cache_key, $response['data'], 10);
             }
         }
         return rest_ensure_response($response);

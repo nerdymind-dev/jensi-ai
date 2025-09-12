@@ -123,6 +123,16 @@ class AgentController extends \WP_REST_Controller
             'success' => false,
             'nonce' => $nonce,
         ];
+
+        // See if we already have a cached value
+        $cache_key = 'jensi_ai_agents_' . md5(json_encode($params));
+        $cached = get_transient($cache_key);
+        if ($cached !== false) {
+            $response['data'] = $cached;
+            $response['success'] = true;
+            return rest_ensure_response($response);
+        }
+
         if (!$this->token) {
             $response['data'] = 'No JENSi AI API token configured.';
         } else {
@@ -163,6 +173,9 @@ class AgentController extends \WP_REST_Controller
                 }
                 $response['data'] = $data['data'];
                 $response['success'] = true;
+
+                // Cache response for next call (let's keep it short, 10 seconds)
+                set_transient($cache_key, $response['data'], 10);
             }
         }
         return rest_ensure_response($response);
