@@ -9,11 +9,11 @@ export default (app: App, configName: string) => {
   installI18n(app)
   const win: any = window
 
-  win.$appConfig = {}
-  win.$appConfig.axios = Axios
-  win.$appConfig.cancelSource = CancelSource
-  win.$appConfig.debounce = debounce
-  win.$appConfig.swal = swal.mixin({
+  win.$jensiAiConfig = {}
+  win.$jensiAiConfig.axios = Axios
+  win.$jensiAiConfig.cancelSource = CancelSource
+  win.$jensiAiConfig.debounce = debounce
+  win.$jensiAiConfig.swal = swal.mixin({
     showClass: {
       // backdrop: 'swal2-noanimation', // disable backdrop animation
       popup: '', // disable popup animation
@@ -39,11 +39,11 @@ export default (app: App, configName: string) => {
 
   // Allow for using this.$win/axios inside a component
   app.config.globalProperties.$win = win;
-  app.config.globalProperties.axios = win.$appConfig.axios
-  app.config.globalProperties.cancelSource = win.$appConfig.cancelSource
-  app.config.globalProperties.$swal = win.$appConfig.swal
+  app.config.globalProperties.axios = win.$jensiAiConfig.axios
+  app.config.globalProperties.cancelSource = win.$jensiAiConfig.cancelSource
+  app.config.globalProperties.$swal = win.$jensiAiConfig.swal
 
-  app.use(VueAxios, win.$appConfig.axios)
+  app.use(VueAxios, win.$jensiAiConfig.axios)
 
   app.provide('win', app.config.globalProperties.$win)
   app.provide('axios', app.config.globalProperties.axios)

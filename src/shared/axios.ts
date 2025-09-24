@@ -30,7 +30,7 @@ Axios.interceptors.request.use((config: any) => {
   progresses.push(useProgress().start())
 
   // set nonce
-  config.headers['X-WP-Nonce'] = window.$appConfig.nonce
+  config.headers['X-WP-Nonce'] = window.$jensiAiConfig.nonce
 
   // update cancel token
   config.cancelToken = CancelSource.token;
@@ -43,7 +43,7 @@ Axios.interceptors.response.use((response: AxiosResponse) => {
 
   // replace old nonce, if sent back
   if (response.headers['X-WP-Nonce']) {
-    window.$appConfig.nonce = response.headers['X-WP-Nonce']
+    window.$jensiAiConfig.nonce = response.headers['X-WP-Nonce']
   }
 
   return response

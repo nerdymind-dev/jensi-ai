@@ -745,8 +745,8 @@ const getFormattedDate = (date) => moment(date).local().format('lll')
 const doLoad = async () => {
   await nextTick()
 
-  if (!win.$appConfig.nonce) {
-    win.$appConfig.nonce = config.rest.nonce
+  if (!win.$jensiAiConfig.nonce) {
+    win.$jensiAiConfig.nonce = config.rest.nonce
   }
 
   queueTable.value = config.queueTable

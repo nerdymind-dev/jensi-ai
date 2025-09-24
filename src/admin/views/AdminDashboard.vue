@@ -612,8 +612,8 @@ const doDestroy = (id) => {
 const doLoad = async () => {
   await nextTick()
 
-  if (!win.$appConfig.nonce) {
-    win.$appConfig.nonce = config.rest.nonce
+  if (!win.$jensiAiConfig.nonce) {
+    win.$jensiAiConfig.nonce = config.rest.nonce
   }
 
   endpoints.value = config.rest.endpoints

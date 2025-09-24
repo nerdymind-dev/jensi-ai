@@ -49,7 +49,7 @@ router.beforeEach((to, from, next) => {
   // Cancel any pending axios requests...
   // const routeName = <string>from.name || ''
   // if (cancelRequestsFor.includes(routeName)) {
-  //   window.$appConfig?.cancelSource?.cancel('User canceled via navigate')
+  //   window.$jensiAiConfig?.cancelSource?.cancel('User canceled via navigate')
   // }
   next();
 })

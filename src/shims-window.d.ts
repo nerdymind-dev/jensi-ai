@@ -1,6 +1,6 @@
 export {}
 declare global {
   interface Window {
-    $appConfig: any
+    $jensiAiConfig: any
   }
 }

@@ -612,8 +612,8 @@ onMounted(() => {
     Object.assign(config, wpConfig)
   }
   
-  if (!win.$appConfig.nonce) {
-    win.$appConfig.nonce = config.nonce
+  if (!win.$jensiAiConfig.nonce) {
+    win.$jensiAiConfig.nonce = config.nonce
   }
 
   // Set pulse animation to stop after a few seconds
