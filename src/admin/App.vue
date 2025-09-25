@@ -17,15 +17,15 @@ import {
   InformationCircleIcon,
   QueueListIcon,
   ArrowsRightLeftIcon,
-  UserGroupIcon
+  ChatBubbleLeftEllipsisIcon,
 } from '@heroicons/vue/24/outline'
 
 const pluginConfig = inject('pluginConfig', {})
 
 const navigation = ref([
-  { name: 'Configuration', href: '/', icon: AdjustmentsHorizontalIcon },
+  { name: 'Configurations', href: '/', icon: AdjustmentsHorizontalIcon },
   { name: 'Sync', href: '/sync', icon: ArrowsRightLeftIcon },
-  { name: 'Agents', href: '/agents', icon: UserGroupIcon },
+  { name: 'Widgets', href: '/widgets', icon: ChatBubbleLeftEllipsisIcon },
   { name: 'Queue', href: '/queue', icon: QueueListIcon },
   { name: 'Settings', href: '/settings', icon: CogIcon },
   { name: 'Help', href: '/help', icon: InformationCircleIcon }

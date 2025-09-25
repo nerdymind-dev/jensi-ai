@@ -1,15 +1,17 @@
 <template>
   <div>
+    <!-- <breadcrumbs :links="getCrumbs()" /> -->
+
     <section>
       <div class="">
         <div class="sm:flex sm:items-center py-3">
           <div class="sm:flex-auto">
             <h1 class="text-xl font-semibold leading-6 text-gray-700">
-              Agents
+              Widgets
             </h1>
           </div>
-          <t-button variant="secondary" @click="() => createAgent()">
-            Create New Agent
+          <t-button variant="secondary" @click="() => createWidget()">
+            Create New Widget
           </t-button>
         </div>
         <div class="mt-8 flow-root">
@@ -24,15 +26,27 @@
                       </div>
                       <div class="ml-3">
                         <p class="text-sm text-blue-700">
-                          Agents are AI chat widgets that can be displayed on specific pages/posts or globally. Each agent can have its own styling, agent configuration, and filtering rules.
+                          Widgets are AI chat widgets that can be displayed on specific pages/posts or globally. Each agent can have its own styling, agent configuration, and filtering rules.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="my-4 border-l-4 border-yellow-400 bg-yellow-50 p-4">
+                    <div class="flex">
+                      <div class="flex-shrink-0">
+                        <ExclamationTriangleIcon class="h-5 w-5 text-yellow-400" aria-hidden="true" />
+                      </div>
+                      <div class="ml-3">
+                        <p class="text-sm text-yellow-700">
+                          <strong>Only one global widget can be active at a time</strong>. If multiple widgets are set to <strong>Display Everywhere</strong>, only the most recently updated one will be shown.
                         </p>
                       </div>
                     </div>
                   </div>
 
-                  <template v-if="currentAgents.length">
+                  <template v-if="currentWidgets.length">
                     <ul role="list" class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                      <li v-for="(agent, idx) in currentAgents" :key="`agent.${idx}`"
+                      <li v-for="(agent, idx) in currentWidgets" :key="`agent.${idx}`"
                           class="col-span-1 flex flex-col justify-between divide-y divide-gray-200 rounded-lg bg-white shadow">
                         <div class="flex w-full items-center justify-between space-x-6 p-6">
                           <div class="flex-1">
@@ -64,7 +78,7 @@
                         <div>
                           <div class="-mt-px flex divide-x divide-gray-200">
                             <div class="flex w-0 flex-1">
-                              <button @click="(e) => selectAndEditAgent(agent)" type="button" class="relative -mr-px inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-bl-lg border border-transparent py-4 text-sm font-semibold text-gray-900">
+                              <button @click="(e) => selectAndEditWidget(agent)" type="button" class="relative -mr-px inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-bl-lg border border-transparent py-4 text-sm font-semibold text-gray-900">
                                 Edit
                               </button>
                             </div>
@@ -85,8 +99,8 @@
                           <p class="text-lg mb-3">
                             No agents currently created, create one to get started!
                           </p>
-                          <t-button @click="() => createAgent()">
-                            Create New Agent
+                          <t-button @click="() => createWidget()">
+                            Create New Widget
                           </t-button>
                         </div>
                       </div>
@@ -99,7 +113,7 @@
         </div>
       </div>
 
-      <!-- Edit Agent Modal -->
+      <!-- Edit Widget Modal -->
       <modal
         :show="showingEditForm"
         type="info"
@@ -112,15 +126,16 @@
           </svg>
         </template>
         <template #title>
-          Edit agent
+          Edit widget
         </template>
-        <template v-if="selectedAgent" #content>
+        <template v-if="selectedWidget" #content>
           <div class="w-full">
             <div class="flex flex-col gap-3">
-              <!-- Agent Details -->
+              <!-- Widget Details -->
               <div class="md:grid grid-cols-5">
                 <label class="col-span-2 block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4">
-                  Name <sup class="text-red-400">*</sup>
+                  Name
+                  <sup class="text-red-400">*</sup>
                 </label>
                 <div class="col-span-3">
                   <t-input v-model="agentFields.name" />
@@ -130,6 +145,7 @@
               <div class="md:grid grid-cols-5">
                 <label class="col-span-2 block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4">
                   Agent
+                  <sup class="text-red-400">*</sup>
                 </label>
                 <div class="col-span-3">
                   <t-button variant="secondary" @click="showAgentModal = true">
@@ -266,41 +282,41 @@
                 <template v-if="!agentFields.display_everywhere">
                     <div class="md:grid grid-cols-5">
                         <label
-                        class="col-span-2 block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4">
-                        Post Type
-                        <sup class="text-red-400">*</sup>
+                            class="col-span-2 block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4">
+                            Post Type
+                            <sup class="text-red-400">*</sup>
                         </label>
                         <t-rich-select
-                        class="col-span-3"
-                        v-model="agentFields.post_type"
-                        @input="() => agentFields.terms = []"
-                        :options="config.postTypes || []"
+                            class="col-span-3"
+                            v-model="agentFields.post_type"
+                            @input="() => agentFields.terms = []"
+                            :options="config.postTypes || []"
                         />
                     </div>
                     <div v-if="agentFields.post_type" class="md:grid grid-cols-5">
                         <label
-                        class="col-span-2 block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4">
-                        Taxonomy
+                            class="col-span-2 block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4">
+                            Taxonomy
                         </label>
                         <t-rich-select
-                        class="col-span-3"
-                        v-model="agentFields.taxonomy"
-                        :options="config.postTerms[agentFields.post_type]['_taxonomies'] || []"
+                            class="col-span-3"
+                            v-model="agentFields.taxonomy"
+                            :options="config.postTerms[agentFields.post_type]['_taxonomies'] || []"
                         />
                     </div>
                     <div v-if="agentFields.taxonomy" class="md:grid grid-cols-5">
                         <label
-                        class="col-span-2 block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4">
-                        Terms
+                            class="col-span-2 block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4">
+                            Terms
                         </label>
                         <t-rich-select
-                        class="col-span-3"
-                        v-model="agentFields.terms"
-                        :options="config.postTerms[agentFields.post_type][agentFields.taxonomy] || []"
-                        valueAttribute="term_id"
-                        textAttribute="name"
-                        multiple
-                        tags
+                            class="col-span-3"
+                            v-model="agentFields.terms"
+                            :options="config.postTerms[agentFields.post_type][agentFields.taxonomy] || []"
+                            valueAttribute="term_id"
+                            textAttribute="name"
+                            multiple
+                            tags
                         />
                     </div>
                 </template>
@@ -308,20 +324,20 @@
             </div>
           </div>
         </template>
-        <template v-if="selectedAgent" #footer>
+        <template v-if="selectedWidget" #footer>
           <t-button variant="secondary" @click.native="closeEditForm">
             Cancel
           </t-button>
           <t-button
-            class="ml-2" @click.native="(e) => doUpdate(selectedAgent.id)"
+            class="ml-2" @click.native="(e) => doUpdate(selectedWidget.id)"
             :class="{ 'opacity-25 cursor-not-allowed': !canSubmit || isSubmitting }"
             :disabled="!canSubmit || isSubmitting">
-            Update Agent
+            Update Widget
           </t-button>
         </template>
       </modal>
 
-      <!-- Create Agent Modal -->
+      <!-- Create Widget Modal -->
       <modal
         :show="showingCreateForm"
         type="info"
@@ -329,11 +345,11 @@
         @close="closeCreateForm">
         <template #icon>
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
-            <path fill-rule="evenodd" d="M7.5 6a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0ZM3.751 20.105a8.25 8.25 0 0 1 16.498 0 .75.75 0 0 1-.437.695A18.683 18.683 0 0 1 12 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 0 1-.437-.695Z" clip-rule="evenodd" />
+            <path fill-rule="evenodd" d="M12 2.25c-2.429 0-4.817.178-7.152.521C2.87 3.061 1.5 4.795 1.5 6.741v6.018c0 1.946 1.37 3.68 3.348 3.97.877.129 1.761.234 2.652.316V21a.75.75 0 0 0 1.28.53l4.184-4.183a.39.39 0 0 1 .266-.112c2.006-.05 3.982-.22 5.922-.506 1.978-.29 3.348-2.023 3.348-3.97V6.741c0-1.947-1.37-3.68-3.348-3.97A49.145 49.145 0 0 0 12 2.25ZM8.25 8.625a1.125 1.125 0 1 0 0 2.25 1.125 1.125 0 0 0 0-2.25Zm2.625 1.125a1.125 1.125 0 1 1 2.25 0 1.125 1.125 0 0 1-2.25 0Zm4.875-1.125a1.125 1.125 0 1 0 0 2.25 1.125 1.125 0 0 0 0-2.25Z" clip-rule="evenodd" />
           </svg>
         </template>
         <template #title>
-          Create agent
+          Create widget
         </template>
         <template #content>
           <div class="w-full">
@@ -367,10 +383,114 @@
                 </div>
               </div>
 
-              <!-- Widget Settings (simplified for create) -->
+              <!-- Widget Settings -->
+              <div class="border-t pt-3 mt-3 space-y-3">
+                <h3 class="text-md font-medium text-gray-700 mb-3">Widget Settings</h3>
+                
+                <div class="md:grid grid-cols-5">
+                  <label class="col-span-2 block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4">
+                    Enabled
+                  </label>
+                  <div>
+                    <t-toggle v-model="agentFields.enabled" />
+                  </div>
+                </div>
+
+                <div class="md:grid grid-cols-5">
+                  <label class="col-span-2 block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4">
+                    Avatar URL
+                  </label>
+                  <t-input class="col-span-3" v-model="agentFields.avatar_url" placeholder="https://..." />
+                </div>
+
+                <div class="md:grid grid-cols-5">
+                  <label class="col-span-2 block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4">
+                    Welcome Message
+                  </label>
+                  <t-textarea class="col-span-3" v-model="agentFields.welcome_message" />
+                </div>
+
+                <!-- Position & Colors -->
+                <div class="md:grid grid-cols-5">
+                  <label class="col-span-2 block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4">
+                    Bottom Offset (px)
+                  </label>
+                    <div class="col-span-3">
+                        <slider
+                            v-model="agentFields.bottom_offset"
+                            :min="0"
+                            :max="200"
+                            class="slider-blue"
+                            showTooltip="drag"
+                        />
+                    </div>
+                </div>
+
+                <div class="md:grid grid-cols-5">
+                  <label class="col-span-2 block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4">
+                    Right Offset (px)
+                  </label>
+                  <div class="col-span-3">
+                    <slider
+                        v-model="agentFields.right_offset"
+                        :min="0"
+                        :max="200"
+                        class="slider-blue"
+                        showTooltip="drag"
+                    />
+                  </div>
+                </div>
+
+                <div class="md:grid grid-cols-5">
+                  <label class="col-span-2 block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4">
+                    Primary Color
+                  </label>
+                  <div class="col-span-3">
+                  <color-input v-model="agentFields.primary_color" :format="'hex'" class="ring ring-offset-1 rounded-lg ring-gray-200" />
+                    </div>  
+                </div>
+
+                <div class="md:grid grid-cols-5">
+                  <label class="col-span-2 block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4">
+                    Secondary Color
+                  </label>
+                  <div class="col-span-3">
+                  <color-input v-model="agentFields.secondary_color" :format="'hex'" class="ring ring-offset-1 rounded-lg ring-gray-200" />
+                  </div>
+                </div>
+
+                <div class="md:grid grid-cols-5">
+                  <label class="col-span-2 block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4">
+                    Background Color
+                  </label>
+                  <div class="col-span-3">
+                  <color-input v-model="agentFields.background_color" :format="'hex'" class="ring ring-offset-1 rounded-lg ring-gray-200" />
+                  </div>
+                </div>
+
+                <div class="md:grid grid-cols-5">
+                  <label class="col-span-2 block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4">
+                    Text Color
+                  </label>
+                  <div class="col-span-3">
+                  <color-input v-model="agentFields.text_color" :format="'hex'" class="ring ring-offset-1 rounded-lg ring-gray-200" />
+                    </div>
+                </div>
+
+                <div class="md:grid grid-cols-5">
+                  <label class="col-span-2 block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4">
+                    Secondary Text Color
+                  </label>
+                  <div class="col-span-3">
+                  <color-input v-model="agentFields.secondary_text_color" :format="'hex'" class="ring ring-offset-1 rounded-lg ring-gray-200" />
+                    </div>
+                </div>
+              </div>
+
+              <!-- Filtering Settings -->
               <div class="border-t pt-3 mt-3 space-y-3">
                 <h3 class="text-md font-medium text-gray-700 mb-3">Display Rules</h3>
-                
+
                 <div class="md:grid grid-cols-5">
                   <label class="col-span-2 block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4">
                     Display Everywhere
@@ -381,43 +501,43 @@
                 </div>
 
                 <template v-if="!agentFields.display_everywhere">
-                  <div class="md:grid grid-cols-5">
+                    <div class="md:grid grid-cols-5">
                         <label
-                        class="col-span-2 block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4">
-                        Post Type
-                        <sup class="text-red-400">*</sup>
+                            class="col-span-2 block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4">
+                            Post Type
+                            <sup class="text-red-400">*</sup>
                         </label>
                         <t-rich-select
-                        class="col-span-3"
-                        v-model="agentFields.post_type"
-                        @input="() => agentFields.terms = []"
-                        :options="config.postTypes || []"
+                            class="col-span-3"
+                            v-model="agentFields.post_type"
+                            @input="() => agentFields.terms = []"
+                            :options="config.postTypes || []"
                         />
                     </div>
                     <div v-if="agentFields.post_type" class="md:grid grid-cols-5">
                         <label
-                        class="col-span-2 block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4">
-                        Taxonomy
+                            class="col-span-2 block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4">
+                            Taxonomy
                         </label>
                         <t-rich-select
-                        class="col-span-3"
-                        v-model="agentFields.taxonomy"
-                        :options="config.postTerms[agentFields.post_type]['_taxonomies'] || []"
+                            class="col-span-3"
+                            v-model="agentFields.taxonomy"
+                            :options="config.postTerms[agentFields.post_type]['_taxonomies'] || []"
                         />
                     </div>
                     <div v-if="agentFields.taxonomy" class="md:grid grid-cols-5">
                         <label
-                        class="col-span-2 block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4">
-                        Terms
+                            class="col-span-2 block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4">
+                            Terms
                         </label>
                         <t-rich-select
-                        class="col-span-3"
-                        v-model="agentFields.terms"
-                        :options="config.postTerms[agentFields.post_type][agentFields.taxonomy] || []"
-                        valueAttribute="term_id"
-                        textAttribute="name"
-                        multiple
-                        tags
+                            class="col-span-3"
+                            v-model="agentFields.terms"
+                            :options="config.postTerms[agentFields.post_type][agentFields.taxonomy] || []"
+                            valueAttribute="term_id"
+                            textAttribute="name"
+                            multiple
+                            tags
                         />
                     </div>
                 </template>
@@ -433,7 +553,7 @@
             class="ml-2" @click.native="(e) => doSave()"
             :class="{ 'opacity-25 cursor-not-allowed': !canSubmit || isSubmitting }"
             :disabled="!canSubmit || isSubmitting">
-            Create Agent
+            Create Widget
           </t-button>
         </template>
       </modal>
@@ -489,6 +609,7 @@ import {
   InformationCircleIcon,
   CheckCircleIcon,
   MinusCircleIcon,
+  ExclamationTriangleIcon,
 } from '@heroicons/vue/24/outline'
 
 // import Breadcrumbs from '~src/shared/components/BreadcrumbNavigation.vue'
@@ -512,10 +633,10 @@ const defaultFields = {
   background_color: '#ffffff',
   text_color: '#000000',
   secondary_text_color: '#ffffff',
-  post_type: 'post',
+  post_type: null,
   taxonomy: null,
   terms: [],
-  display_everywhere: false
+  display_everywhere: true
 }
 const agentFields = ref({ ...defaultFields })
 
@@ -529,23 +650,32 @@ const endpoints = ref({
 
 const config = inject('pluginConfig')
 
-const currentAgents = ref([])
-const jensiAgents = ref([])
-const selectedAgent = ref(null)
-const selectedJensiAgent = ref(null)
-
+const currentWidgets = ref([])
+const showingEditForm = ref(false)
+const showingCreateForm = ref(false)
+const selectedWidget = ref(null)
 const hasLoaded = ref(false)
 const isSubmitting = ref(false)
-const showingCreateForm = ref(false)
-const showingEditForm = ref(false)
+
+const jensiAgents = ref([])
+const selectedJensiAgent = ref(null)
 const showAgentModal = ref(false)
 
 const canSubmit = computed(() => {
-  const fields = showingCreateForm.value ? agentFields.value : selectedAgent.value
-  if (fields?.display_everywhere === false) {
-    return fields?.name && fields?.agent_id && fields?.post_type
+  if (isSubmitting.value) {
+    return false
   }
-  return fields?.name && fields?.agent_id
+  if (!agentFields.value.name || agentFields.value.name.length === 0) {
+    return false
+  }
+  if (!agentFields.value.agent_id || agentFields.value.agent_id.length === 0) {
+    return false
+  }
+  if (!agentFields.value.display_everywhere) {
+    return agentFields.value.post_type && agentFields.value.post_type.length !== 0
+  }
+  
+  return true
 })
 
 const getTaxonomy = (conf) => {
@@ -590,7 +720,7 @@ onBeforeMount(() => {
   }
 })
 
-const createAgent = () => {
+const createWidget = () => {
   // Clear out any old data
   agentFields.value = { ...defaultFields }
   selectedJensiAgent.value = null
@@ -598,7 +728,7 @@ const createAgent = () => {
   showingCreateForm.value = true
 }
 
-const selectAndEditAgent = async (agent) => {
+const selectAndEditWidget = async (agent) => {
   agentFields.value = { ...agent }
 
   // Need to convert boolean and array values
@@ -610,20 +740,20 @@ const selectAndEditAgent = async (agent) => {
   selectedJensiAgent.value = jensiAgents.value.find(a => a.id === agent.agent_id) || null
 
   // Update the selected config and show modal
-  selectedAgent.value = agent;
+  selectedWidget.value = agent;
   showingEditForm.value = true
 }
 
 const closeCreateForm = () => {
   showingCreateForm.value = false
-  selectedAgent.value = null
+  selectedWidget.value = null
   agentFields.value = { ...defaultFields }
   selectedJensiAgent.value = null
 }
 
 const closeEditForm = () => {
   showingEditForm.value = false
-  selectedAgent.value = null
+  selectedWidget.value = null
   selectedJensiAgent.value = null
 }
 
@@ -633,8 +763,7 @@ const selectJensiAgent = (agent) => {
 
 const confirmJensiAgent = () => {
   if (selectedJensiAgent.value) {
-    const target = showingCreateForm.value ? agentFields.value : selectedAgent.value
-    target.agent_id = selectedJensiAgent.value.id
+    agentFields.value.agent_id = selectedJensiAgent.value.id
     showAgentModal.value = false
   }
 }
@@ -671,7 +800,7 @@ const doSave = async (id = null) => {
       swal.fire({
         position: 'top-end',
         icon: 'success',
-        title: 'Agent updated successfully',
+        title: 'Widget updated successfully',
         showConfirmButton: false,
         timer: 1500
       })
@@ -685,7 +814,7 @@ const doSave = async (id = null) => {
 
       // Update config and local values
       config.agents = allItems || []
-      currentAgents.value = allItems || []
+      currentWidgets.value = allItems || []
 
       // Reset agent form
       agentFields.value = { ...defaultFields }
@@ -776,7 +905,7 @@ const doDestroy = (id) => {
           swal.fire({
             position: 'top-end',
             icon: 'success',
-            title: 'Agent deleted successfully',
+            title: 'Widget deleted successfully',
             showConfirmButton: false,
             timer: 1500
           })
@@ -786,7 +915,7 @@ const doDestroy = (id) => {
 
           // Update config and local values
           config.agents = allItems || []
-          currentAgents.value = allItems || []
+          currentWidgets.value = allItems || []
 
           // Reset agent form
           agentFields.value = { ...defaultFields }
@@ -838,9 +967,9 @@ const doLoad = async () => {
   }
 
   endpoints.value = config.rest.endpoints
-  currentAgents.value = config.agents || []
+  currentWidgets.value = config.agents || []
 
-  // Load JENSi agents (but not data sources - they're loaded on-demand per agent)
+  // Load JENSi agents
   await loadJensiAgents()
 
   hasLoaded.value = true

@@ -4,7 +4,7 @@ import AdminSettings from '~src/admin/views/AdminSettings.vue'
 import AdminInfo from '~src/admin/views/AdminInfo.vue'
 import AdminQueue from '~src/admin/views/AdminQueue.vue'
 import AdminSync from '~src/admin/views/AdminSync.vue'
-import AdminAgents from '~src/admin/views/AdminAgents.vue'
+import AdminWidgets from '~src/admin/views/AdminWidgets.vue'
 
 const routes: RouteRecordRaw[] = [
   {
@@ -13,9 +13,9 @@ const routes: RouteRecordRaw[] = [
     component: AdminDashboard
   },
   {
-    name: 'agents',
-    path: '/agents',
-    component: AdminAgents
+    name: 'widgets',
+    path: '/widgets',
+    component: AdminWidgets
   },
   {
     name: 'settings',

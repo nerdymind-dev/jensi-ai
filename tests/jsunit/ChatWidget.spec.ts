@@ -47,24 +47,24 @@ describe('ChatWidget with Laravel Echo', () => {
 
   test('should render chat button when closed', () => {
     wrapper = mount(ChatWidget)
-    
+
     const button = wrapper.find('.jensi-ai-chat-button')
     expect(button.exists()).toBe(true)
-    
+
     const chatWindow = wrapper.find('.jensi-ai-chat-window')
     expect(chatWindow.exists()).toBe(false)
   })
 
   test('should show chat window when opened', async () => {
     wrapper = mount(ChatWidget)
-    
+
     const button = wrapper.find('.jensi-ai-chat-button')
     await button.trigger('click')
     await nextTick()
 
     const chatWindow = wrapper.find('.jensi-ai-chat-window')
     expect(chatWindow.exists()).toBe(true)
-    
+
     const chatButton = wrapper.find('.jensi-ai-chat-button')
     expect(chatButton.exists()).toBe(false)
   })

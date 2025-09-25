@@ -64,7 +64,7 @@
                     <div class="">
                       <p class="mb-2">
                         Data Sources are content repositories that your agents can access to enhance their understanding and responses. You can connect multiple data sources to provide a richer context for your AI agents.
-                        This WordPress site is an example of a data source.
+                        This WordPress site is an example of a data source!
                       </p>
                       <t-button variant="primary" class="inline-block" :href="config.rest.api_url" target="_blank">
                         <span class="text-white">Manage Your Data Sources</span>

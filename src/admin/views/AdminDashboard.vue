@@ -144,6 +144,55 @@
                 </div>
               </div>
               <div class="md:grid grid-cols-5">
+                <label class="col-span-2 block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4">
+                  Agent
+                  <sup class="text-red-400">*</sup>
+                </label>
+                <div class="col-span-3">
+                  <t-button variant="secondary" @click="showAgentModal = true">
+                    {{ selectedJensiAgent ? 'Change' : 'Select' }} Agent
+                  </t-button>
+                  <div v-if="selectedJensiAgent" class="mt-1">
+                    <span class="inline-flex items-center rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 inset-ring inset-ring-blue-700/10 dark:bg-blue-400/10 dark:text-blue-400 dark:inset-ring-blue-400/30">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4 inline-block mr-1">
+                        <path d="M10 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM3.465 14.493a1.23 1.23 0 0 0 .41 1.412A9.957 9.957 0 0 0 10 18c2.31 0 4.438-.784 6.131-2.1.43-.333.604-.903.408-1.41a7.002 7.002 0 0 0-13.074.003Z" />
+                      </svg>
+                      {{ selectedJensiAgent.name }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="md:grid grid-cols-5">
+                <label class="col-span-2 block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4">
+                  Data Source
+                  <sup class="text-red-400">*</sup>
+                </label>
+                <div class="col-span-3">
+                  <template v-if="selectedJensiAgent">
+                    <t-button variant="secondary" @click="openDataSourceModal">
+                      {{ selectedDataSource ? 'Change' : 'Select' }} Data Source
+                    </t-button>
+                    <div v-if="selectedDataSource" class="mt-1">
+                    <span class="inline-flex items-center rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 inset-ring inset-ring-blue-700/10 dark:bg-blue-400/10 dark:text-blue-400 dark:inset-ring-blue-400/30">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4 inline-block mr-1">
+                        <path d="M5.127 3.502 5.25 3.5h9.5c.041 0 .082 0 .123.002A2.251 2.251 0 0 0 12.75 2h-5.5a2.25 2.25 0 0 0-2.123 1.502ZM1 10.25A2.25 2.25 0 0 1 3.25 8h13.5A2.25 2.25 0 0 1 19 10.25v5.5A2.25 2.25 0 0 1 16.75 18H3.25A2.25 2.25 0 0 1 1 15.75v-5.5ZM3.25 6.5c-.04 0-.082 0-.123.002A2.25 2.25 0 0 1 5.25 5h9.5c.98 0 1.814.627 2.123 1.502a3.819 3.819 0 0 0-.123-.002H3.25Z" />
+                      </svg>
+                      {{ selectedDataSource.name }}
+                    </span>
+                  </div>
+                  </template>
+                  <template v-else>
+                      <span class="inline-flex items-center rounded-full bg-red-50 px-2 py-1 text-xs font-medium text-red-700 inset-ring inset-ring-red-600/10 dark:bg-red-400/10 dark:text-red-400 dark:inset-ring-red-400/20">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4 inline-block mr-1">
+                          <path fill-rule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495ZM10 5a.75.75 0 0 1 .75.75v3.5a.75.75 0 0 1-1.5 0v-3.5A.75.75 0 0 1 10 5Zm0 9a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z" clip-rule="evenodd" />
+                        </svg>
+                        Select an agent first
+                      </span>
+                  </template>
+                </div>
+              </div>
+              <div class="md:grid grid-cols-5">
                 <label
                   class="col-span-2 block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4">
                   Post Type
@@ -507,13 +556,12 @@ const selectedConfig = ref(null)
 const hasLoaded = ref(false)
 const isSubmitting = ref(false)
 
-const currentAgents = ref([])
 const jensiAgents = ref([])
-const jensiDataSources = ref([])
-const selectedAgent = ref(null)
 const selectedJensiAgent = ref(null)
-const selectedDataSource = ref(null)
 const showAgentModal = ref(false)
+
+const jensiDataSources = ref([])
+const selectedDataSource = ref(null)
 const showDataSourceModal = ref(false)
 
 watch(configFields, (newVal, oldVal) => {
@@ -609,7 +657,7 @@ const createConfig = () => {
   showingCreateForm.value = true
 }
 
-const selectAndEditConfig = (config) => {
+const selectAndEditConfig = async (config) => {
   // Flag the selected config and show update form
   configFields.value = { ...config }
 
@@ -617,13 +665,24 @@ const selectAndEditConfig = (config) => {
   configFields.value.terms = JSON.parse(config.terms || "[]")
   configFields.value.enabled = config.enabled == 1
 
+  // Set the selected agent and data source
+  selectedJensiAgent.value = jensiAgents.value.find(a => a.id === config.agent_id) || null
+  
+  if (selectedJensiAgent.value) {
+    // Load data sources for the selected agent
+    await loadJensiDataSources(selectedJensiAgent.value.id)
+    selectedDataSource.value = jensiDataSources.value.find(ds => ds.id === config.data_source_id) || null
+  } else {
+    jensiDataSources.value = []
+  }
+
   // Update the selected config and show modal
   selectedConfig.value = config
   showingEditForm.value = true
 }
 
 const closeCreateForm = () => {
-  showingEditForm.value = false
+  showingCreateForm.value = false
   selectedConfig.value = null
   configFields.value = { ...defaultFields }
   selectedJensiAgent.value = null
@@ -643,8 +702,7 @@ const selectJensiAgent = (agent) => {
 
 const confirmJensiAgent = () => {
   if (selectedJensiAgent.value) {
-    const target = showingCreateForm.value ? configFields.value : selectedAgent.value
-    target.agent_id = selectedJensiAgent.value.id
+    configFields.value.agent_id = selectedJensiAgent.value.id
     showAgentModal.value = false
   }
 }
@@ -675,9 +733,7 @@ const confirmDataSource = async () => {
         const newDataSource = response.data.data
         jensiDataSources.value.push(newDataSource)
         selectedDataSource.value = newDataSource
-        
-        const target = showingCreateForm.value ? configFields.value : selectedAgent.value
-        target.data_source_id = newDataSource.id
+        configFields.value.data_source_id = newDataSource.id
         
         // Reset data source config
         dataSourceConfig.value = { ...defaultDataSourceConfig }
@@ -694,8 +750,7 @@ const confirmDataSource = async () => {
     } else {
       // Select existing data source
       if (selectedDataSource.value) {
-        const target = showingCreateForm.value ? configFields.value : selectedAgent.value
-        target.data_source_id = selectedDataSource.value.id
+        configFields.value.data_source_id = selectedDataSource.value.id
         showDataSourceModal.value = false
       }
     }
@@ -940,7 +995,6 @@ const doLoad = async () => {
 
   endpoints.value = config.rest.endpoints
   currentConfigs.value = config.configs || []
-  currentAgents.value = config.agents || []
 
   // Load JENSi agents (but not data sources - they're loaded on-demand per agent)
   await loadJensiAgents()

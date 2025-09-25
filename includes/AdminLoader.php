@@ -55,10 +55,10 @@ class AdminLoader
             );
             add_submenu_page(
                 $slug,
-                esc_html(__('Agents', $this->prefix)),
-                esc_html(__('Agents', $this->prefix)),
+                esc_html(__('Widgets', $this->prefix)),
+                esc_html(__('Widgets', $this->prefix)),
                 $capability,
-                "admin.php?page={$slug}#/agents"
+                "admin.php?page={$slug}#/widgets"
             );
             add_submenu_page(
                 $slug,

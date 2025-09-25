@@ -5,7 +5,7 @@ import { Vue3ProgressPlugin } from '@marcoschulte/vue3-progress';
 
 /**
  * Chat Widget Entry Point
- * 
+ *
  * This creates a floating chat widget that can be embedded on any page
  */
 
@@ -18,10 +18,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Create and mount the Vue app
   const app = createApp(ChatWidget)
-  
+
   // Install shared utilities
   installShared(app, 'jensi_ai_chat_widget_config')
-  
+
   app.use(Vue3ProgressPlugin, {
     // ...
   })
