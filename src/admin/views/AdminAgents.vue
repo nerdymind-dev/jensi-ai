@@ -146,12 +146,17 @@
                   Data Source
                 </label>
                 <div class="col-span-3">
-                  <t-button variant="secondary" @click="showDataSourceModal = true">
-                    {{ selectedDataSource ? 'Change' : 'Select' }} Data Source
-                  </t-button>
-                  <p v-if="selectedDataSource" class="text-sm text-gray-500 mt-1">
-                    {{ selectedDataSource.name }}
-                  </p>
+                  <template v-if="selectedJensiAgent">
+                    <t-button variant="secondary" @click="openDataSourceModal">
+                      {{ selectedDataSource ? 'Change' : 'Select' }} Data Source
+                    </t-button>
+                    <p v-if="selectedDataSource" class="text-sm text-gray-500 mt-1">
+                      {{ selectedDataSource.name }}
+                    </p>
+                  </template>
+                  <template v-else>
+                    <p class="text-gray-500 text-sm">Select an agent first</p>
+                  </template>
                 </div>
               </div>
 
@@ -348,12 +353,17 @@
                   Data Source <sup class="text-red-400">*</sup>
                 </label>
                 <div class="col-span-3">
-                  <t-button variant="secondary" @click="showDataSourceModal = true">
-                    {{ selectedDataSource ? 'Change' : 'Select' }} Data Source
-                  </t-button>
-                  <p v-if="selectedDataSource" class="text-sm text-gray-500 mt-1">
-                    {{ selectedDataSource.name }}
-                  </p>
+                  <template v-if="selectedJensiAgent">
+                    <t-button variant="secondary" @click="openDataSourceModal">
+                      {{ selectedDataSource ? 'Change' : 'Select' }} Data Source
+                    </t-button>
+                    <p v-if="selectedDataSource" class="text-sm text-gray-500 mt-1">
+                      {{ selectedDataSource.name }}
+                    </p>
+                  </template>
+                  <template v-else>
+                    <p class="text-gray-500 text-sm">Select an agent first</p>
+                  </template>
                 </div>
               </div>
 
@@ -483,25 +493,55 @@
         </template>
         <template #content>
           <div class="w-full">
-            <div class="max-h-64 overflow-y-auto">
-              <div v-for="dataSource in jensiDataSources" :key="dataSource.id" 
-                   @click="selectDataSource(dataSource)"
-                   class="flex items-center justify-between p-3 border rounded-lg cursor-pointer hover:bg-gray-50 mb-2"
-                   :class="{ 'border-blue-500 bg-blue-50': selectedDataSource?.id === dataSource.id }">
-                <div>
-                  <div class="font-medium">{{ dataSource.name }}</div>
-                  <div class="text-sm text-gray-500">{{ dataSource.description || 'No description' }}</div>
-                </div>
+            <!-- Create vs Select Toggle -->
+            <div class="mb-4 p-3 border border-gray-200 rounded bg-gray-50">
+              <div class="flex items-center justify-between">
+                <span class="text-sm font-medium">
+                  {{ dataSourceConfig.create_config ? 'Create new data source' : 'Select existing data source' }}
+                </span>
+                <t-toggle v-model="dataSourceConfig.create_config" />
               </div>
             </div>
+
+            <!-- Create New Data Source -->
+            <template v-if="dataSourceConfig.create_config">
+              <div class="space-y-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                  <t-input v-model="dataSourceConfig.name" placeholder="Enter data source name" />
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                  <t-textarea v-model="dataSourceConfig.description" placeholder="Enter description (optional)" />
+                </div>
+              </div>
+            </template>
+
+            <!-- Select Existing Data Source -->
+            <template v-else>
+              <div class="max-h-64 overflow-y-auto">
+                <div v-if="jensiDataSources.length === 0" class="p-4 text-center text-gray-500">
+                  No data sources available. Try creating a new one instead.
+                </div>
+                <div v-for="dataSource in jensiDataSources" :key="dataSource.id" 
+                     @click="selectDataSource(dataSource)"
+                     class="flex items-center justify-between p-3 border rounded-lg cursor-pointer hover:bg-gray-50 mb-2"
+                     :class="{ 'border-blue-500 bg-blue-50': selectedDataSource?.id === dataSource.id }">
+                  <div>
+                    <div class="font-medium">{{ dataSource.name }}</div>
+                    <div class="text-sm text-gray-500">{{ dataSource.description || 'No description' }}</div>
+                  </div>
+                </div>
+              </div>
+            </template>
           </div>
         </template>
         <template #footer>
           <t-button variant="secondary" @click.native="showDataSourceModal = false">
             Cancel
           </t-button>
-          <t-button class="ml-2" @click.native="confirmDataSource" :disabled="!selectedDataSource">
-            Select Data Source
+          <t-button class="ml-2" @click.native="confirmDataSource" :disabled="!canConfirmDataSource">
+            {{ dataSourceConfig.create_config ? 'Create' : 'Select' }} Data Source
           </t-button>
         </template>
       </modal>
@@ -546,13 +586,24 @@ const defaultAgentFields = {
 
 const agentFields = ref({ ...defaultAgentFields })
 
+// Data source configuration for create/select modal
+const defaultDataSourceConfig = {
+  create_config: true,
+  name: '',
+  description: '',
+  config_id: null,
+  type: 'wordpress'
+}
+
+const dataSourceConfig = ref({ ...defaultDataSourceConfig })
+
 const endpoints = ref({
   agent_crud: {
     all: '',
     crud: ''
   },
   agents: { get: '' },
-  data_sources: { get: '' }
+  data_sources: { get: '', create: '' }
 })
 
 const config = inject('pluginConfig')
@@ -590,6 +641,14 @@ const termsOptions = computed(() => {
   
   const postType = selectedAgent.value.post_type[0]
   return config.postTerms[postType]?.[selectedAgent.value.taxonomy] || []
+})
+
+const canConfirmDataSource = computed(() => {
+  if (dataSourceConfig.value.create_config) {
+    return dataSourceConfig.value.name.trim().length > 0
+  } else {
+    return selectedDataSource.value !== null
+  }
 })
 
 const taxonomyOptionsForCreate = computed(() => {
@@ -630,7 +689,14 @@ const selectAndEditAgent = async (agent) => {
   
   // Find the corresponding JENSi agent and data source
   selectedJensiAgent.value = jensiAgents.value.find(a => a.id === agent.agent_id) || null
-  selectedDataSource.value = jensiDataSources.value.find(ds => ds.id === agent.data_source_id) || null
+  
+  // Load data sources for this agent if agent is selected
+  if (selectedJensiAgent.value) {
+    await loadJensiDataSources(selectedJensiAgent.value.id)
+    selectedDataSource.value = jensiDataSources.value.find(ds => ds.id === agent.data_source_id) || null
+  } else {
+    selectedDataSource.value = null
+  }
   
   showingEditForm.value = true
 }
@@ -665,11 +731,59 @@ const selectDataSource = (dataSource) => {
   selectedDataSource.value = dataSource
 }
 
-const confirmDataSource = () => {
-  if (selectedDataSource.value) {
-    const target = showingCreateForm.value ? agentFields.value : selectedAgent.value
-    target.data_source_id = selectedDataSource.value.id
-    showDataSourceModal.value = false
+const confirmDataSource = async () => {
+  try {
+    if (dataSourceConfig.value.create_config) {
+      // Create new data source
+      if (!selectedJensiAgent.value) {
+        swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'Agent must be selected before creating a data source'
+        })
+        return
+      }
+      
+      const response = await axios.post(endpoints.value.data_sources.create, {
+        ...dataSourceConfig.value,
+        agent_id: selectedJensiAgent.value.id
+      })
+      
+      if (response.data.success) {
+        const newDataSource = response.data.data
+        jensiDataSources.value.push(newDataSource)
+        selectedDataSource.value = newDataSource
+        
+        const target = showingCreateForm.value ? agentFields.value : selectedAgent.value
+        target.data_source_id = newDataSource.id
+        
+        // Reset data source config
+        dataSourceConfig.value = { ...defaultDataSourceConfig }
+        showDataSourceModal.value = false
+        
+        swal.fire({
+          position: 'top-end',
+          icon: 'success',
+          title: 'Data source created successfully',
+          showConfirmButton: false,
+          timer: 1500
+        })
+      }
+    } else {
+      // Select existing data source
+      if (selectedDataSource.value) {
+        const target = showingCreateForm.value ? agentFields.value : selectedAgent.value
+        target.data_source_id = selectedDataSource.value.id
+        showDataSourceModal.value = false
+      }
+    }
+  } catch (err) {
+    console.error('Error with data source:', err)
+    swal.fire({
+      icon: 'error',
+      title: 'Error',
+      text: err?.response?.data?.message || 'An error occurred'
+    })
   }
 }
 
@@ -802,15 +916,36 @@ const loadJensiAgents = async () => {
   }
 }
 
-const loadJensiDataSources = async () => {
+const loadJensiDataSources = async (agentId = null) => {
   try {
-    const response = await axios.get(endpoints.value.data_sources.get)
+    const params = agentId ? { agent_id: agentId } : {}
+    const response = await axios.get(endpoints.value.data_sources.get, { params })
     if (response.data.success) {
       jensiDataSources.value = response.data.data
     }
   } catch (err) {
     console.error('Error loading JENSi data sources:', err)
   }
+}
+
+const openDataSourceModal = async () => {
+  if (!selectedJensiAgent.value) {
+    swal.fire({
+      icon: 'warning',
+      title: 'Select Agent First',
+      text: 'Please select an agent before choosing a data source'
+    })
+    return
+  }
+  
+  // Load data sources for the selected agent
+  await loadJensiDataSources(selectedJensiAgent.value.id)
+  
+  // Reset data source config
+  dataSourceConfig.value = { ...defaultDataSourceConfig }
+  selectedDataSource.value = null
+  
+  showDataSourceModal.value = true
 }
 
 onBeforeMount(() => {
@@ -835,11 +970,8 @@ const doLoad = async () => {
   endpoints.value = config.rest.endpoints
   currentAgents.value = config.agents || []
 
-  // Load JENSi agents and data sources
-  await Promise.all([
-    loadJensiAgents(),
-    loadJensiDataSources()
-  ])
+  // Load JENSi agents (but not data sources - they're loaded on-demand per agent)
+  await loadJensiAgents()
 
   hasLoaded.value = true
 }
