@@ -41,9 +41,9 @@ final class Migrations
 
         // Apply migrations in order
         $this->applyMigration($lastVersion, '0.0.1', 'migration_0_0_1');
-        $this->applyMigration($lastVersion, '0.0.2', 'migration_0_0_2');
+        $this->applyMigration($lastVersion, '1.0.1', 'migration_1_0_1');
 
-        // $this->applyMigration($lastVersion, '0.0.3', 'migration_0_0_3');
+        // $this->applyMigration($lastVersion, '1.0.3', 'migration_1_0_3');
         // ...
 
         // Update the last migrated version for future updates
@@ -151,11 +151,11 @@ final class Migrations
     }
 
     /**
-     * DB Migration for v0.0.2.
+     * DB Migration for v1.0.1 - Create agents table.
      *
      * @return void
      */
-    public function migration_0_0_2()
+    public function migration_1_0_1()
     {
         global $wpdb;
 
