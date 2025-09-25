@@ -166,7 +166,7 @@ class SyncController extends \WP_REST_Controller
         $errors = [];
         foreach ($posts_to_sync as $post) {
             // Queue each post for syncing
-            $result = $loader->store_job($post, $post->post_type);
+            $result = $loader->store_job($post, $config, $post->post_type);
             if ($result !== true) {
                 $errors[] = $result;
             }

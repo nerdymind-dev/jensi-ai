@@ -234,18 +234,18 @@ final class Main
         }
 
         // Queue up post for submission to JENSi AI
-        $this->generate_content_for_post($post_id, $post_type);
+        $this->generate_content_for_post($post_id, $config, $post_type);
     }
 
     /**
      * Generate content for post
      *
      * @param $post_id
-     * @param $type
      * @param $config
+     * @param $type
      * @return void
      */
-    private function generate_content_for_post($post_id, $type): void
+    private function generate_content_for_post($post_id, $config, $type): void
     {
         // Get the post Object, so we can grab the current content
         $post = get_post($post_id);
@@ -253,7 +253,7 @@ final class Main
         // If post and config set, queue it up!
         if ($post) {
             // Add to queue
-            (new QueueLoader())->store_job($post, $type);
+            (new QueueLoader())->store_job($post, $config, $type);
 
             // Add admin notice that we've queued this post up
             set_transient('jensi_ai_generating', [

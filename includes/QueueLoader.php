@@ -46,10 +46,11 @@ class QueueLoader
 
     /**
      * @param $post
+     * @param $config
      * @param null|string $type
      * @return array|true
      */
-    public function store_job($post, $type = null)
+    public function store_job($post, $config, $type = null)
     {
         global $wpdb;
 
@@ -68,6 +69,13 @@ class QueueLoader
             'post_id' => $post->ID,
             'content' => strip_tags($post->post_content),
             'type' => $type,
+            'meta' => json_encode([
+                'agent_id' => $config->agent_id ?? null,
+                'source_id' => $config->data_source_id ?? null,
+                'post_date' => $post->post_date,
+                'post_modified' => $post->post_modified,
+                'post_type' => $post->post_type,
+            ]),
             // 'processed' => false // populated by default...
         ]);
         if ($result === false) {
