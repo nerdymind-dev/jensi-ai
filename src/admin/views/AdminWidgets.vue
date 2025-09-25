@@ -896,7 +896,7 @@ const doDestroy = (id) => {
         if (config.settings.enable_debug_messages) {
           console.log(':: DEBUG :: deleting config', id)
         }
-        const rst = await axios.delete(endpoints.value.configs.crud, { data: { id } })
+        const rst = await axios.delete(endpoints.value.agent_crud.crud, { data: { id } })
         if (config.settings.enable_debug_messages) {
           console.log(':: DEBUG - Response ::', rst)
         }
@@ -981,3 +981,13 @@ const getCrumbs = () => {
 }
 
 </script>
+
+<style lang="css" scoped>
+.slider-blue {
+  --slider-connect-bg: #3B82F6;
+  --slider-tooltip-bg: #3B82F6;
+  --slider-handle-ring-color: #3B82F630;
+}
+</style>
+
+<style src="@vueform/slider/themes/default.css"></style>
