@@ -18,11 +18,6 @@ final class Migrations
      */
     public function run($prefix, $currentVersion)
     {
-        // Make sure has the correct permissions
-        if (!current_user_can('activate_plugins')) {
-            return $this;
-        }
-
         global $wpdb;
         $settings_table = "{$wpdb->prefix}jensi_ai_settings";
         $lastVersion = '0.0.0';
