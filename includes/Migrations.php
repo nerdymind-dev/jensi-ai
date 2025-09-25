@@ -41,8 +41,9 @@ final class Migrations
 
         // Apply migrations in order
         $this->applyMigration($lastVersion, '0.0.1', 'migration_0_0_1');
+        $this->applyMigration($lastVersion, '0.0.2', 'migration_0_0_2');
 
-        // $this->applyMigration($lastVersion, '0.0.2', 'migration_0_0_2');
+        // $this->applyMigration($lastVersion, '0.0.3', 'migration_0_0_3');
         // ...
 
         // Update the last migrated version for future updates
@@ -92,7 +93,8 @@ final class Migrations
         // Remove tables
         $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}jensi_ai_jobs");
         $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}jensi_ai_settings");
-        $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}jensi_ai_spinner_configs");
+        $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}jensi_ai_configs");
+        $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}jensi_ai_agents");
 
         // Remove options
         // delete_option($prefix . $option_name);
@@ -155,7 +157,35 @@ final class Migrations
      */
     public function migration_0_0_2()
     {
-        // ...
+        global $wpdb;
+
+        $charset_collate = $wpdb->get_charset_collate();
+
+        require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+        $sqlQuery = "CREATE TABLE {$wpdb->prefix}jensi_ai_agents (
+            `id` mediumint(9) NOT NULL AUTO_INCREMENT,
+            `name` VARCHAR(255) NOT NULL,
+            `agent_id` VARCHAR(255) NOT NULL,
+            `data_source_id` VARCHAR(255) NOT NULL,
+            `enabled` TINYINT NOT NULL DEFAULT 1,
+            `avatar_url` TEXT NULL,
+            `welcome_message` TEXT NULL,
+            `bottom_offset` INT NOT NULL DEFAULT 20,
+            `right_offset` INT NOT NULL DEFAULT 20,
+            `primary_color` VARCHAR(255) NOT NULL DEFAULT '#667eea',
+            `secondary_color` VARCHAR(255) NOT NULL DEFAULT '#764ba2',
+            `background_color` VARCHAR(255) NOT NULL DEFAULT '#ffffff',
+            `text_color` VARCHAR(255) NOT NULL DEFAULT '#000000',
+            `secondary_text_color` VARCHAR(255) NOT NULL DEFAULT '#ffffff',
+            `post_type` TEXT NULL,
+            `taxonomy` TEXT NULL,
+            `terms` TEXT NULL,
+            `display_everywhere` TINYINT NOT NULL DEFAULT 0,
+            `modified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (id)
+        ) $charset_collate;";
+        dbDelta($sqlQuery);
     }
 
     // ... Add more migration methods as needed

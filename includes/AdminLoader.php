@@ -55,6 +55,13 @@ class AdminLoader
             );
             add_submenu_page(
                 $slug,
+                esc_html(__('Agents', $this->prefix)),
+                esc_html(__('Agents', $this->prefix)),
+                $capability,
+                "admin.php?page={$slug}#/agents"
+            );
+            add_submenu_page(
+                $slug,
                 esc_html(__('Queue', $this->prefix)),
                 esc_html(__('Queue', $this->prefix)),
                 $capability,
@@ -103,6 +110,7 @@ class AdminLoader
         $queueController = new Api\QueueController();
         $configController = new Api\ConfigController();
         $agentController = new Api\AgentController();
+        $agentCrudController = new Api\AgentCrudController();
         $dataSourceController = new Api\DataSourceController();
         $syncController = new Api\SyncController();
 
@@ -119,7 +127,7 @@ class AdminLoader
             // Filter out built-in post types and those that don't support title/editor
             // Also exclude any post types that start with 'wp_' to avoid core post types
             // like 'wp_block', 'wp_navigation', etc.
-            if (str_contains($postType, 'wp_') || in_array($postType, ['attachment', 'revision', 'nav_menu_item', 'custom_css', 'oembed_cache'])) {
+            if (str_contains($postType, 'wp_') || str_contains($postType, 'kadence_') || in_array($postType, ['attachment', 'revision', 'nav_menu_item', 'custom_css', 'oembed_cache'])) {
                 return false;
             }
 
@@ -173,6 +181,7 @@ class AdminLoader
                     'queue' => $queueController->get_endpoints(),
                     'configs' => $configController->get_endpoints(),
                     'agents' => $agentController->get_endpoints(),
+                    'agent_crud' => $agentCrudController->get_endpoints(),
                     'data_sources' => $dataSourceController->get_endpoints(),
                     'sync' => $syncController->get_endpoints(),
                 ],
@@ -181,16 +190,9 @@ class AdminLoader
             ],
             'nonce' => wp_create_nonce('wp_rest'),
             'configs' => $configController->get_all_configs(),
+            'agents' => $agentCrudController->get_all_agents(),
             'settings' => $settingController->get_settings_raw(),
             'defaultSettings' => [
-                'welcome_message' => 'Hello! How can I assist you today?',
-                'bottom_offset' => 20,
-                'right_offset' => 20,
-                'primary_color' => '#667eea',
-                'secondary_color' => '#764ba2',
-                'background_color' => '#ffffff',
-                'text_color' => '#000000',
-                'secondary_text_color' => '#ffffff',
                 'enable_debug_messages' => false,
             ],
             'settingStructure' => $settingController->get_settings_structure(true),

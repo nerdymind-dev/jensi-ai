@@ -16,7 +16,8 @@ import {
   AdjustmentsHorizontalIcon,
   InformationCircleIcon,
   QueueListIcon,
-  ArrowsRightLeftIcon
+  ArrowsRightLeftIcon,
+  UserGroupIcon
 } from '@heroicons/vue/24/outline'
 
 const pluginConfig = inject('pluginConfig', {})
@@ -24,9 +25,10 @@ const pluginConfig = inject('pluginConfig', {})
 const navigation = ref([
   { name: 'Configuration', href: '/', icon: AdjustmentsHorizontalIcon },
   { name: 'Sync', href: '/sync', icon: ArrowsRightLeftIcon },
+  { name: 'Agents', href: '/agents', icon: UserGroupIcon },
   { name: 'Queue', href: '/queue', icon: QueueListIcon },
   { name: 'Settings', href: '/settings', icon: CogIcon },
-  { name: 'Help', href: '/help', icon: InformationCircleIcon },
+  { name: 'Help', href: '/help', icon: InformationCircleIcon }
 ])
 
 const appMeta = ref([])
