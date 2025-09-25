@@ -39,7 +39,7 @@
                             <div class="flex items-center justify-between space-x-2">
                               <div class="flex items-center space-x-1">
                                 <h3 class="text-sm font-medium text-gray-900">{{ agent.name }}</h3>
-                                <div v-if="agent.enabled">
+                                <div v-if="agent.enabled === '1'">
                                   <CheckCircleIcon class="w-4 h-4 text-green-400" />
                                 </div>
                                 <div v-else>

@@ -117,15 +117,12 @@ class AgentController extends \WP_REST_Controller
      */
     public function get_agents($request)
     {
-        $data = $this->get_all_agents();
         $nonce = wp_create_nonce('wp_rest');
-
         $response = [
-            'data' => $data,
+            'data' => $this->get_all_agents(),
             'success' => true,
             'nonce' => $nonce,
         ];
-
         return rest_ensure_response($response);
     }
 
