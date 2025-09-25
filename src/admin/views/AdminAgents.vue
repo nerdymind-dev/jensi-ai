@@ -106,8 +106,9 @@
         :custom-icon="true"
         @close="closeEditForm">
         <template #icon>
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
-            <path fill-rule="evenodd" d="M7.5 6a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0ZM3.751 20.105a8.25 8.25 0 0 1 16.498 0 .75.75 0 0 1-.437.695A18.683 18.683 0 0 1 12 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 0 1-.437-.695Z" clip-rule="evenodd" />
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
+            <path d="M5.433 13.917l1.262-3.155A4 4 0 017.58 9.42l6.92-6.918a2.121 2.121 0 013 3l-6.92 6.918c-.383.383-.84.685-1.343.886l-3.154 1.262a.5.5 0 01-.65-.65z" />
+            <path d="M3.5 5.75c0-.69.56-1.25 1.25-1.25H10A.75.75 0 0010 3H4.75A2.75 2.75 0 002 5.75v9.5A2.75 2.75 0 004.75 18h9.5A2.75 2.75 0 0017 15.25V10a.75.75 0 00-1.5 0v5.25c0 .69-.56 1.25-1.25 1.25h-9.5c-.69 0-1.25-.56-1.25-1.25v-9.5z" />
           </svg>
         </template>
         <template #title>
@@ -340,14 +341,16 @@
             <div class="flex flex-col gap-3">
               <div class="md:grid grid-cols-5">
                 <label class="col-span-2 block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4">
-                  Name <sup class="text-red-400">*</sup>
+                  Name
+                  <sup class="text-red-400">*</sup>
                 </label>
                 <t-input class="col-span-3" v-model="agentFields.name" />
               </div>
 
               <div class="md:grid grid-cols-5">
                 <label class="col-span-2 block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4">
-                  Agent <sup class="text-red-400">*</sup>
+                  Agent
+                  <sup class="text-red-400">*</sup>
                 </label>
                 <div class="col-span-3">
                   <t-button variant="secondary" @click="showAgentModal = true">

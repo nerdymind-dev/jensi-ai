@@ -106,6 +106,7 @@
         </div>
       </div>
 
+      <!-- Edit Config Modal -->
       <modal
         :show="showingEditForm"
         type="info"
@@ -195,6 +196,7 @@
         </template>
       </modal>
 
+      <!-- Create Config Modal -->
       <modal
         :show="showingCreateForm"
         type="info"
@@ -234,6 +236,7 @@
               <div class="md:grid grid-cols-5">
                 <label class="col-span-2 block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4">
                   Agent
+                  <sup class="text-red-400">*</sup>
                 </label>
                 <div class="col-span-3">
                   <t-button variant="secondary" @click="showAgentModal = true">
@@ -253,6 +256,7 @@
               <div class="md:grid grid-cols-5">
                 <label class="col-span-2 block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4">
                   Data Source
+                  <sup class="text-red-400">*</sup>
                 </label>
                 <div class="col-span-3">
                   <template v-if="selectedJensiAgent">
