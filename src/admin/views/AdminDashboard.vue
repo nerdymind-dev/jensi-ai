@@ -184,7 +184,7 @@
         </template>
         <template v-if="selectedConfig" #footer>
           <t-button variant="secondary" @click.native="closeEditForm">
-            Nevermind
+            Cancel
           </t-button>
           <t-button
             class="ml-2" @click.native="(e) => doUpdate(selectedConfig.id)"
@@ -230,6 +230,55 @@
                   <t-toggle v-model="configFields.enabled" />
                 </div>
               </div>
+
+              <div class="md:grid grid-cols-5">
+                <label class="col-span-2 block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4">
+                  Agent
+                </label>
+                <div class="col-span-3">
+                  <t-button variant="secondary" @click="showAgentModal = true">
+                    {{ selectedJensiAgent ? 'Change' : 'Select' }} Agent
+                  </t-button>
+                  <div v-if="selectedJensiAgent" class="mt-1">
+                    <span class="inline-flex items-center rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 inset-ring inset-ring-blue-700/10 dark:bg-blue-400/10 dark:text-blue-400 dark:inset-ring-blue-400/30">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4 inline-block mr-1">
+                        <path d="M10 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM3.465 14.493a1.23 1.23 0 0 0 .41 1.412A9.957 9.957 0 0 0 10 18c2.31 0 4.438-.784 6.131-2.1.43-.333.604-.903.408-1.41a7.002 7.002 0 0 0-13.074.003Z" />
+                      </svg>
+                      {{ selectedJensiAgent.name }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="md:grid grid-cols-5">
+                <label class="col-span-2 block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4">
+                  Data Source
+                </label>
+                <div class="col-span-3">
+                  <template v-if="selectedJensiAgent">
+                    <t-button variant="secondary" @click="openDataSourceModal">
+                      {{ selectedDataSource ? 'Change' : 'Select' }} Data Source
+                    </t-button>
+                    <div v-if="selectedDataSource" class="mt-1">
+                    <span class="inline-flex items-center rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 inset-ring inset-ring-blue-700/10 dark:bg-blue-400/10 dark:text-blue-400 dark:inset-ring-blue-400/30">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4 inline-block mr-1">
+                        <path d="M5.127 3.502 5.25 3.5h9.5c.041 0 .082 0 .123.002A2.251 2.251 0 0 0 12.75 2h-5.5a2.25 2.25 0 0 0-2.123 1.502ZM1 10.25A2.25 2.25 0 0 1 3.25 8h13.5A2.25 2.25 0 0 1 19 10.25v5.5A2.25 2.25 0 0 1 16.75 18H3.25A2.25 2.25 0 0 1 1 15.75v-5.5ZM3.25 6.5c-.04 0-.082 0-.123.002A2.25 2.25 0 0 1 5.25 5h9.5c.98 0 1.814.627 2.123 1.502a3.819 3.819 0 0 0-.123-.002H3.25Z" />
+                      </svg>
+                      {{ selectedDataSource.name }}
+                    </span>
+                  </div>
+                  </template>
+                  <template v-else>
+                      <span class="inline-flex items-center rounded-full bg-red-50 px-2 py-1 text-xs font-medium text-red-700 inset-ring inset-ring-red-600/10 dark:bg-red-400/10 dark:text-red-400 dark:inset-ring-red-400/20">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4 inline-block mr-1">
+                          <path fill-rule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495ZM10 5a.75.75 0 0 1 .75.75v3.5a.75.75 0 0 1-1.5 0v-3.5A.75.75 0 0 1 10 5Zm0 9a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z" clip-rule="evenodd" />
+                        </svg>
+                        Select an agent first
+                      </span>
+                  </template>
+                </div>
+              </div>
+
               <div class="md:grid grid-cols-5">
                 <label
                   class="col-span-2 block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4">
@@ -274,7 +323,7 @@
         </template>
         <template #footer>
           <t-button variant="secondary" @click.native="closeCreateForm">
-            Nevermind
+            Cancel
           </t-button>
           <t-button
             class="ml-2" @click.native="(e) => doSave()"
@@ -284,6 +333,115 @@
           </t-button>
         </template>
       </modal>
+
+      <!-- Agent Selection Modal -->
+      <modal
+        :show="showAgentModal"
+        type="info"
+        :custom-icon="true"
+        @close="showAgentModal = false">
+        <template #icon>
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
+            <path d="M4.5 6.375a4.125 4.125 0 1 1 8.25 0 4.125 4.125 0 0 1-8.25 0ZM14.25 8.625a3.375 3.375 0 1 1 6.75 0 3.375 3.375 0 0 1-6.75 0ZM1.5 19.125a7.125 7.125 0 0 1 14.25 0v.003l-.001.119a.75.75 0 0 1-.363.63 13.067 13.067 0 0 1-6.761 1.873c-2.472 0-4.786-.684-6.76-1.873a.75.75 0 0 1-.364-.63l-.001-.122ZM17.25 19.128l-.001.144a2.25 2.25 0 0 1-.233.96 10.088 10.088 0 0 0 5.06-1.01.75.75 0 0 0 .42-.643 4.875 4.875 0 0 0-6.957-4.611 8.586 8.586 0 0 1 1.71 5.157v.003Z" />
+          </svg>
+        </template>
+        <template #title>
+          Select Agent
+        </template>
+        <template #content>
+          <div class="w-full">
+            <div class="max-h-64 overflow-y-auto">
+              <div v-for="agent in jensiAgents" :key="agent.id" 
+                   @click="selectJensiAgent(agent)"
+                   class="flex items-center justify-between p-3 border rounded-lg cursor-pointer hover:bg-gray-50 mb-2"
+                   :class="{ 'border-blue-500 bg-blue-50': selectedJensiAgent?.id === agent.id }">
+                <div>
+                  <div class="font-medium">{{ agent.name }}</div>
+                  <div class="text-sm text-gray-500">{{ agent.description || 'No description' }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </template>
+        <template #footer>
+          <t-button variant="secondary" @click.native="showAgentModal = false">
+            Cancel
+          </t-button>
+          <t-button class="ml-2" @click.native="confirmJensiAgent" :disabled="!selectedJensiAgent">
+            Select Agent
+          </t-button>
+        </template>
+      </modal>
+
+      <!-- Data Source Selection Modal -->
+      <modal
+        :show="showDataSourceModal"
+        type="info"
+        :custom-icon="true"
+        @close="showDataSourceModal = false">
+        <template #icon>
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
+            <path d="M5.566 4.657A4.505 4.505 0 0 1 6.75 4.5h10.5c.41 0 .806.055 1.183.157A3 3 0 0 0 15.75 3h-7.5a3 3 0 0 0-2.684 1.657ZM2.25 12a3 3 0 0 1 3-3h13.5a3 3 0 0 1 3 3v6a3 3 0 0 1-3 3H5.25a3 3 0 0 1-3-3v-6ZM5.25 7.5c-.41 0-.806.055-1.184.157A3 3 0 0 1 6.75 6h10.5a3 3 0 0 1 2.683 1.657A4.505 4.505 0 0 0 18.75 7.5H5.25Z" />
+          </svg>
+        </template>
+        <template #title>
+          Select Data Source
+        </template>
+        <template #content>
+          <div class="w-full">
+            <!-- Create vs Select Toggle -->
+            <div class="mb-4 p-3 border border-gray-200 rounded bg-gray-50">
+              <div class="flex items-center justify-between">
+                <span class="text-sm font-medium">
+                  {{ dataSourceConfig.create_config ? 'Create new data source' : 'Select existing data source' }}
+                </span>
+                <t-toggle v-model="dataSourceConfig.create_config" />
+              </div>
+            </div>
+
+            <!-- Create New Data Source -->
+            <template v-if="dataSourceConfig.create_config">
+              <div class="space-y-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                  <t-input v-model="dataSourceConfig.name" placeholder="Enter data source name" />
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                  <t-textarea v-model="dataSourceConfig.description" placeholder="Enter description (optional)" />
+                </div>
+              </div>
+            </template>
+
+            <!-- Select Existing Data Source -->
+            <template v-else>
+              <div class="max-h-64 overflow-y-auto">
+                <div v-if="jensiDataSources.length === 0" class="p-4 text-center text-gray-500">
+                  No data sources available. Try creating a new one instead.
+                </div>
+                <div v-for="dataSource in jensiDataSources" :key="dataSource.id" 
+                     @click="selectDataSource(dataSource)"
+                     class="flex items-center justify-between p-3 border rounded-lg cursor-pointer hover:bg-gray-50 mb-2"
+                     :class="{ 'border-blue-500 bg-blue-50': selectedDataSource?.id === dataSource.id }">
+                  <div>
+                    <div class="font-medium">{{ dataSource.name }}</div>
+                    <div class="text-sm text-gray-500">{{ dataSource.description || 'No description' }}</div>
+                  </div>
+                </div>
+              </div>
+            </template>
+          </div>
+        </template>
+        <template #footer>
+          <t-button variant="secondary" @click.native="showDataSourceModal = false">
+            Cancel
+          </t-button>
+          <t-button class="ml-2" @click.native="confirmDataSource" :disabled="!canConfirmDataSource">
+            {{ dataSourceConfig.create_config ? 'Create' : 'Select' }} Data Source
+          </t-button>
+        </template>
+      </modal>
+
     </section>
   </div>
 </template>
@@ -307,21 +465,36 @@ const win = inject('win')
 const swal = inject('swal')
 const axios = inject('axios')
 
+// Form fields for create/edit
 const defaultFields = {
   title: '',
   post_type: 'post', // Default to 'post' type
   taxonomy: null, // Default taxonomy
   terms: [],
-  enabled: true
+  enabled: true,
+  agent_id: '',
+  data_source_id: '',
 }
 const configFields = ref({ ...defaultFields })
+
+// Data source configuration for create/select modal
+const defaultDataSourceConfig = {
+  create_config: true,
+  name: '',
+  description: '',
+  config_id: null,
+  type: 'wordpress'
+}
+const dataSourceConfig = ref({ ...defaultDataSourceConfig })
 
 const endpoints = ref({
   configs: {
     all: '', // GET
     crud: '', // GET/POST/DELETE
     taxonomy: '' // GET
-  }
+  },
+  agents: { get: '' },
+  data_sources: { get: '', create: '' }
 })
 const config = inject('pluginConfig')
 
@@ -331,6 +504,15 @@ const showingCreateForm = ref(false)
 const selectedConfig = ref(null)
 const hasLoaded = ref(false)
 const isSubmitting = ref(false)
+
+const currentAgents = ref([])
+const jensiAgents = ref([])
+const jensiDataSources = ref([])
+const selectedAgent = ref(null)
+const selectedJensiAgent = ref(null)
+const selectedDataSource = ref(null)
+const showAgentModal = ref(false)
+const showDataSourceModal = ref(false)
 
 watch(configFields, (newVal, oldVal) => {
   if (newVal) {
@@ -356,7 +538,21 @@ const canSubmit = computed(() => {
   if (!configFields.value.post_type || configFields.value.post_type.length === 0) {
     return false
   }
+  if (!configFields.value.agent_id || configFields.value.agent_id.length === 0) {
+    return false
+  }
+  if (!configFields.value.data_source_id || configFields.value.data_source_id.length === 0) {
+    return false
+  }
   return true
+})
+
+const canConfirmDataSource = computed(() => {
+  if (dataSourceConfig.value.create_config) {
+    return dataSourceConfig.value.name.trim().length > 0
+  } else {
+    return selectedDataSource.value !== null
+  }
 })
 
 const getTaxonomy = (conf) => {
@@ -405,31 +601,130 @@ const createConfig = () => {
   // Clear out any old data
   configFields.value = { ...defaultFields }
   selectedConfig.value = null
+  selectedJensiAgent.value = null
+  selectedDataSource.value = null
   // Show create form
   showingCreateForm.value = true
 }
 
-const closeCreateForm = () => {
-  // Reset form and values on close
-  showingCreateForm.value = false
-  configFields.value = { ...defaultFields }
-}
-
 const selectAndEditConfig = (config) => {
   // Flag the selected config and show update form
-  configFields.value.title = config.title
-  configFields.value.post_type = config.post_type
-  configFields.value.taxonomy = config.taxonomy
+  configFields.value = { ...config }
+
+  // Need to convert boolean and array values
   configFields.value.terms = JSON.parse(config.terms || "[]")
   configFields.value.enabled = config.enabled == 1
+
+  // Update the selected config and show modal
   selectedConfig.value = config
   showingEditForm.value = true
+}
+
+const closeCreateForm = () => {
+  showingEditForm.value = false
+  selectedConfig.value = null
+  configFields.value = { ...defaultFields }
+  selectedJensiAgent.value = null
+  selectedDataSource.value = null
 }
 
 const closeEditForm = () => {
   showingEditForm.value = false
   selectedConfig.value = null
-  configFields.value = { ...defaultFields }
+  selectedJensiAgent.value = null
+  selectedDataSource.value = null
+}
+
+const selectJensiAgent = (agent) => {
+  selectedJensiAgent.value = agent
+}
+
+const confirmJensiAgent = () => {
+  if (selectedJensiAgent.value) {
+    const target = showingCreateForm.value ? configFields.value : selectedAgent.value
+    target.agent_id = selectedJensiAgent.value.id
+    showAgentModal.value = false
+  }
+}
+
+const selectDataSource = (dataSource) => {
+  selectedDataSource.value = dataSource
+}
+
+const confirmDataSource = async () => {
+  try {
+    if (dataSourceConfig.value.create_config) {
+      // Create new data source
+      if (!selectedJensiAgent.value) {
+        swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'Agent must be selected before creating a data source'
+        })
+        return
+      }
+      
+      const response = await axios.post(endpoints.value.data_sources.create, {
+        ...dataSourceConfig.value,
+        agent_id: selectedJensiAgent.value.id
+      })
+      
+      if (response.data.success) {
+        const newDataSource = response.data.data
+        jensiDataSources.value.push(newDataSource)
+        selectedDataSource.value = newDataSource
+        
+        const target = showingCreateForm.value ? configFields.value : selectedAgent.value
+        target.data_source_id = newDataSource.id
+        
+        // Reset data source config
+        dataSourceConfig.value = { ...defaultDataSourceConfig }
+        showDataSourceModal.value = false
+        
+        swal.fire({
+          position: 'top-end',
+          icon: 'success',
+          title: 'Data source created successfully',
+          showConfirmButton: false,
+          timer: 1500
+        })
+      }
+    } else {
+      // Select existing data source
+      if (selectedDataSource.value) {
+        const target = showingCreateForm.value ? configFields.value : selectedAgent.value
+        target.data_source_id = selectedDataSource.value.id
+        showDataSourceModal.value = false
+      }
+    }
+  } catch (err) {
+    console.error('Error with data source:', err)
+    swal.fire({
+      icon: 'error',
+      title: 'Error',
+      text: err?.response?.data?.message || 'An error occurred'
+    })
+  }
+}
+
+const openDataSourceModal = async () => {
+  if (!selectedJensiAgent.value) {
+    swal.fire({
+      icon: 'warning',
+      title: 'Select Agent First',
+      text: 'Please select an agent before choosing a data source'
+    })
+    return
+  }
+  
+  // Load data sources for the selected agent
+  await loadJensiDataSources(selectedJensiAgent.value.id)
+  
+  // Reset data source config
+  dataSourceConfig.value = { ...defaultDataSourceConfig }
+  selectedDataSource.value = null
+  
+  showDataSourceModal.value = true
 }
 
 const doUpdate = async (id) => {
@@ -467,6 +762,7 @@ const doSave = async (id = null) => {
         showConfirmButton: false,
         timer: 1500
       })
+
       // Close any modals
       closeCreateForm()
       closeEditForm()
@@ -571,6 +867,7 @@ const doDestroy = (id) => {
             showConfirmButton: false,
             timer: 1500
           })
+
           // Fetch all items (including new/updated)
           const allItems = await deFetchAll()
 
@@ -609,6 +906,29 @@ const doDestroy = (id) => {
   })
 }
 
+const loadJensiAgents = async () => {
+  try {
+    const response = await axios.get(endpoints.value.agents.get)
+    if (response.data.success) {
+      jensiAgents.value = response.data.data
+    }
+  } catch (err) {
+    console.error('Error loading JENSi agents:', err)
+  }
+}
+
+const loadJensiDataSources = async (agentId = null) => {
+  try {
+    const params = agentId ? { agent_id: agentId } : {}
+    const response = await axios.get(endpoints.value.data_sources.get, { params })
+    if (response.data.success) {
+      jensiDataSources.value = response.data.data
+    }
+  } catch (err) {
+    console.error('Error loading JENSi data sources:', err)
+  }
+}
+
 const doLoad = async () => {
   await nextTick()
 
@@ -618,6 +938,10 @@ const doLoad = async () => {
 
   endpoints.value = config.rest.endpoints
   currentConfigs.value = config.configs || []
+  currentAgents.value = config.agents || []
+
+  // Load JENSi agents (but not data sources - they're loaded on-demand per agent)
+  await loadJensiAgents()
 
   // make sure data is loaded before ui render
   hasLoaded.value = true

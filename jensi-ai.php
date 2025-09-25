@@ -10,7 +10,7 @@ use Symfony\Component\VarDumper\VarDumper;
 
 /**
  * Plugin Name: JENSi AI
- * Version: 1.0.1
+ * Version: 1.0.2
  * Plugin URI: https://nerdymind.com/
  * Description: JENSi AI 🤖
  * Author: Shaun Parkison (NerdyMind)
@@ -34,7 +34,7 @@ if (!defined('ABSPATH')) {
 // define the plugin version
 if (!defined('JENSI_AI_VERSION')) {
     // NOTE: be sure change version in plugin details above as well...
-    define('JENSI_AI_VERSION', '1.0.1');
+    define('JENSI_AI_VERSION', '1.0.2');
 }
 
 /*

@@ -31,8 +31,8 @@ class ApiRoutes
         (new Api\ConfigController())->register_routes();
         (new Api\SyncController())->register_routes();
         (new Api\DataSourceController())->register_routes();    
+        (new Api\JensiAgentController())->register_routes();
         (new Api\AgentController())->register_routes();
-        (new Api\AgentCrudController())->register_routes();
         (new Api\ChatController())->register_routes();
 
         /*

@@ -270,15 +270,21 @@ class ConfigController extends \WP_REST_Controller
         if (isset($params)) {
             global $wpdb;
             $id = $params['id'] ?? null;
+            $tableName = $wpdb->prefix . $this->table_name;
+
+            // Sanitize and prepare data
+            $fields = [
+                'title' => sanitize_text_field($params['title'] ?? null),
+                'post_type' => sanitize_text_field($params['post_type'] ?? null),
+                'taxonomy' => sanitize_text_field($params['taxonomy'] ?? null),
+                'terms' => json_encode($params['terms'] ?? []),
+                'agent_id' => sanitize_text_field($params['agent_id'] ?? null),
+                'data_source_id' => sanitize_text_field($params['data_source_id'] ?? null),
+                'enabled' => $params['enabled'], // true/false, default true
+            ];
             if (!$id) {
                 // Create it
-                $wpdb->insert($wpdb->prefix . $this->table_name, [
-                    'title' => $params['title'] ?? null,
-                    'post_type' => $params['post_type'] ?? null,
-                    'taxonomy' => $params['taxonomy'] ?? null,
-                    'terms' => json_encode($params['terms'] ?? []),
-                    'enabled' => $params['enabled'], // true/false, default true
-                ]);
+                $wpdb->insert($tableName, $fields);
                 $result = $this->get_config_object(); // get the latest item
                 if ($result) {
                     // Errors will be an array, else TRUE if stored successfully
@@ -289,13 +295,7 @@ class ConfigController extends \WP_REST_Controller
                 // Update it
                 $result = $this->get_config_object($id);
                 if ($result) {
-                    $updated = $wpdb->update($wpdb->prefix . $this->table_name, [
-                        'title' => $params['title'] ?? null,
-                        'post_type' => $params['post_type'] ?? null,
-                        'taxonomy' => $params['taxonomy'] ?? null,
-                        'terms' => json_encode($params['terms'] ?? []),
-                        'enabled' => $params['enabled'], // true/false, default true
-                    ], ['id' => $result->id]);
+                    $updated = $wpdb->update($tableName, $fields, ['id' => $result->id]);
                     if ($updated !== false) {
                         // Get the updated item
                         $result = $this->get_config_object($id);
@@ -399,19 +399,18 @@ class ConfigController extends \WP_REST_Controller
                         },
                         'required' => true
                     ],
-                    // Should taxonomy and term be required?
-                    // 'taxonomy' => [
-                    //     'validate_callback' => function($param, $request, $key) {
-                    //         return !empty($param);
-                    //     },
-                    //     'required' => true
-                    // ],
-                    //'term_id' => [
-                    //    'validate_callback' => function($param, $request, $key) {
-                    //        return is_numeric($param);
-                    //    },
-                    //    'required' => true
-                    //],
+                    'agent_id' => [
+                        'required' => true,
+                        'validate_callback' => function ($param, $request, $key) {
+                            return !empty($param) && is_string($param);
+                        },
+                    ],
+                    'data_source_id' => [
+                        'required' => true,
+                        'validate_callback' => function ($param, $request, $key) {
+                            return !empty($param) && is_string($param);
+                        },
+                    ],
                 ];
         }
         return [];

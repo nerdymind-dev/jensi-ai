@@ -109,8 +109,8 @@ class AdminLoader
         $settingController = new Api\SettingController();
         $queueController = new Api\QueueController();
         $configController = new Api\ConfigController();
-        $agentController = new Api\AgentController();
-        $agentCrudController = new Api\AgentCrudController();
+        $agentController = new Api\JensiAgentController();
+        $AgentController = new Api\AgentController();
         $dataSourceController = new Api\DataSourceController();
         $syncController = new Api\SyncController();
 
@@ -181,7 +181,7 @@ class AdminLoader
                     'queue' => $queueController->get_endpoints(),
                     'configs' => $configController->get_endpoints(),
                     'agents' => $agentController->get_endpoints(),
-                    'agent_crud' => $agentCrudController->get_endpoints(),
+                    'agent_crud' => $AgentController->get_endpoints(),
                     'data_sources' => $dataSourceController->get_endpoints(),
                     'sync' => $syncController->get_endpoints(),
                 ],
@@ -190,7 +190,7 @@ class AdminLoader
             ],
             'nonce' => wp_create_nonce('wp_rest'),
             'configs' => $configController->get_all_configs(),
-            'agents' => $agentCrudController->get_all_agents(),
+            'agents' => $AgentController->get_all_agents(),
             'settings' => $settingController->get_settings_raw(),
             'defaultSettings' => [
                 'enable_debug_messages' => false,

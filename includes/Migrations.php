@@ -42,8 +42,10 @@ final class Migrations
         // Apply migrations in order
         $this->applyMigration($lastVersion, '0.0.1', 'migration_0_0_1');
         $this->applyMigration($lastVersion, '1.0.1', 'migration_1_0_1');
+        $this->applyMigration($lastVersion, '1.0.2', 'migration_1_0_2');
 
-        // $this->applyMigration($lastVersion, '1.0.3', 'migration_1_0_3');
+        // $this->applyMigration($lastVersion, '1.0.x', 'migration_1_0_x');
+
         // ...
 
         // Update the last migrated version for future updates
@@ -186,6 +188,26 @@ final class Migrations
             PRIMARY KEY (id)
         ) $charset_collate;";
         dbDelta($sqlQuery);
+    }
+
+    /**
+     * DB Migration for v1.0.2 - Modify agents and configs tables.
+     *
+     * @return void
+     */
+    public function migration_1_0_2()
+    {
+        // Need to drop the `data_source_id` column from the agents table
+        global $wpdb;
+
+        $agents_table = $wpdb->prefix . 'jensi_ai_agents';
+        $column = 'data_source_id';
+        $wpdb->query("ALTER TABLE $agents_table DROP COLUMN $column");
+
+        // Next, we need to add `agent_id` and `data_source_id` to the jensi_ai_configs table
+        $configs_table = $wpdb->prefix . 'jensi_ai_configs';
+        $wpdb->query("ALTER TABLE $configs_table ADD COLUMN agent_id VARCHAR(255) NOT NULL");
+        $wpdb->query("ALTER TABLE $configs_table ADD COLUMN data_source_id VARCHAR(255) NOT NULL");
     }
 
     // ... Add more migration methods as needed

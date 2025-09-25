@@ -106,9 +106,8 @@
         :custom-icon="true"
         @close="closeEditForm">
         <template #icon>
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
-            <path d="M3.5 5.75c0-.69.56-1.25 1.25-1.25H10A.75.75 0 0010 3H4.75A2.75 2.75 0 002 5.75v9.5A2.75 2.75 0 004.75 18h9.5A2.75 2.75 0 0017 15.25V10a.75.75 0 00-1.5 0v5.25c0 .69-.56 1.25-1.25 1.25h-9.5c-.69 0-1.25-.56-1.25-1.25v-9.5z" />
-            <path d="M13 3.5c0-.69.56-1.25 1.25-1.25H20A.75.75 0 0020 3v5.75c0 .41-.34.75-.75.75s-.75-.34-.75-.75V4.56l-7.22 7.22a.75.75 0 01-1.06-1.06L17.44 3.5H13.25c-.41 0-.75-.34-.75-.75z" />
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
+            <path fill-rule="evenodd" d="M7.5 6a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0ZM3.751 20.105a8.25 8.25 0 0 1 16.498 0 .75.75 0 0 1-.437.695A18.683 18.683 0 0 1 12 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 0 1-.437-.695Z" clip-rule="evenodd" />
           </svg>
         </template>
         <template #title>
@@ -123,7 +122,7 @@
                   Name <sup class="text-red-400">*</sup>
                 </label>
                 <div class="col-span-3">
-                  <t-input v-model="selectedAgent.name" />
+                  <t-input v-model="agentFields.name" />
                 </div>
               </div>
               
@@ -135,33 +134,19 @@
                   <t-button variant="secondary" @click="showAgentModal = true">
                     {{ selectedJensiAgent ? 'Change' : 'Select' }} Agent
                   </t-button>
-                  <p v-if="selectedJensiAgent" class="text-sm text-gray-500 mt-1">
-                    {{ selectedJensiAgent.name }}
-                  </p>
-                </div>
-              </div>
-
-              <div class="md:grid grid-cols-5">
-                <label class="col-span-2 block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4">
-                  Data Source
-                </label>
-                <div class="col-span-3">
-                  <template v-if="selectedJensiAgent">
-                    <t-button variant="secondary" @click="openDataSourceModal">
-                      {{ selectedDataSource ? 'Change' : 'Select' }} Data Source
-                    </t-button>
-                    <p v-if="selectedDataSource" class="text-sm text-gray-500 mt-1">
-                      {{ selectedDataSource.name }}
-                    </p>
-                  </template>
-                  <template v-else>
-                    <p class="text-gray-500 text-sm">Select an agent first</p>
-                  </template>
+                  <div v-if="selectedJensiAgent" class="mt-1">
+                    <span class="inline-flex items-center rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 inset-ring inset-ring-blue-700/10 dark:bg-blue-400/10 dark:text-blue-400 dark:inset-ring-blue-400/30">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4 inline-block mr-1">
+                        <path d="M10 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM3.465 14.493a1.23 1.23 0 0 0 .41 1.412A9.957 9.957 0 0 0 10 18c2.31 0 4.438-.784 6.131-2.1.43-.333.604-.903.408-1.41a7.002 7.002 0 0 0-13.074.003Z" />
+                      </svg>
+                      {{ selectedJensiAgent.name }}
+                    </span>
+                  </div>
                 </div>
               </div>
 
               <!-- Widget Settings -->
-              <div class="border-t pt-3 mt-3">
+              <div class="border-t pt-3 mt-3 space-y-3">
                 <h3 class="text-md font-medium text-gray-700 mb-3">Widget Settings</h3>
                 
                 <div class="md:grid grid-cols-5">
@@ -169,7 +154,7 @@
                     Enabled
                   </label>
                   <div>
-                    <t-toggle v-model="selectedAgent.enabled" />
+                    <t-toggle v-model="agentFields.enabled" />
                   </div>
                 </div>
 
@@ -177,14 +162,14 @@
                   <label class="col-span-2 block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4">
                     Avatar URL
                   </label>
-                  <t-input class="col-span-3" v-model="selectedAgent.avatar_url" placeholder="https://..." />
+                  <t-input class="col-span-3" v-model="agentFields.avatar_url" placeholder="https://..." />
                 </div>
 
                 <div class="md:grid grid-cols-5">
                   <label class="col-span-2 block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4">
                     Welcome Message
                   </label>
-                  <t-textarea class="col-span-3" v-model="selectedAgent.welcome_message" />
+                  <t-textarea class="col-span-3" v-model="agentFields.welcome_message" />
                 </div>
 
                 <!-- Position & Colors -->
@@ -192,54 +177,80 @@
                   <label class="col-span-2 block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4">
                     Bottom Offset (px)
                   </label>
-                  <t-input class="col-span-3" type="number" v-model="selectedAgent.bottom_offset" />
+                    <div class="col-span-3">
+                        <slider
+                            v-model="agentFields.bottom_offset"
+                            :min="0"
+                            :max="200"
+                            class="slider-blue"
+                            showTooltip="drag"
+                        />
+                    </div>
                 </div>
 
                 <div class="md:grid grid-cols-5">
                   <label class="col-span-2 block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4">
                     Right Offset (px)
                   </label>
-                  <t-input class="col-span-3" type="number" v-model="selectedAgent.right_offset" />
+                  <div class="col-span-3">
+                    <slider
+                        v-model="agentFields.right_offset"
+                        :min="0"
+                        :max="200"
+                        class="slider-blue"
+                        showTooltip="drag"
+                    />
+                  </div>
                 </div>
 
                 <div class="md:grid grid-cols-5">
                   <label class="col-span-2 block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4">
                     Primary Color
                   </label>
-                  <t-input class="col-span-3" type="color" v-model="selectedAgent.primary_color" />
+                  <div class="col-span-3">
+                  <color-input v-model="agentFields.primary_color" :format="'hex'" class="ring ring-offset-1 rounded-lg ring-gray-200" />
+                    </div>  
                 </div>
 
                 <div class="md:grid grid-cols-5">
                   <label class="col-span-2 block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4">
                     Secondary Color
                   </label>
-                  <t-input class="col-span-3" type="color" v-model="selectedAgent.secondary_color" />
+                  <div class="col-span-3">
+                  <color-input v-model="agentFields.secondary_color" :format="'hex'" class="ring ring-offset-1 rounded-lg ring-gray-200" />
+                  </div>
                 </div>
 
                 <div class="md:grid grid-cols-5">
                   <label class="col-span-2 block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4">
                     Background Color
                   </label>
-                  <t-input class="col-span-3" type="color" v-model="selectedAgent.background_color" />
+                  <div class="col-span-3">
+                  <color-input v-model="agentFields.background_color" :format="'hex'" class="ring ring-offset-1 rounded-lg ring-gray-200" />
+                  </div>
                 </div>
 
                 <div class="md:grid grid-cols-5">
                   <label class="col-span-2 block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4">
                     Text Color
                   </label>
-                  <t-input class="col-span-3" type="color" v-model="selectedAgent.text_color" />
+                  <div class="col-span-3">
+                  <color-input v-model="agentFields.text_color" :format="'hex'" class="ring ring-offset-1 rounded-lg ring-gray-200" />
+                    </div>
                 </div>
 
                 <div class="md:grid grid-cols-5">
                   <label class="col-span-2 block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4">
                     Secondary Text Color
                   </label>
-                  <t-input class="col-span-3" type="color" v-model="selectedAgent.secondary_text_color" />
+                  <div class="col-span-3">
+                  <color-input v-model="agentFields.secondary_text_color" :format="'hex'" class="ring ring-offset-1 rounded-lg ring-gray-200" />
+                    </div>
                 </div>
               </div>
 
               <!-- Filtering Settings -->
-              <div class="border-t pt-3 mt-3">
+              <div class="border-t pt-3 mt-3 space-y-3">
                 <h3 class="text-md font-medium text-gray-700 mb-3">Display Rules</h3>
 
                 <div class="md:grid grid-cols-5">
@@ -247,50 +258,50 @@
                     Display Everywhere
                   </label>
                   <div>
-                    <t-toggle v-model="selectedAgent.display_everywhere" />
+                    <t-toggle v-model="agentFields.display_everywhere" />
                   </div>
                 </div>
 
-                <template v-if="!selectedAgent.display_everywhere">
-                  <div class="md:grid grid-cols-5">
-                    <label class="col-span-2 block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4">
-                      Post Types
-                    </label>
-                    <t-rich-select
-                      class="col-span-3"
-                      v-model="selectedAgent.post_type"
-                      :options="config.postTypes"
-                      multiple
-                      tags
-                    />
-                  </div>
-
-                  <div class="md:grid grid-cols-5" v-if="selectedAgent.post_type && selectedAgent.post_type.length > 0">
-                    <label class="col-span-2 block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4">
-                      Taxonomy
-                    </label>
-                    <t-select
-                      class="col-span-3"
-                      v-model="selectedAgent.taxonomy"
-                      :options="taxonomyOptions"
-                      placeholder="Select taxonomy (optional)"
-                    />
-                  </div>
-
-                  <div class="md:grid grid-cols-5" v-if="selectedAgent.taxonomy">
-                    <label class="col-span-2 block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4">
-                      Terms
-                    </label>
-                    <t-rich-select
-                      class="col-span-3"
-                      v-model="selectedAgent.terms"
-                      :options="termsOptions"
-                      valueAttribute="term_id"
-                      textAttribute="name"
-                      multiple
-                      tags
-                    />
-                  </div>
+                <template v-if="!agentFields.display_everywhere">
+                    <div class="md:grid grid-cols-5">
+                        <label
+                        class="col-span-2 block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4">
+                        Post Type
+                        <sup class="text-red-400">*</sup>
+                        </label>
+                        <t-rich-select
+                        class="col-span-3"
+                        v-model="agentFields.post_type"
+                        @input="() => agentFields.terms = []"
+                        :options="config.postTypes || []"
+                        />
+                    </div>
+                    <div v-if="agentFields.post_type" class="md:grid grid-cols-5">
+                        <label
+                        class="col-span-2 block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4">
+                        Taxonomy
+                        </label>
+                        <t-rich-select
+                        class="col-span-3"
+                        v-model="agentFields.taxonomy"
+                        :options="config.postTerms[agentFields.post_type]['_taxonomies'] || []"
+                        />
+                    </div>
+                    <div v-if="agentFields.taxonomy" class="md:grid grid-cols-5">
+                        <label
+                        class="col-span-2 block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4">
+                        Terms
+                        </label>
+                        <t-rich-select
+                        class="col-span-3"
+                        v-model="agentFields.terms"
+                        :options="config.postTerms[agentFields.post_type][agentFields.taxonomy] || []"
+                        valueAttribute="term_id"
+                        textAttribute="name"
+                        multiple
+                        tags
+                        />
+                    </div>
                 </template>
               </div>
             </div>
@@ -316,8 +327,8 @@
         :custom-icon="true"
         @close="closeCreateForm">
         <template #icon>
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
-            <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
+            <path fill-rule="evenodd" d="M7.5 6a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0ZM3.751 20.105a8.25 8.25 0 0 1 16.498 0 .75.75 0 0 1-.437.695A18.683 18.683 0 0 1 12 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 0 1-.437-.695Z" clip-rule="evenodd" />
           </svg>
         </template>
         <template #title>
@@ -342,33 +353,19 @@
                   <t-button variant="secondary" @click="showAgentModal = true">
                     {{ selectedJensiAgent ? 'Change' : 'Select' }} Agent
                   </t-button>
-                  <p v-if="selectedJensiAgent" class="text-sm text-gray-500 mt-1">
-                    {{ selectedJensiAgent.name }}
-                  </p>
-                </div>
-              </div>
-
-              <div class="md:grid grid-cols-5">
-                <label class="col-span-2 block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4">
-                  Data Source <sup class="text-red-400">*</sup>
-                </label>
-                <div class="col-span-3">
-                  <template v-if="selectedJensiAgent">
-                    <t-button variant="secondary" @click="openDataSourceModal">
-                      {{ selectedDataSource ? 'Change' : 'Select' }} Data Source
-                    </t-button>
-                    <p v-if="selectedDataSource" class="text-sm text-gray-500 mt-1">
-                      {{ selectedDataSource.name }}
-                    </p>
-                  </template>
-                  <template v-else>
-                    <p class="text-gray-500 text-sm">Select an agent first</p>
-                  </template>
+                  <div v-if="selectedJensiAgent" class="mt-1">
+                    <span class="inline-flex items-center rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 inset-ring inset-ring-blue-700/10 dark:bg-blue-400/10 dark:text-blue-400 dark:inset-ring-blue-400/30">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4 inline-block mr-1">
+                        <path d="M10 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM3.465 14.493a1.23 1.23 0 0 0 .41 1.412A9.957 9.957 0 0 0 10 18c2.31 0 4.438-.784 6.131-2.1.43-.333.604-.903.408-1.41a7.002 7.002 0 0 0-13.074.003Z" />
+                      </svg>
+                      {{ selectedJensiAgent.name }}
+                    </span>
+                  </div>
                 </div>
               </div>
 
               <!-- Widget Settings (simplified for create) -->
-              <div class="border-t pt-3 mt-3">
+              <div class="border-t pt-3 mt-3 space-y-3">
                 <h3 class="text-md font-medium text-gray-700 mb-3">Display Rules</h3>
                 
                 <div class="md:grid grid-cols-5">
@@ -382,44 +379,44 @@
 
                 <template v-if="!agentFields.display_everywhere">
                   <div class="md:grid grid-cols-5">
-                    <label class="col-span-2 block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4">
-                      Post Types
-                    </label>
-                    <t-rich-select
-                      class="col-span-3"
-                      v-model="agentFields.post_type"
-                      :options="config.postTypes"
-                      multiple
-                      tags
-                    />
-                  </div>
-
-                  <div class="md:grid grid-cols-5" v-if="agentFields.post_type && agentFields.post_type.length > 0">
-                    <label class="col-span-2 block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4">
-                      Taxonomy
-                    </label>
-                    <t-select
-                      class="col-span-3"
-                      v-model="agentFields.taxonomy"
-                      :options="taxonomyOptionsForCreate"
-                      placeholder="Select taxonomy (optional)"
-                    />
-                  </div>
-
-                  <div class="md:grid grid-cols-5" v-if="agentFields.taxonomy">
-                    <label class="col-span-2 block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4">
-                      Terms
-                    </label>
-                    <t-rich-select
-                      class="col-span-3"
-                      v-model="agentFields.terms"
-                      :options="termsOptionsForCreate"
-                      valueAttribute="term_id"
-                      textAttribute="name"
-                      multiple
-                      tags
-                    />
-                  </div>
+                        <label
+                        class="col-span-2 block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4">
+                        Post Type
+                        <sup class="text-red-400">*</sup>
+                        </label>
+                        <t-rich-select
+                        class="col-span-3"
+                        v-model="agentFields.post_type"
+                        @input="() => agentFields.terms = []"
+                        :options="config.postTypes || []"
+                        />
+                    </div>
+                    <div v-if="agentFields.post_type" class="md:grid grid-cols-5">
+                        <label
+                        class="col-span-2 block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4">
+                        Taxonomy
+                        </label>
+                        <t-rich-select
+                        class="col-span-3"
+                        v-model="agentFields.taxonomy"
+                        :options="config.postTerms[agentFields.post_type]['_taxonomies'] || []"
+                        />
+                    </div>
+                    <div v-if="agentFields.taxonomy" class="md:grid grid-cols-5">
+                        <label
+                        class="col-span-2 block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4">
+                        Terms
+                        </label>
+                        <t-rich-select
+                        class="col-span-3"
+                        v-model="agentFields.terms"
+                        :options="config.postTerms[agentFields.post_type][agentFields.taxonomy] || []"
+                        valueAttribute="term_id"
+                        textAttribute="name"
+                        multiple
+                        tags
+                        />
+                    </div>
                 </template>
               </div>
             </div>
@@ -445,8 +442,8 @@
         :custom-icon="true"
         @close="showAgentModal = false">
         <template #icon>
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
+            <path d="M4.5 6.375a4.125 4.125 0 1 1 8.25 0 4.125 4.125 0 0 1-8.25 0ZM14.25 8.625a3.375 3.375 0 1 1 6.75 0 3.375 3.375 0 0 1-6.75 0ZM1.5 19.125a7.125 7.125 0 0 1 14.25 0v.003l-.001.119a.75.75 0 0 1-.363.63 13.067 13.067 0 0 1-6.761 1.873c-2.472 0-4.786-.684-6.76-1.873a.75.75 0 0 1-.364-.63l-.001-.122ZM17.25 19.128l-.001.144a2.25 2.25 0 0 1-.233.96 10.088 10.088 0 0 0 5.06-1.01.75.75 0 0 0 .42-.643 4.875 4.875 0 0 0-6.957-4.611 8.586 8.586 0 0 1 1.71 5.157v.003Z" />
           </svg>
         </template>
         <template #title>
@@ -476,75 +473,6 @@
           </t-button>
         </template>
       </modal>
-
-      <!-- Data Source Selection Modal -->
-      <modal
-        :show="showDataSourceModal"
-        type="info"
-        :custom-icon="true"
-        @close="showDataSourceModal = false">
-        <template #icon>
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 0v3.75m-16.5-3.75v3.75m16.5 0v3.75C20.25 16.153 16.556 18 12 18s-8.25-1.847-8.25-4.125v-3.75m16.5 0c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125" />
-          </svg>
-        </template>
-        <template #title>
-          Select Data Source
-        </template>
-        <template #content>
-          <div class="w-full">
-            <!-- Create vs Select Toggle -->
-            <div class="mb-4 p-3 border border-gray-200 rounded bg-gray-50">
-              <div class="flex items-center justify-between">
-                <span class="text-sm font-medium">
-                  {{ dataSourceConfig.create_config ? 'Create new data source' : 'Select existing data source' }}
-                </span>
-                <t-toggle v-model="dataSourceConfig.create_config" />
-              </div>
-            </div>
-
-            <!-- Create New Data Source -->
-            <template v-if="dataSourceConfig.create_config">
-              <div class="space-y-4">
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
-                  <t-input v-model="dataSourceConfig.name" placeholder="Enter data source name" />
-                </div>
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                  <t-textarea v-model="dataSourceConfig.description" placeholder="Enter description (optional)" />
-                </div>
-              </div>
-            </template>
-
-            <!-- Select Existing Data Source -->
-            <template v-else>
-              <div class="max-h-64 overflow-y-auto">
-                <div v-if="jensiDataSources.length === 0" class="p-4 text-center text-gray-500">
-                  No data sources available. Try creating a new one instead.
-                </div>
-                <div v-for="dataSource in jensiDataSources" :key="dataSource.id" 
-                     @click="selectDataSource(dataSource)"
-                     class="flex items-center justify-between p-3 border rounded-lg cursor-pointer hover:bg-gray-50 mb-2"
-                     :class="{ 'border-blue-500 bg-blue-50': selectedDataSource?.id === dataSource.id }">
-                  <div>
-                    <div class="font-medium">{{ dataSource.name }}</div>
-                    <div class="text-sm text-gray-500">{{ dataSource.description || 'No description' }}</div>
-                  </div>
-                </div>
-              </div>
-            </template>
-          </div>
-        </template>
-        <template #footer>
-          <t-button variant="secondary" @click.native="showDataSourceModal = false">
-            Cancel
-          </t-button>
-          <t-button class="ml-2" @click.native="confirmDataSource" :disabled="!canConfirmDataSource">
-            {{ dataSourceConfig.create_config ? 'Create' : 'Select' }} Data Source
-          </t-button>
-        </template>
-      </modal>
     </section>
   </div>
 </template>
@@ -552,6 +480,9 @@
 <script setup>
 import {computed, inject, nextTick, onBeforeMount, watch, ref, toRaw} from 'vue'
 import {TToggle, TButton, TTextarea, TInput, TSelect, TRichSelect} from '@variantjs/vue'
+import Slider from '@vueform/slider'
+import Breadcrumbs from '~src/shared/components/BreadcrumbNavigation.vue'
+import ColorInput from 'vue-color-input'
 import {
   InformationCircleIcon,
   CheckCircleIcon,
@@ -564,10 +495,9 @@ const win = inject('win')
 const swal = inject('swal')
 const axios = inject('axios')
 
-const defaultAgentFields = {
+const defaultFields = {
   name: '',
   agent_id: '',
-  data_source_id: '',
   enabled: true,
   avatar_url: '',
   welcome_message: 'Hello! How can I assist you today?',
@@ -578,24 +508,12 @@ const defaultAgentFields = {
   background_color: '#ffffff',
   text_color: '#000000',
   secondary_text_color: '#ffffff',
-  post_type: [],
-  taxonomy: '',
+  post_type: 'post',
+  taxonomy: null,
   terms: [],
   display_everywhere: false
 }
-
-const agentFields = ref({ ...defaultAgentFields })
-
-// Data source configuration for create/select modal
-const defaultDataSourceConfig = {
-  create_config: true,
-  name: '',
-  description: '',
-  config_id: null,
-  type: 'wordpress'
-}
-
-const dataSourceConfig = ref({ ...defaultDataSourceConfig })
+const agentFields = ref({ ...defaultFields })
 
 const endpoints = ref({
   agent_crud: {
@@ -603,116 +521,63 @@ const endpoints = ref({
     crud: ''
   },
   agents: { get: '' },
-  data_sources: { get: '', create: '' }
 })
 
 const config = inject('pluginConfig')
 
 const currentAgents = ref([])
 const jensiAgents = ref([])
-const jensiDataSources = ref([])
 const selectedAgent = ref(null)
 const selectedJensiAgent = ref(null)
-const selectedDataSource = ref(null)
 
 const hasLoaded = ref(false)
 const isSubmitting = ref(false)
 const showingCreateForm = ref(false)
 const showingEditForm = ref(false)
 const showAgentModal = ref(false)
-const showDataSourceModal = ref(false)
-
-// Computed properties for taxonomy and terms options
-const taxonomyOptions = computed(() => {
-  if (!selectedAgent.value?.post_type || selectedAgent.value.post_type.length === 0) {
-    return []
-  }
-  
-  const postType = selectedAgent.value.post_type[0] // Use first post type for simplicity
-  const taxonomies = config.postTerms[postType]?._taxonomies || []
-  
-  return taxonomies.map(tax => ({ value: tax, text: tax }))
-})
-
-const termsOptions = computed(() => {
-  if (!selectedAgent.value?.taxonomy || !selectedAgent.value?.post_type || selectedAgent.value.post_type.length === 0) {
-    return []
-  }
-  
-  const postType = selectedAgent.value.post_type[0]
-  return config.postTerms[postType]?.[selectedAgent.value.taxonomy] || []
-})
-
-const canConfirmDataSource = computed(() => {
-  if (dataSourceConfig.value.create_config) {
-    return dataSourceConfig.value.name.trim().length > 0
-  } else {
-    return selectedDataSource.value !== null
-  }
-})
-
-const taxonomyOptionsForCreate = computed(() => {
-  if (!agentFields.value.post_type || agentFields.value.post_type.length === 0) {
-    return []
-  }
-  
-  const postType = agentFields.value.post_type[0]
-  const taxonomies = config.postTerms[postType]?._taxonomies || []
-  
-  return taxonomies.map(tax => ({ value: tax, text: tax }))
-})
-
-const termsOptionsForCreate = computed(() => {
-  if (!agentFields.value.taxonomy || !agentFields.value.post_type || agentFields.value.post_type.length === 0) {
-    return []
-  }
-  
-  const postType = agentFields.value.post_type[0]
-  return config.postTerms[postType]?.[agentFields.value.taxonomy] || []
-})
 
 const canSubmit = computed(() => {
   const fields = showingCreateForm.value ? agentFields.value : selectedAgent.value
-  return fields?.name && fields?.agent_id && fields?.data_source_id
+  if (fields?.display_everywhere === false) {
+    return fields?.name && fields?.agent_id && fields?.post_type
+  }
+  return fields?.name && fields?.agent_id
 })
 
 // Methods
 const createAgent = () => {
-  agentFields.value = { ...defaultAgentFields }
+  agentFields.value = { ...defaultFields }
   selectedJensiAgent.value = null
-  selectedDataSource.value = null
   showingCreateForm.value = true
 }
 
 const selectAndEditAgent = async (agent) => {
-  selectedAgent.value = { ...agent }
+  agentFields.value = { ...agent }
+
+  // Need to convert boolean and array values
+  agentFields.value.terms = JSON.parse(agent.terms || "[]")
+  agentFields.value.enabled = agent.enabled == 1
+  agentFields.value.display_everywhere = agent.display_everywhere == 1
   
   // Find the corresponding JENSi agent and data source
   selectedJensiAgent.value = jensiAgents.value.find(a => a.id === agent.agent_id) || null
-  
-  // Load data sources for this agent if agent is selected
-  if (selectedJensiAgent.value) {
-    await loadJensiDataSources(selectedJensiAgent.value.id)
-    selectedDataSource.value = jensiDataSources.value.find(ds => ds.id === agent.data_source_id) || null
-  } else {
-    selectedDataSource.value = null
-  }
-  
+
+  // Update the selected config and show modal
+  selectedAgent.value = agent;
   showingEditForm.value = true
 }
 
 const closeCreateForm = () => {
   showingCreateForm.value = false
-  agentFields.value = { ...defaultAgentFields }
+  selectedAgent.value = null
+  agentFields.value = { ...defaultFields }
   selectedJensiAgent.value = null
-  selectedDataSource.value = null
 }
 
 const closeEditForm = () => {
   showingEditForm.value = false
   selectedAgent.value = null
   selectedJensiAgent.value = null
-  selectedDataSource.value = null
 }
 
 const selectJensiAgent = (agent) => {
@@ -727,122 +592,47 @@ const confirmJensiAgent = () => {
   }
 }
 
-const selectDataSource = (dataSource) => {
-  selectedDataSource.value = dataSource
-}
-
-const confirmDataSource = async () => {
-  try {
-    if (dataSourceConfig.value.create_config) {
-      // Create new data source
-      if (!selectedJensiAgent.value) {
-        swal.fire({
-          icon: 'error',
-          title: 'Error',
-          text: 'Agent must be selected before creating a data source'
-        })
-        return
-      }
-      
-      const response = await axios.post(endpoints.value.data_sources.create, {
-        ...dataSourceConfig.value,
-        agent_id: selectedJensiAgent.value.id
-      })
-      
-      if (response.data.success) {
-        const newDataSource = response.data.data
-        jensiDataSources.value.push(newDataSource)
-        selectedDataSource.value = newDataSource
-        
-        const target = showingCreateForm.value ? agentFields.value : selectedAgent.value
-        target.data_source_id = newDataSource.id
-        
-        // Reset data source config
-        dataSourceConfig.value = { ...defaultDataSourceConfig }
-        showDataSourceModal.value = false
-        
-        swal.fire({
-          position: 'top-end',
-          icon: 'success',
-          title: 'Data source created successfully',
-          showConfirmButton: false,
-          timer: 1500
-        })
-      }
-    } else {
-      // Select existing data source
-      if (selectedDataSource.value) {
-        const target = showingCreateForm.value ? agentFields.value : selectedAgent.value
-        target.data_source_id = selectedDataSource.value.id
-        showDataSourceModal.value = false
+onBeforeMount(() => {
+  if (document.readyState === 'complete') {
+    doLoad()
+  } else {
+    document.onreadystatechange = () => {
+      if (document.readyState === 'complete') {
+        doLoad()
       }
     }
-  } catch (err) {
-    console.error('Error with data source:', err)
-    swal.fire({
-      icon: 'error',
-      title: 'Error',
-      text: err?.response?.data?.message || 'An error occurred'
-    })
   }
+})
+
+const doUpdate = async (id) => {
+  await doSave(id)
 }
 
-const doSave = async () => {
+const doSave = async (id = null) => {
   if (!canSubmit.value || isSubmitting.value) return
-
   isSubmitting.value = true
-  
   try {
-    const data = toRaw(agentFields.value)
-    
-    const response = await axios.post(endpoints.value.agent_crud.crud, data)
-    
-    if (response.data.success) {
-      currentAgents.value.unshift(response.data.data)
-      closeCreateForm()
-      
+    const formData = toRaw(agentFields.value)
+    if (id) {
+      formData.id = id
+    }
+    if (config.settings.enable_debug_messages) {
+      console.log(':: DEBUG ::', formData)
+    }
+    const rst = await axios.post(endpoints.value.agent_crud.crud, formData)
+    if (config.settings.enable_debug_messages) {
+      console.log(':: DEBUG - Response ::', rst)
+    }
+    const { data = null, success = null } = rst?.data
+    if (success === false) {
       swal.fire({
         position: 'top-end',
-        icon: 'success',
-        title: 'Agent created successfully',
+        icon: 'warning',
+        title: 'Error updating config',
         showConfirmButton: false,
         timer: 1500
       })
-    } else {
-      throw new Error(response.data.data || 'Failed to create agent')
-    }
-  } catch (err) {
-    console.error('Error creating agent:', err)
-    const message = err?.response?.data?.data || err.message || 'Failed to create agent'
-    swal.fire({
-      icon: 'error',
-      title: 'Error',
-      text: message
-    })
-  }
-  
-  isSubmitting.value = false
-}
-
-const doUpdate = async (agentId) => {
-  if (!canSubmit.value || isSubmitting.value) return
-
-  isSubmitting.value = true
-  
-  try {
-    const data = toRaw(selectedAgent.value)
-    
-    const response = await axios.post(endpoints.value.agent_crud.crud, data)
-    
-    if (response.data.success) {
-      // Update the agent in the list
-      const index = currentAgents.value.findIndex(a => a.id === agentId)
-      if (index !== -1) {
-        currentAgents.value[index] = response.data.data
-      }
-      
-      closeEditForm()
-      
+    } else if (data && rst.status === 200) {
       swal.fire({
         position: 'top-end',
         icon: 'success',
@@ -850,38 +640,104 @@ const doUpdate = async (agentId) => {
         showConfirmButton: false,
         timer: 1500
       })
+      
+      // Close any modals
+      closeCreateForm()
+      closeEditForm()
+
+      // Fetch all items (including new/updated)
+      const allItems = await deFetchAll()
+
+      // Update config and local values
+      config.agents = allItems || []
+      currentAgents.value = allItems || []
+
+      // Reset agent form
+      agentFields.value = { ...defaultFields }
     } else {
-      throw new Error(response.data.data || 'Failed to update agent')
+      swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Wordpress responded with an error',
+        footer: '<div class="overflow-footer w-full">' + JSON.stringify(rst, null, 2) + '</div>'
+      })
     }
   } catch (err) {
-    console.error('Error updating agent:', err)
-    const message = err?.response?.data?.data || err.message || 'Failed to update agent'
-    swal.fire({
-      icon: 'error',
-      title: 'Error',
-      text: message
-    })
+    if (err?.code !== 'ERR_CANCELED') {
+      const text = err?.response?.data?.error || 'Server responded with an error'
+      swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text,
+        footer: '<div class="overflow-footer w-full">' + err.message + '</div>'
+      })
+    }
   }
-  
-  isSubmitting.value = false
+  finally {
+    isSubmitting.value = false
+  }
 }
 
-const doDestroy = (agentId) => {
+const deFetchAll = async () => {
+  try {
+    const rst = await axios.get(endpoints.value.agent_crud.all)
+    if (config.settings.enable_debug_messages) {
+      console.log(':: DEBUG - Response ::', rst)
+    }
+    const { data = null, success = null } = rst?.data
+    if (success === false) {
+      swal.fire({
+        position: 'top-end',
+        icon: 'warning',
+        title: 'Error fetching agents',
+        showConfirmButton: false,
+        timer: 1500
+      })
+    } else if (data && rst.status === 200) {
+      return data
+    } else {
+      swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Wordpress responded with an error',
+        footer: '<div class="overflow-footer w-full">' + JSON.stringify(rst, null, 2) + '</div>'
+      })
+      return false
+    }
+  } catch (err) {
+    if (err?.code !== 'ERR_CANCELED') {
+      const text = err?.response?.data?.error || 'Server responded with an error'
+      swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text,
+        footer: '<div class="overflow-footer w-full">' + err.message + '</div>'
+      })
+    }
+    return false
+  }
+}
+
+const doDestroy = (id) => {
   swal.fire({
     icon: 'warning',
-    title: 'Delete Agent',
-    text: 'Are you sure you want to delete this agent? This action cannot be undone.',
+    title: 'Are you sure?',
+    text: 'Delete item now? This action cannot be undone.',
     showCancelButton: true,
-    confirmButtonText: 'Yes, delete it!',
-    cancelButtonText: 'Cancel'
+    confirmButtonText: 'Delete',
   }).then(async (result) => {
     if (result.isConfirmed) {
+      isSubmitting.value = true
       try {
-        const response = await axios.delete(`${endpoints.value.agent_crud.crud}?id=${agentId}`)
-        
-        if (response.data.success) {
-          currentAgents.value = currentAgents.value.filter(a => a.id !== agentId)
-          
+        if (config.settings.enable_debug_messages) {
+          console.log(':: DEBUG :: deleting config', id)
+        }
+        const rst = await axios.delete(endpoints.value.configs.crud, { data: { id } })
+        if (config.settings.enable_debug_messages) {
+          console.log(':: DEBUG - Response ::', rst)
+        }
+        const { success = null } = rst?.data
+        if (success === true && rst.status === 200) {
           swal.fire({
             position: 'top-end',
             icon: 'success',
@@ -889,17 +745,40 @@ const doDestroy = (agentId) => {
             showConfirmButton: false,
             timer: 1500
           })
+
+          // Fetch all items (including new/updated)
+          const allItems = await deFetchAll()
+
+          // Update config and local values
+          config.agents = allItems || []
+          currentAgents.value = allItems || []
+
+          // Reset agent form
+          agentFields.value = { ...defaultFields }
         } else {
-          throw new Error(response.data.data || 'Failed to delete agent')
+          swal.fire({
+            position: 'top-end',
+            icon: 'error',
+            title: 'Unable to delete agent, please try again later',
+            showConfirmButton: false,
+            timer: 1500
+          })
+          isSubmitting.value = false
         }
       } catch (err) {
-        console.error('Error deleting agent:', err)
-        const message = err?.response?.data?.data || err.message || 'Failed to delete agent'
-        swal.fire({
-          icon: 'error',
-          title: 'Error',
-          text: message
-        })
+        if (config.settings.enable_debug_messages) {
+          console.error(':: DEBUG - Error ::', err)
+        }
+        if (err?.code !== 'ERR_CANCELED') {
+          const text = err?.response?.data?.error || 'Server responded with an error'
+          swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text,
+            footer: '<div class="overflow-footer w-full">' + err.message + '</div>'
+          })
+        }
+        isSubmitting.value = false
       }
     }
   })
@@ -916,50 +795,6 @@ const loadJensiAgents = async () => {
   }
 }
 
-const loadJensiDataSources = async (agentId = null) => {
-  try {
-    const params = agentId ? { agent_id: agentId } : {}
-    const response = await axios.get(endpoints.value.data_sources.get, { params })
-    if (response.data.success) {
-      jensiDataSources.value = response.data.data
-    }
-  } catch (err) {
-    console.error('Error loading JENSi data sources:', err)
-  }
-}
-
-const openDataSourceModal = async () => {
-  if (!selectedJensiAgent.value) {
-    swal.fire({
-      icon: 'warning',
-      title: 'Select Agent First',
-      text: 'Please select an agent before choosing a data source'
-    })
-    return
-  }
-  
-  // Load data sources for the selected agent
-  await loadJensiDataSources(selectedJensiAgent.value.id)
-  
-  // Reset data source config
-  dataSourceConfig.value = { ...defaultDataSourceConfig }
-  selectedDataSource.value = null
-  
-  showDataSourceModal.value = true
-}
-
-onBeforeMount(() => {
-  if (document.readyState === 'complete') {
-    doLoad()
-  } else {
-    document.onreadystatechange = () => {
-      if (document.readyState === 'complete') {
-        doLoad()
-      }
-    }
-  }
-})
-
 const doLoad = async () => {
   await nextTick()
 
@@ -975,4 +810,10 @@ const doLoad = async () => {
 
   hasLoaded.value = true
 }
+
+const getCrumbs = () => {
+  return [
+  ]
+}
+
 </script>
