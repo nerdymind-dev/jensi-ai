@@ -43,7 +43,7 @@ class ChatWidgetLoader
     {
         // Find the agent that should be displayed for the current page
         $agent = $this->get_current_page_agent();
-        
+
         // If no agent should be displayed, don't load the widget
         if (!$agent) {
             return;
@@ -101,7 +101,6 @@ class ChatWidgetLoader
 
         // Get all enabled agents
         $agents = $this->get_enabled_agents();
-        
         if (empty($agents)) {
             return null;
         }
@@ -109,17 +108,19 @@ class ChatWidgetLoader
         // Get current post/page information
         $current_post = get_queried_object();
         $current_post_type = get_post_type();
-        
-        // First, check for agents that display everywhere
+
+        // First, check for agents with specific filtering rules
+        // This will allow more specific agents to take precedence
+        // over those that display everywhere
         foreach ($agents as $agent) {
-            if ($agent['display_everywhere']) {
+            if ($this->agent_matches_current_page($agent, $current_post, $current_post_type)) {
                 return $agent;
             }
         }
 
-        // Then check for agents with specific filtering rules
+        // Then check for agents that display everywhere
         foreach ($agents as $agent) {
-            if ($this->agent_matches_current_page($agent, $current_post, $current_post_type)) {
+            if ($agent['display_everywhere']) {
                 return $agent;
             }
         }
@@ -144,7 +145,6 @@ class ChatWidgetLoader
         $agents_table = $wpdb->prefix . $this->prefix . '_agents';
 
         $agents = $wpdb->get_results("SELECT * FROM $agents_table WHERE enabled = 1 ORDER BY created ASC");
-
         if (!$agents) {
             return [];
         }
@@ -200,10 +200,10 @@ class ChatWidgetLoader
         if (!empty($agent['taxonomy']) && !empty($agent['terms']) && $current_post) {
             $taxonomy = $agent['taxonomy'];
             $required_terms = $agent['terms'];
-            
+
             // Get the terms for the current post in the specified taxonomy
             $post_terms = wp_get_post_terms($current_post->ID, $taxonomy, ['fields' => 'slugs']);
-            
+
             if (is_wp_error($post_terms)) {
                 return false;
             }
@@ -233,6 +233,7 @@ class ChatWidgetLoader
             : 'ai.jensi.com:443'; // Use port 443 for secure WebSocket (wss) in production
 
         $config = [
+            'id' => $agent['id'],
             'nonce' => wp_create_nonce('wp_rest'),
             'apiBaseUrl' => rest_url($this->prefix . '/v1'),
             'wsBaseUrl' => $ws_base_url,

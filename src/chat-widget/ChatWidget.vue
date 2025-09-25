@@ -251,6 +251,7 @@ const messageInput = ref<HTMLInputElement>()
 
 // Configuration (will be populated by WordPress)
 const config = reactive({
+  id: 0,
   apiBaseUrl: '',
   wsBaseUrl: '',
   defaultAgentId: '',
@@ -325,7 +326,7 @@ const closeWidget = () => {
 const initializeChat = async () => {
   try {
     // Check for saved chat ID
-    const savedChatId = localStorage.getItem('jensi_ai_chat_id')
+    const savedChatId = localStorage.getItem(`jensi_ai_${config.id}_chat_id`)
     if (savedChatId && savedChatId !== undefined) {
       // Try to load existing chat
       await loadChat(savedChatId)
@@ -387,7 +388,7 @@ const loadChat = async (chatId: string) => {
   } catch (error) {
     console.error('Error loading chat:', error)
     // Clear invalid chat ID and start fresh
-    localStorage.removeItem('jensi_ai_chat_id')
+    localStorage.removeItem(`jensi_ai_${config.id}_chat_id`)
     currentAgent.value = await getDefaultAgent()
   } finally {
     isLoading.value = false
@@ -444,7 +445,7 @@ const sendMessage = async () => {
     // Save chat info
     if (!currentChat.value) {
       currentChat.value = sentMessage.chat
-      localStorage.setItem('jensi_ai_chat_id', sentMessage.chat_id)
+      localStorage.setItem(`jensi_ai_${config.id}_chat_id`, sentMessage.chat_id)
       
       // Connect to websocket for streaming response
       connectWebSocket(sentMessage.chat.websocket)
@@ -579,7 +580,7 @@ const clearChat = () => {
   if (isLoading.value) return
   
   if (confirm('Are you sure you want to clear this chat? This action cannot be undone.')) {
-    localStorage.removeItem('jensi_ai_chat_id')
+    localStorage.removeItem(`jensi_ai_${config.id}_chat_id`)
     messages.value = []
     currentChat.value = null
     
