@@ -448,17 +448,14 @@
 
 <script setup>
 import {computed, inject, nextTick, onBeforeMount, watch, ref, toRaw} from 'vue'
-import {TToggle, TButton, TInputGroup, TTextarea, TInput, TSelect, TRichSelect} from '@variantjs/vue'
+import {TToggle, TButton, TTextarea, TInput, TRichSelect} from '@variantjs/vue'
 import {
   InformationCircleIcon,
-  CheckIcon,
   CheckCircleIcon,
-  MinusIcon,
   MinusCircleIcon,
-  TrashIcon
 } from '@heroicons/vue/24/outline'
 
-import Breadcrumbs from '~src/shared/components/BreadcrumbNavigation.vue'
+// import Breadcrumbs from '~src/shared/components/BreadcrumbNavigation.vue'
 import Modal from '~src/shared/components/ConfirmationModal.vue'
 
 const win = inject('win')
@@ -496,6 +493,7 @@ const endpoints = ref({
   agents: { get: '' },
   data_sources: { get: '', create: '' }
 })
+
 const config = inject('pluginConfig')
 
 const currentConfigs = ref([])

@@ -478,10 +478,9 @@
 </template>
 
 <script setup>
-import {computed, inject, nextTick, onBeforeMount, watch, ref, toRaw} from 'vue'
-import {TToggle, TButton, TTextarea, TInput, TSelect, TRichSelect} from '@variantjs/vue'
+import {computed, inject, nextTick, onBeforeMount, ref, toRaw} from 'vue'
+import {TToggle, TButton, TTextarea, TInput, TRichSelect} from '@variantjs/vue'
 import Slider from '@vueform/slider'
-import Breadcrumbs from '~src/shared/components/BreadcrumbNavigation.vue'
 import ColorInput from 'vue-color-input'
 import {
   InformationCircleIcon,
@@ -489,12 +488,14 @@ import {
   MinusCircleIcon,
 } from '@heroicons/vue/24/outline'
 
+// import Breadcrumbs from '~src/shared/components/BreadcrumbNavigation.vue'
 import Modal from '~src/shared/components/ConfirmationModal.vue'
 
 const win = inject('win')
 const swal = inject('swal')
 const axios = inject('axios')
 
+// Form fields for create/edit
 const defaultFields = {
   name: '',
   agent_id: '',
@@ -517,8 +518,8 @@ const agentFields = ref({ ...defaultFields })
 
 const endpoints = ref({
   agent_crud: {
-    all: '',
-    crud: ''
+    all: '', // GET
+    crud: '', // GET/POST/DELETE
   },
   agents: { get: '' },
 })
@@ -544,10 +545,53 @@ const canSubmit = computed(() => {
   return fields?.name && fields?.agent_id
 })
 
-// Methods
+const getTaxonomy = (conf) => {
+  // If no taxonomy is selected, return 'All Taxonomies' (as all will be included)
+  if (!conf.taxonomy) {
+    return 'Any Taxonomy'
+  }
+  
+  // Convert to uppercase first letter
+  let titleCase = conf.taxonomy.charAt(0).toUpperCase() + conf.taxonomy.slice(1);
+
+  // Replace underscores with spaces
+  titleCase = titleCase.replace(/_/g, ' ');
+
+  return titleCase;
+}
+
+const getTerms = (conf) => {
+  if (!conf.taxonomy) {
+    return 'Any Term'
+  }
+  const terms = JSON.parse(conf.terms || "[]")
+  const selectedTerms = terms.map(term_id => {
+    const selected = (config.postTerms[conf.post_type][conf.taxonomy] || []).find(cat => cat.term_id == term_id)
+    if (selected) {
+      return selected.name
+    }
+    return null
+  }).filter(t => t !== null)
+  return selectedTerms.toString()
+}
+
+onBeforeMount(() => {
+  if (document.readyState === 'complete') {
+    doLoad()
+  } else {
+    document.onreadystatechange = () => {
+      if (document.readyState === 'complete') {
+        doLoad()
+      }
+    }
+  }
+})
+
 const createAgent = () => {
+  // Clear out any old data
   agentFields.value = { ...defaultFields }
   selectedJensiAgent.value = null
+  // Show create form
   showingCreateForm.value = true
 }
 
@@ -591,18 +635,6 @@ const confirmJensiAgent = () => {
     showAgentModal.value = false
   }
 }
-
-onBeforeMount(() => {
-  if (document.readyState === 'complete') {
-    doLoad()
-  } else {
-    document.onreadystatechange = () => {
-      if (document.readyState === 'complete') {
-        doLoad()
-      }
-    }
-  }
-})
 
 const doUpdate = async (id) => {
   await doSave(id)
