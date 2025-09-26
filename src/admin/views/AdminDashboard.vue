@@ -632,7 +632,7 @@ const getTerms = (conf) => {
     }
     return null
   }).filter(t => t !== null)
-  return selectedTerms.toString()
+  return selectedTerms.length ? selectedTerms.toString() : 'Any Term'
 }
 
 onBeforeMount(() => {

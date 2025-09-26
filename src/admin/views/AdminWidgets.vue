@@ -46,44 +46,52 @@
 
                   <template v-if="currentWidgets.length">
                     <ul role="list" class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                      <li v-for="(agent, idx) in currentWidgets" :key="`agent.${idx}`"
+                      <li v-for="(widget, idx) in currentWidgets" :key="`widget.${idx}`"
                           class="col-span-1 flex flex-col justify-between divide-y divide-gray-200 rounded-lg bg-white shadow">
                         <div class="flex w-full items-center justify-between space-x-6 p-6">
                           <div class="flex-1">
                             <div class="flex items-center justify-between space-x-2">
                               <div class="flex items-center space-x-1">
-                                <h3 class="text-sm font-medium text-gray-900">{{ agent.name }}</h3>
-                                <div v-if="agent.enabled === '1'">
+                                <h3 class="text-sm font-medium text-gray-900">{{ widget.name }}</h3>
+                                <div v-if="widget.enabled === '1'">
                                   <CheckCircleIcon class="w-4 h-4 text-green-400" />
                                 </div>
                                 <div v-else>
                                   <MinusCircleIcon class="w-4 h-4 text-red-400" />
                                 </div>
                               </div>
+                              <div>
+                                <template v-if="widget.display_everywhere == '1'">
+                                  <span class="inline-flex items-center rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600 ring-1 ring-gray-500/10 ring-inset">
+                                    Global
+                                  </span>
+                                </template>
+                                <template v-else-if="widget.post_type">
+                                  <span class="inline-flex items-center rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600 ring-1 ring-gray-500/10 ring-inset">
+                                    {{ widget.post_type }}
+                                  </span>
+                                </template>
+                              </div>
                             </div>
-                            <div class="mt-1 flex items-center space-x-2 text-xs text-gray-500">
-                              <template v-if="agent.display_everywhere">
-                                <span class="inline-flex items-center rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800 ring-1 ring-blue-600/20 ring-inset">
-                                  Global
-                                </span>
-                              </template>
-                              <template v-else-if="agent.post_type && agent.post_type.length > 0">
-                                <span class="inline-flex items-center rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600 ring-1 ring-gray-500/10 ring-inset">
-                                  {{ agent.post_type.join(', ') }}
-                                </span>
-                              </template>
+                            <div class="my-3" v-if="widget.display_everywhere != '1'">
+                              <p>
+                                Taxonomy: <strong>{{ getTaxonomy(widget) }}</strong>
+                              </p>
+                              <p class="text-xs text-gray-500 whitespace-normal">
+                                Terms: <strong>{{ getTerms(widget) }}</strong>
+                              </p>
                             </div>
                           </div>
                         </div>
                         <div>
                           <div class="-mt-px flex divide-x divide-gray-200">
                             <div class="flex w-0 flex-1">
-                              <button @click="(e) => selectAndEditWidget(agent)" type="button" class="relative -mr-px inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-bl-lg border border-transparent py-4 text-sm font-semibold text-gray-900">
+                              <button @click="(e) => selectAndEditWidget(widget)" type="button" class="relative -mr-px inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-bl-lg border border-transparent py-4 text-sm font-semibold text-gray-900">
                                 Edit
                               </button>
                             </div>
                             <div class="-ml-px flex w-0 flex-1">
-                              <button @click="(e) => doDestroy(agent.id)" type="button" class="relative inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-br-lg border border-transparent py-4 text-sm font-semibold text-gray-900">
+                              <button @click="(e) => doDestroy(widget.id)" type="button" class="relative inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-br-lg border border-transparent py-4 text-sm font-semibold text-gray-900">
                                 Delete
                               </button>
                             </div>
@@ -601,7 +609,7 @@
 </template>
 
 <script setup>
-import {computed, inject, nextTick, onBeforeMount, ref, toRaw} from 'vue'
+import {computed, inject, nextTick, onBeforeMount, watch, ref, toRaw} from 'vue'
 import {TToggle, TButton, TTextarea, TInput, TRichSelect} from '@variantjs/vue'
 import Slider from '@vueform/slider'
 import ColorInput from 'vue-color-input'
@@ -661,6 +669,20 @@ const jensiAgents = ref([])
 const selectedJensiAgent = ref(null)
 const showAgentModal = ref(false)
 
+watch(agentFields, (newVal, oldVal) => {
+  if (newVal) {
+    const { post_type, taxonomy } = newVal
+    if (post_type && taxonomy) {
+      // Clear out taxonomy and terms if post_type or taxonomy changes
+      const availableTaxonomies = config.postTerms[post_type]['_taxonomies'] || [];
+      if (!availableTaxonomies.includes(taxonomy)) {
+        agentFields.value.taxonomy = null;
+        agentFields.value.terms = [];
+      }
+    }
+  }
+}, { deep: true, immediate: true })
+
 const canSubmit = computed(() => {
   if (isSubmitting.value) {
     return false
@@ -678,14 +700,14 @@ const canSubmit = computed(() => {
   return true
 })
 
-const getTaxonomy = (conf) => {
+const getTaxonomy = (widget) => {
   // If no taxonomy is selected, return 'All Taxonomies' (as all will be included)
-  if (!conf.taxonomy) {
+  if (!widget.taxonomy) {
     return 'Any Taxonomy'
   }
   
   // Convert to uppercase first letter
-  let titleCase = conf.taxonomy.charAt(0).toUpperCase() + conf.taxonomy.slice(1);
+  let titleCase = widget.taxonomy.charAt(0).toUpperCase() + widget.taxonomy.slice(1);
 
   // Replace underscores with spaces
   titleCase = titleCase.replace(/_/g, ' ');
@@ -693,19 +715,19 @@ const getTaxonomy = (conf) => {
   return titleCase;
 }
 
-const getTerms = (conf) => {
-  if (!conf.taxonomy) {
+const getTerms = (widget) => {
+  if (!widget.taxonomy) {
     return 'Any Term'
   }
-  const terms = JSON.parse(conf.terms || "[]")
+  const terms = JSON.parse(widget.terms || "[]")
   const selectedTerms = terms.map(term_id => {
-    const selected = (config.postTerms[conf.post_type][conf.taxonomy] || []).find(cat => cat.term_id == term_id)
+    const selected = (widget.postTerms[widget.post_type][widget.taxonomy] || []).find(cat => cat.term_id == term_id)
     if (selected) {
       return selected.name
     }
     return null
   }).filter(t => t !== null)
-  return selectedTerms.toString()
+  return selectedTerms.length > 0 ? selectedTerms.toString() : 'Any Term'
 }
 
 onBeforeMount(() => {
