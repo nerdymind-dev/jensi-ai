@@ -140,7 +140,11 @@ class QueueLoader
                         ], ['id' => $result->id]);
                         continue;
                     }
-                    if (!$settings['jensi_ai_data_source']) {
+
+                    // Fetch the meta data
+                    $meta = json_decode($result->meta, true);
+
+                    if (!$meta['source_id']) {
                         $wpdb->update($queue_table, [
                             'failed' => true,
                             'errors' => json_encode([
@@ -155,8 +159,8 @@ class QueueLoader
 
                     // Process the job
                     $body = [
-                        'agent_id' => $settings['jensi_ai_agent'] ?? null,
-                        'source_id' => $settings['jensi_ai_data_source'] ?? null,
+                        'agent_id' => $meta['agent_id'] ?? null,
+                        'source_id' => $meta['source_id'] ?? null,
                         'url' => get_permalink($result->post_id),
                         'data' => $result->content,
                         'metadata' => [
