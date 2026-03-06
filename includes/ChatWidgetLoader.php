@@ -155,7 +155,7 @@ class ChatWidgetLoader
                 'id' => $agent->id,
                 'name' => $agent->name,
                 'agent_id' => $agent->agent_id,
-                'data_source_id' => $agent->data_source_id,
+                'data_source_id' => $agent->data_source_id ?? null,
                 'enabled' => (bool) $agent->enabled,
                 'avatar_url' => $agent->avatar_url,
                 'welcome_message' => $agent->welcome_message,
