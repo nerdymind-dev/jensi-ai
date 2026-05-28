@@ -16,6 +16,7 @@ class FrontendLoader
 
     /**
      * The id.
+     *
      * @var string
      */
     private $id;
@@ -23,7 +24,7 @@ class FrontendLoader
     /**
      * Initialize this class.
      *
-     * @param string $prefix
+     * @param  string  $prefix
      */
     public function __construct($prefix)
     {
@@ -39,8 +40,7 @@ class FrontendLoader
      * Render frontend app.
      *
      * @param  array  $atts
-     * @param  string $content
-     *
+     * @param  string  $content
      * @return string
      */
     public function render_frontend($atts, $content = '')
@@ -49,7 +49,7 @@ class FrontendLoader
         // See Assets.php to add additional frontend js and css
         $a = shortcode_atts([
             'postfix' => 'frontend',
-            'view'    => 'Home',
+            'view' => 'Home',
         ], $atts);
 
         $postfix = esc_attr($a['postfix']);
@@ -63,7 +63,7 @@ class FrontendLoader
             // output data for use on client-side
             // https://wordpress.stackexchange.com/questions/344537/authenticating-with-rest-api
             $appVars = apply_filters('jensi_ai/frontend_app_vars', [
-                'pluginUrl'     => rtrim(\JensiAI\Main::$BASEURL, '/'),
+                'pluginUrl' => rtrim(Main::$BASEURL, '/'),
             ]);
             wp_localize_script($this->prefix.'-'.$postfix, 'vue_wp_plugin_config_'.$postfix, $appVars);
 
@@ -73,7 +73,7 @@ class FrontendLoader
             // https://wordpress.stackexchange.com/questions/344537/authenticating-with-rest-api
             $appVars = apply_filters('jensi_ai/frontview_app_vars', [
                 'viewComponent' => esc_attr($a['view']),
-                'pluginUrl'     => rtrim(\JensiAI\Main::$BASEURL, '/'),
+                'pluginUrl' => rtrim(Main::$BASEURL, '/'),
             ]);
             wp_localize_script($this->prefix.'-'.$postfix, 'vue_wp_plugin_config_'.$postfix, $appVars);
 

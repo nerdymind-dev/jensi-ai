@@ -2,6 +2,8 @@
 
 namespace JensiAI\Api;
 
+use JensiAI\Main;
+
 /**
  * Chat API controller for front-end widget.
  */
@@ -33,12 +35,12 @@ class ChatController extends \WP_REST_Controller
      */
     public function __construct()
     {
-        $this->prefix = \JensiAI\Main::PREFIX;
-        $this->namespace = $this->prefix . '/v1';
+        $this->prefix = Main::PREFIX;
+        $this->namespace = $this->prefix.'/v1';
         $this->rest_base = 'chat';
 
         // Get settings so we can set the API token
-        $settings = (new SettingController())->get_settings_raw();
+        $settings = (new SettingController)->get_settings_raw();
         $this->token = $settings['jensi_ai_api_key'] ?? '';
 
         // Get the base API url
@@ -57,7 +59,7 @@ class ChatController extends \WP_REST_Controller
         // Send message to chat
         register_rest_route(
             $this->namespace,
-            '/' . $this->rest_base . '/send-message',
+            '/'.$this->rest_base.'/send-message',
             [
                 [
                     'methods' => \WP_REST_Server::CREATABLE,
@@ -71,7 +73,7 @@ class ChatController extends \WP_REST_Controller
         // Get chat details
         register_rest_route(
             $this->namespace,
-            '/' . $this->rest_base . '/(?P<chat_id>[a-f0-9\-]{36})',
+            '/'.$this->rest_base.'/(?P<chat_id>[a-f0-9\-]{36})',
             [
                 [
                     'methods' => \WP_REST_Server::READABLE,
@@ -92,7 +94,7 @@ class ChatController extends \WP_REST_Controller
         // Create new chat
         register_rest_route(
             $this->namespace,
-            '/' . $this->rest_base . '/create',
+            '/'.$this->rest_base.'/create',
             [
                 [
                     'methods' => \WP_REST_Server::CREATABLE,
@@ -106,7 +108,7 @@ class ChatController extends \WP_REST_Controller
         // Get an agent's details
         register_rest_route(
             $this->namespace,
-            '/' . $this->rest_base . '/agent/(?P<agent_id>[a-f0-9\-]{36})',
+            '/'.$this->rest_base.'/agent/(?P<agent_id>[a-f0-9\-]{36})',
             [
                 [
                     'methods' => \WP_REST_Server::READABLE,
@@ -128,15 +130,14 @@ class ChatController extends \WP_REST_Controller
     /**
      * Send a message to the chat.
      *
-     * @param \WP_REST_Request $request Full details about the request.
-     *
+     * @param  \WP_REST_Request  $request  Full details about the request.
      * @return \WP_REST_Response|\WP_Error Response object on success, or WP_Error object on failure.
      */
     public function send_message($request)
     {
         $params = $request->get_params();
 
-        if (!$this->token) {
+        if (! $this->token) {
             return new \WP_Error('no_api_token', __('No JENSi AI API token configured.'), ['status' => 500]);
         }
 
@@ -145,23 +146,23 @@ class ChatController extends \WP_REST_Controller
         ];
 
         // Add chat_id or agent_id depending on what's provided
-        if (!empty($params['chat_id'])) {
+        if (! empty($params['chat_id'])) {
             $body['chat_id'] = sanitize_text_field($params['chat_id']);
-        } elseif (!empty($params['agent_id'])) {
+        } elseif (! empty($params['agent_id'])) {
             $body['agent_id'] = sanitize_text_field($params['agent_id']);
         } else {
             return new \WP_Error('missing_ids', __('Either chat_id or agent_id must be provided.'), ['status' => 400]);
         }
 
-        if (!empty($params['metadata'])) {
+        if (! empty($params['metadata'])) {
             $body['metadata'] = array_map('sanitize_text_field', $params['metadata']);
         }
 
-        $api_response = wp_remote_post($this->base_api . '/chats/messages', [
+        $api_response = wp_remote_post($this->base_api.'/chats/messages', [
             'headers' => [
                 'Accept' => 'application/json',
                 'Content-Type' => 'application/json',
-                'Authorization' => 'Bearer ' . $this->token,
+                'Authorization' => 'Bearer '.$this->token,
             ],
             'body' => wp_json_encode($body),
             'timeout' => 30,
@@ -178,6 +179,7 @@ class ChatController extends \WP_REST_Controller
 
         if ($code !== 201) {
             $message = $data['message'] ?? __('JENSi AI API returned an error.');
+
             return new \WP_Error('api_error', $message, ['status' => $code]);
         }
 
@@ -190,22 +192,21 @@ class ChatController extends \WP_REST_Controller
     /**
      * Get chat details and message history.
      *
-     * @param \WP_REST_Request $request Full details about the request.
-     *
+     * @param  \WP_REST_Request  $request  Full details about the request.
      * @return \WP_REST_Response|\WP_Error Response object on success, or WP_Error object on failure.
      */
     public function get_chat($request)
     {
         $chat_id = $request->get_param('chat_id');
 
-        if (!$this->token) {
+        if (! $this->token) {
             return new \WP_Error('no_api_token', __('No JENSi AI API token configured.'), ['status' => 500]);
         }
 
-        $api_response = wp_remote_get($this->base_api . '/chats/' . $chat_id, [
+        $api_response = wp_remote_get($this->base_api.'/chats/'.$chat_id, [
             'headers' => [
                 'Accept' => 'application/json',
-                'Authorization' => 'Bearer ' . $this->token,
+                'Authorization' => 'Bearer '.$this->token,
             ],
             'timeout' => 15,
             'sslverify' => wp_get_environment_type() !== 'local',
@@ -221,6 +222,7 @@ class ChatController extends \WP_REST_Controller
 
         if ($code !== 200) {
             $message = $data['message'] ?? __('JENSi AI API returned an error.');
+
             return new \WP_Error('api_error', $message, ['status' => $code]);
         }
 
@@ -233,15 +235,14 @@ class ChatController extends \WP_REST_Controller
     /**
      * Create a new chat session.
      *
-     * @param \WP_REST_Request $request Full details about the request.
-     *
+     * @param  \WP_REST_Request  $request  Full details about the request.
      * @return \WP_REST_Response|\WP_Error Response object on success, or WP_Error object on failure.
      */
     public function create_chat($request)
     {
         $params = $request->get_params();
 
-        if (!$this->token) {
+        if (! $this->token) {
             return new \WP_Error('no_api_token', __('No JENSi AI API token configured.'), ['status' => 500]);
         }
 
@@ -249,15 +250,15 @@ class ChatController extends \WP_REST_Controller
             'agent_id' => sanitize_text_field($params['agent_id']),
         ];
 
-        if (!empty($params['metadata'])) {
+        if (! empty($params['metadata'])) {
             $body['metadata'] = array_map('sanitize_text_field', $params['metadata']);
         }
 
-        $api_response = wp_remote_post($this->base_api . '/chats', [
+        $api_response = wp_remote_post($this->base_api.'/chats', [
             'headers' => [
                 'Accept' => 'application/json',
                 'Content-Type' => 'application/json',
-                'Authorization' => 'Bearer ' . $this->token,
+                'Authorization' => 'Bearer '.$this->token,
             ],
             'body' => wp_json_encode($body),
             'timeout' => 15,
@@ -274,6 +275,7 @@ class ChatController extends \WP_REST_Controller
 
         if ($code !== 201) {
             $message = $data['message'] ?? __('JENSi AI API returned an error.');
+
             return new \WP_Error('api_error', $message, ['status' => $code]);
         }
 
@@ -287,14 +289,14 @@ class ChatController extends \WP_REST_Controller
     {
         $agent_id = $request->get_param('agent_id');
 
-        if (!$this->token) {
+        if (! $this->token) {
             return new \WP_Error('no_api_token', __('No JENSi AI API token configured.'), ['status' => 500]);
         }
 
-        $api_response = wp_remote_get($this->base_api . '/agents/' . $agent_id, [
+        $api_response = wp_remote_get($this->base_api.'/agents/'.$agent_id, [
             'headers' => [
                 'Accept' => 'application/json',
-                'Authorization' => 'Bearer ' . $this->token,
+                'Authorization' => 'Bearer '.$this->token,
             ],
             'timeout' => 15,
             'sslverify' => wp_get_environment_type() !== 'local',
@@ -310,6 +312,7 @@ class ChatController extends \WP_REST_Controller
 
         if ($code !== 200) {
             $message = $data['message'] ?? __('JENSi AI API returned an error.');
+
             return new \WP_Error('api_error', $message, ['status' => $code]);
         }
 
@@ -322,20 +325,19 @@ class ChatController extends \WP_REST_Controller
     /**
      * Check permissions for public endpoints.
      *
-     * @param \WP_REST_Request $request Full details about the request.
-     *
+     * @param  \WP_REST_Request  $request  Full details about the request.
      * @return true|\WP_Error True if the request has access, WP_Error object otherwise.
      */
     public function check_public_permissions($request)
     {
         // Check for CSRF to make sure request is valid
         $nonce = $request->get_header('X-WP-Nonce') ?: $request->get_param('_wpnonce');
-        if (!$nonce || !wp_verify_nonce($nonce, 'wp_rest')) {
+        if (! $nonce || ! wp_verify_nonce($nonce, 'wp_rest')) {
             return new \WP_Error('rest_forbidden', __('Invalid nonce.'), ['status' => 403]);
         }
 
         // since success, we respond with next nonce
-        header('X-WP-Nonce: ' . wp_create_nonce('wp_rest'));
+        header('X-WP-Nonce: '.wp_create_nonce('wp_rest'));
 
         return true;
     }
@@ -352,7 +354,7 @@ class ChatController extends \WP_REST_Controller
                 'required' => true,
                 'type' => 'string',
                 'validate_callback' => function ($param) {
-                    return !empty($param) && strlen($param) <= 10000;
+                    return ! empty($param) && strlen($param) <= 10000;
                 },
             ],
             'chat_id' => [

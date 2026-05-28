@@ -1,5 +1,6 @@
 <?php
 
+use JensiAI\Main;
 use Symfony\Component\VarDumper\Cloner\VarCloner;
 use Symfony\Component\VarDumper\Dumper\CliDumper;
 use Symfony\Component\VarDumper\Dumper\ContextProvider\CliContextProvider;
@@ -14,7 +15,7 @@ use Symfony\Component\VarDumper\VarDumper;
  * Plugin URI: https://nerdymind.com/
  * Description: JENSi AI 🤖
  * Author: Shaun Parkison (NerdyMind)
- * Author URI: 
+ * Author URI:
  * Requires at least: 6.0
  * Tested up to: 6.8.1
  * Requires PHP: 8.0
@@ -27,12 +28,12 @@ use Symfony\Component\VarDumper\VarDumper;
  */
 
 // don't call the file directly
-if (!defined('ABSPATH')) {
+if (! defined('ABSPATH')) {
     exit;
 }
 
 // define the plugin version
-if (!defined('JENSI_AI_VERSION')) {
+if (! defined('JENSI_AI_VERSION')) {
     // NOTE: be sure change version in plugin details above as well...
     define('JENSI_AI_VERSION', '1.0.3');
 }
@@ -48,14 +49,14 @@ if (!defined('JENSI_AI_VERSION')) {
 |
  */
 
-require __DIR__ . '/vendor/autoload.php';
+require __DIR__.'/vendor/autoload.php';
 
 // Import WP file helpers we'll be using
-require_once(ABSPATH . '/wp-admin/includes/media.php');
-require_once(ABSPATH . '/wp-admin/includes/file.php');
-require_once(ABSPATH . '/wp-admin/includes/image.php');
+require_once ABSPATH.'/wp-admin/includes/media.php';
+require_once ABSPATH.'/wp-admin/includes/file.php';
+require_once ABSPATH.'/wp-admin/includes/image.php';
 
-if (!function_exists('write_log')) {
+if (! function_exists('write_log')) {
     function write_log($log)
     {
         if (true === WP_DEBUG) {
@@ -71,17 +72,17 @@ if (!function_exists('write_log')) {
 /**
  * Returns the main instance to prevent the need to use globals.
  */
-$instance = \JensiAI\Main::get_instance(__FILE__, JENSI_AI_VERSION);
+$instance = Main::get_instance(__FILE__, JENSI_AI_VERSION);
 $instance->run();
 
 /*
  * Enable debugging
  */
-$cloner = new VarCloner();
-$fallbackDumper = \in_array(\PHP_SAPI, ['cli', 'phpdbg']) ? new CliDumper() : new HtmlDumper();
+$cloner = new VarCloner;
+$fallbackDumper = \in_array(\PHP_SAPI, ['cli', 'phpdbg']) ? new CliDumper : new HtmlDumper;
 $dumper = new ServerDumper('tcp://127.0.0.1:9912', $fallbackDumper, [
-    'cli' => new CliContextProvider(),
-    'source' => new SourceContextProvider(),
+    'cli' => new CliContextProvider,
+    'source' => new SourceContextProvider,
 ]);
 VarDumper::setHandler(function ($var) use ($cloner, $dumper) {
     $dumper->dump($cloner->cloneVar($var));

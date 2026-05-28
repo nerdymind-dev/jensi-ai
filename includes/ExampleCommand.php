@@ -32,7 +32,7 @@ class ExampleCommand
      */
     public function hello($args, $assoc_args)
     {
-        list($name) = $args;
+        [$name] = $args;
 
         // Print the message with type
         $type = $assoc_args['type'];

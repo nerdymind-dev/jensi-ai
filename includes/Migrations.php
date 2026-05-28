@@ -12,8 +12,8 @@ final class Migrations
     /**
      * Run the migration.
      *
-     * @param string $prefix application prefix
-     * @param string $currentVersion the current version
+     * @param  string  $prefix  application prefix
+     * @param  string  $currentVersion  the current version
      * @return Migrations
      */
     public function run($prefix, $currentVersion)
@@ -44,7 +44,7 @@ final class Migrations
         // ...
 
         // Update the last migrated version for future updates
-        if (!$result) {
+        if (! $result) {
             // If table was just created, insert first row
             $wpdb->insert($settings_table, ['last_migrated_version' => $currentVersion]);
         } else {
@@ -58,9 +58,9 @@ final class Migrations
     /**
      * Function that help apply application migration.
      *
-     * @param string $lastVersion the migrated version
-     * @param string $applyVersion the migration to apply version
-     * @param string $migration_func the migration function
+     * @param  string  $lastVersion  the migrated version
+     * @param  string  $applyVersion  the migration to apply version
+     * @param  string  $migration_func  the migration function
      * @return void
      */
     public function applyMigration($lastVersion, $applyVersion, $migration_func)
@@ -74,14 +74,14 @@ final class Migrations
     /**
      * Database cleanup to run during plugin uninstall.
      *
-     * @param string $prefix
-     * @param array $settings
+     * @param  string  $prefix
+     * @param  array  $settings
      * @return void
      */
     public function cleanUp($prefix, $settings)
     {
         // don't do anything if configured to not cleanup db
-        if (!isset($settings['cleanup_db_on_plugin_uninstall']) || !$settings['cleanup_db_on_plugin_uninstall']) {
+        if (! isset($settings['cleanup_db_on_plugin_uninstall']) || ! $settings['cleanup_db_on_plugin_uninstall']) {
             return;
         }
 
@@ -108,7 +108,7 @@ final class Migrations
 
         $charset_collate = $wpdb->get_charset_collate();
 
-        require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+        require_once ABSPATH.'wp-admin/includes/upgrade.php';
         $sqlQuery = "CREATE TABLE {$wpdb->prefix}jensi_ai_jobs (
             `id` mediumint(9) NOT NULL AUTO_INCREMENT,
             `name` VARCHAR(256) NOT NULL,
@@ -158,7 +158,7 @@ final class Migrations
 
         $charset_collate = $wpdb->get_charset_collate();
 
-        require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+        require_once ABSPATH.'wp-admin/includes/upgrade.php';
         $sqlQuery = "CREATE TABLE {$wpdb->prefix}jensi_ai_agents (
             `id` mediumint(9) NOT NULL AUTO_INCREMENT,
             `name` VARCHAR(255) NOT NULL,
@@ -195,12 +195,12 @@ final class Migrations
         // Need to drop the `data_source_id` column from the agents table
         global $wpdb;
 
-        $agents_table = $wpdb->prefix . 'jensi_ai_agents';
+        $agents_table = $wpdb->prefix.'jensi_ai_agents';
         $column = 'data_source_id';
         $wpdb->query("ALTER TABLE $agents_table DROP COLUMN $column");
 
         // Next, we need to add `agent_id` and `data_source_id` to the jensi_ai_configs table
-        $configs_table = $wpdb->prefix . 'jensi_ai_configs';
+        $configs_table = $wpdb->prefix.'jensi_ai_configs';
         $wpdb->query("ALTER TABLE $configs_table ADD COLUMN agent_id VARCHAR(255) NOT NULL");
         $wpdb->query("ALTER TABLE $configs_table ADD COLUMN data_source_id VARCHAR(255) NOT NULL");
     }

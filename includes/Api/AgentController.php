@@ -2,6 +2,8 @@
 
 namespace JensiAI\Api;
 
+use JensiAI\Main;
+
 /**
  * Backend Agent CRUD controller.
  */
@@ -26,16 +28,14 @@ class AgentController extends \WP_REST_Controller
      */
     public function __construct()
     {
-        $this->prefix = \JensiAI\Main::PREFIX;
-        $this->namespace = $this->prefix . '/v1';
+        $this->prefix = Main::PREFIX;
+        $this->namespace = $this->prefix.'/v1';
         $this->rest_base = 'agent-crud';
-        $this->table_name = $this->prefix . '_agents';
+        $this->table_name = $this->prefix.'_agents';
     }
 
     /**
      * Get the primary table for this controllers data
-     *
-     * @return string
      */
     public function getTableName(): string
     {
@@ -52,19 +52,19 @@ class AgentController extends \WP_REST_Controller
         // Register the /wp-json/ + get_endpoint() route
         register_rest_route(
             $this->namespace,
-            '/' . $this->rest_base . '/all',
+            '/'.$this->rest_base.'/all',
             [
                 [
                     'methods' => \WP_REST_Server::READABLE,
                     'callback' => [$this, 'get_agents'],
                     'permission_callback' => [$this, 'get_items_permissions_check'],
                     'args' => $this->get_collection_params(),
-                ]
+                ],
             ]
         );
         register_rest_route(
             $this->namespace,
-            '/' . $this->rest_base . '/agent',
+            '/'.$this->rest_base.'/agent',
             [
                 [
                     'methods' => \WP_REST_Server::READABLE,
@@ -99,11 +99,11 @@ class AgentController extends \WP_REST_Controller
         return [
             'all' => esc_url_raw(
                 // GET
-                rest_url($this->namespace . '/' . $this->rest_base . '/all')
+                rest_url($this->namespace.'/'.$this->rest_base.'/all')
             ),
             'crud' => esc_url_raw(
                 // GET/POST/DELETE
-                rest_url($this->namespace . '/' . $this->rest_base . '/agent')
+                rest_url($this->namespace.'/'.$this->rest_base.'/agent')
             ),
         ];
     }
@@ -111,8 +111,7 @@ class AgentController extends \WP_REST_Controller
     /**
      * Retrieves agents.
      *
-     * @param \WP_REST_Request $request Full details about the request.
-     *
+     * @param  \WP_REST_Request  $request  Full details about the request.
      * @return \WP_REST_Response|\WP_Error Response object on success, or WP_Error object on failure.
      */
     public function get_agents($request)
@@ -123,14 +122,14 @@ class AgentController extends \WP_REST_Controller
             'success' => true,
             'nonce' => $nonce,
         ];
+
         return rest_ensure_response($response);
     }
 
     /**
      * Retrieves a single agent.
      *
-     * @param \WP_REST_Request $request Full details about the request.
-     *
+     * @param  \WP_REST_Request  $request  Full details about the request.
      * @return \WP_REST_Response|\WP_Error Response object on success, or WP_Error object on failure.
      */
     public function get_agent($request)
@@ -148,7 +147,7 @@ class AgentController extends \WP_REST_Controller
 
         if (isset($params['id'])) {
             global $wpdb;
-            $agents_table = $wpdb->prefix . $this->table_name;
+            $agents_table = $wpdb->prefix.$this->table_name;
             $id = intval($params['id']);
 
             $agent = $wpdb->get_row($wpdb->prepare("SELECT * FROM $agents_table WHERE id = %d", $id));
@@ -189,8 +188,7 @@ class AgentController extends \WP_REST_Controller
     /**
      * Create or update agent.
      *
-     * @param \WP_REST_Request $request Full details about the request.
-     *
+     * @param  \WP_REST_Request  $request  Full details about the request.
      * @return \WP_REST_Response|\WP_Error Response object on success, or WP_Error object on failure.
      */
     public function create_update_agent($request)
@@ -209,7 +207,7 @@ class AgentController extends \WP_REST_Controller
         if (isset($params)) {
             global $wpdb;
             $id = $params['id'] ?? null;
-            $tableName = $wpdb->prefix . $this->table_name;
+            $tableName = $wpdb->prefix.$this->table_name;
 
             // Sanitize and prepare data
             $fields = [
@@ -231,7 +229,7 @@ class AgentController extends \WP_REST_Controller
                 'display_everywhere' => isset($params['display_everywhere']) ? (bool) $params['display_everywhere'] : false,
             ];
 
-            if (!$id) {
+            if (! $id) {
                 // Create it
                 $wpdb->insert($tableName, $fields);
                 $result = $this->get_agent_object(); // get the latest item
@@ -262,8 +260,7 @@ class AgentController extends \WP_REST_Controller
     /**
      * Delete agent.
      *
-     * @param \WP_REST_Request $request Full details about the request.
-     *
+     * @param  \WP_REST_Request  $request  Full details about the request.
      * @return \WP_REST_Response|\WP_Error Response object on success, or WP_Error object on failure.
      */
     public function destroy_agent($request)
@@ -281,7 +278,7 @@ class AgentController extends \WP_REST_Controller
 
         if (isset($params['id'])) {
             global $wpdb;
-            $agents_table = $wpdb->prefix . $this->table_name;
+            $agents_table = $wpdb->prefix.$this->table_name;
             $id = intval($params['id']);
 
             $result = $wpdb->delete($agents_table, ['id' => $id], ['%d']);
@@ -307,20 +304,21 @@ class AgentController extends \WP_REST_Controller
     public function get_all_agents()
     {
         global $wpdb;
-        $agents_table = $wpdb->prefix . $this->table_name;
+        $agents_table = $wpdb->prefix.$this->table_name;
+
         return $wpdb->get_results("SELECT * FROM $agents_table ORDER BY `created` DESC");
     }
 
     /**
      * Fetch row from the agents table
      *
-     * @param object|null $id
+     * @param  object|null  $id
      * @return array|object|\stdClass|null
      */
     public function get_agent_object($id = null)
     {
         global $wpdb;
-        $configs_table = $wpdb->prefix . $this->table_name;
+        $configs_table = $wpdb->prefix.$this->table_name;
         if ($id !== null) {
             // Get specified item from the database
             $result = $wpdb->get_row("SELECT * FROM $configs_table WHERE `id` = $id");
@@ -328,24 +326,24 @@ class AgentController extends \WP_REST_Controller
             // Get first item (latest entry) if no ID passed
             $result = $wpdb->get_row("SELECT * FROM $configs_table ORDER BY `modified` DESC");
         }
+
         return $result;
     }
 
     /**
      * Checks if a given request has access to read the items.
      *
-     * @param \WP_REST_Request $request Full details about the request.
-     *
+     * @param  \WP_REST_Request  $request  Full details about the request.
      * @return true|\WP_Error True if the request has read access, WP_Error object otherwise.
      */
     public function get_items_permissions_check($request)
     {
-        if (!current_user_can('manage_options')) {
+        if (! current_user_can('manage_options')) {
             return new \WP_Error('rest_forbidden', __('Sorry, you cannot manage agents.'), ['status' => 403]);
         }
 
         // since success, we respond with next nonce
-        header('X-WP-Nonce: ' . wp_create_nonce('wp_rest'));
+        header('X-WP-Nonce: '.wp_create_nonce('wp_rest'));
 
         return true;
     }
@@ -377,17 +375,18 @@ class AgentController extends \WP_REST_Controller
                 'name' => [
                     'required' => true,
                     'validate_callback' => function ($param, $request, $key) {
-                        return !empty($param) && is_string($param);
+                        return ! empty($param) && is_string($param);
                     },
                 ],
                 'agent_id' => [
                     'required' => true,
                     'validate_callback' => function ($param, $request, $key) {
-                        return !empty($param) && is_string($param);
+                        return ! empty($param) && is_string($param);
                     },
                 ],
             ];
         }
+
         return [];
     }
 }

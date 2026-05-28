@@ -1,4 +1,5 @@
 <?php
+
 /**
  * The following snippets uses `PLUGIN` to prefix
  * the constants and class names. You should replace

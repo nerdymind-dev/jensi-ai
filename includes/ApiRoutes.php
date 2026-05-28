@@ -26,14 +26,14 @@ class ApiRoutes
     public function register_routes()
     {
         // instantiate and load all api routes
-        (new Api\SettingController())->register_routes();
-        (new Api\QueueController())->register_routes();
-        (new Api\ConfigController())->register_routes();
-        (new Api\SyncController())->register_routes();
-        (new Api\DataSourceController())->register_routes();    
-        (new Api\JensiAgentController())->register_routes();
-        (new Api\AgentController())->register_routes();
-        (new Api\ChatController())->register_routes();
+        (new Api\SettingController)->register_routes();
+        (new Api\QueueController)->register_routes();
+        (new Api\ConfigController)->register_routes();
+        (new Api\SyncController)->register_routes();
+        (new Api\DataSourceController)->register_routes();
+        (new Api\JensiAgentController)->register_routes();
+        (new Api\AgentController)->register_routes();
+        (new Api\ChatController)->register_routes();
 
         /*
     // uncomment this to automatically return new nonce

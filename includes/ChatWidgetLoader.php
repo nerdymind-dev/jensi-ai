@@ -19,19 +19,19 @@ class ChatWidgetLoader
     /**
      * Initialize this class.
      *
-     * @param string $prefix
+     * @param  string  $prefix
      */
     public function __construct($prefix)
     {
         $this->prefix = $prefix;
 
         // Only load on front-end, not admin
-        if (!is_admin()) {
+        if (! is_admin()) {
             add_action('wp_enqueue_scripts', [$this, 'enqueue_chat_widget']);
         }
 
         // Get settings (used in multiple methods)
-        $this->settings = (new Api\SettingController())->get_settings_raw();
+        $this->settings = (new Api\SettingController)->get_settings_raw();
     }
 
     /**
@@ -45,41 +45,41 @@ class ChatWidgetLoader
         $agent = $this->get_current_page_agent();
 
         // If no agent should be displayed, don't load the widget
-        if (!$agent) {
+        if (! $agent) {
             return;
         }
 
         // Enqueue styles and scripts
-        wp_enqueue_style($this->prefix . '-chat-widget');
-        wp_enqueue_script($this->prefix . '-chat-widget');
+        wp_enqueue_style($this->prefix.'-chat-widget');
+        wp_enqueue_script($this->prefix.'-chat-widget');
 
         // Output custom styles based on agent settings
         $primaryHex = $agent['primary_color'] ?? '#667eea';
-        $primaryRgb = sscanf($primaryHex, "#%02x%02x%02x");
+        $primaryRgb = sscanf($primaryHex, '#%02x%02x%02x');
         $secondaryHex = $agent['secondary_color'] ?? '#764ba2';
         $backgroundHex = $agent['background_color'] ?? '#ffffff';
         $textHex = $agent['text_color'] ?? '#000000';
         $secondaryTextHex = $agent['secondary_text_color'] ?? '#ffffff';
         $bottomOffset = isset($agent['bottom_offset']) ? intval($agent['bottom_offset']) : 20;
         $rightOffset = isset($agent['right_offset']) ? intval($agent['right_offset']) : 20;
-        $custom_css = "
+        $custom_css = '
         :root {
-            --jensi-ai-color-primary: " . $primaryHex . ";
-            --jensi-ai-rgb-primary: " . implode(',', $primaryRgb) . ";
-            --jensi-ai-color-secondary: " . $secondaryHex . ";
-            --jensi-ai-bottom-offset: " . $bottomOffset . "px;
-            --jensi-ai-right-offset: " . $rightOffset . "px;
-            --jensi-ai-color-background: " . $backgroundHex . ";
-            --jensi-ai-color-text: " . $textHex . ";
-            --jensi-ai-color-text-secondary: " . $secondaryTextHex . ";
-        }";
-        wp_add_inline_style($this->prefix . '-chat-widget', $custom_css);
+            --jensi-ai-color-primary: '.$primaryHex.';
+            --jensi-ai-rgb-primary: '.implode(',', $primaryRgb).';
+            --jensi-ai-color-secondary: '.$secondaryHex.';
+            --jensi-ai-bottom-offset: '.$bottomOffset.'px;
+            --jensi-ai-right-offset: '.$rightOffset.'px;
+            --jensi-ai-color-background: '.$backgroundHex.';
+            --jensi-ai-color-text: '.$textHex.';
+            --jensi-ai-color-text-secondary: '.$secondaryTextHex.';
+        }';
+        wp_add_inline_style($this->prefix.'-chat-widget', $custom_css);
 
         // Get widget configuration
         $config = $this->get_widget_config($agent);
 
         // Localize script with configuration
-        wp_localize_script($this->prefix . '-chat-widget', 'jensi_ai_chat_widget_config', $config);
+        wp_localize_script($this->prefix.'-chat-widget', 'jensi_ai_chat_widget_config', $config);
     }
 
     /**
@@ -142,10 +142,10 @@ class ChatWidgetLoader
     private function get_enabled_agents()
     {
         global $wpdb;
-        $agents_table = $wpdb->prefix . $this->prefix . '_agents';
+        $agents_table = $wpdb->prefix.$this->prefix.'_agents';
 
         $agents = $wpdb->get_results("SELECT * FROM $agents_table WHERE enabled = 1 ORDER BY created ASC");
-        if (!$agents) {
+        if (! $agents) {
             return [];
         }
 
@@ -177,9 +177,9 @@ class ChatWidgetLoader
     /**
      * Check if an agent matches the current page based on filtering rules.
      *
-     * @param array $agent
-     * @param object|null $current_post
-     * @param string|false $current_post_type
+     * @param  array  $agent
+     * @param  object|null  $current_post
+     * @param  string|false  $current_post_type
      * @return bool
      */
     private function agent_matches_current_page($agent, $current_post, $current_post_type)
@@ -190,14 +190,14 @@ class ChatWidgetLoader
         }
 
         // Check post type matching
-        if (!empty($agent['post_type'])) {
-            if (!$current_post_type || !in_array($current_post_type, $agent['post_type'])) {
+        if (! empty($agent['post_type'])) {
+            if (! $current_post_type || ! in_array($current_post_type, $agent['post_type'])) {
                 return false;
             }
         }
 
         // Check taxonomy and terms matching
-        if (!empty($agent['taxonomy']) && !empty($agent['terms']) && $current_post) {
+        if (! empty($agent['taxonomy']) && ! empty($agent['terms']) && $current_post) {
             $taxonomy = $agent['taxonomy'];
             $required_terms = $agent['terms'];
 
@@ -209,8 +209,8 @@ class ChatWidgetLoader
             }
 
             // Check if any of the required terms match the post's terms
-            $has_matching_term = !empty(array_intersect($required_terms, $post_terms));
-            if (!$has_matching_term) {
+            $has_matching_term = ! empty(array_intersect($required_terms, $post_terms));
+            if (! $has_matching_term) {
                 return false;
             }
         }
@@ -221,7 +221,7 @@ class ChatWidgetLoader
     /**
      * Get widget configuration for the front-end.
      *
-     * @param array $agent
+     * @param  array  $agent
      * @return array
      */
     private function get_widget_config($agent)
@@ -235,13 +235,13 @@ class ChatWidgetLoader
         $config = [
             'id' => $agent['id'],
             'nonce' => wp_create_nonce('wp_rest'),
-            'apiBaseUrl' => rest_url($this->prefix . '/v1'),
+            'apiBaseUrl' => rest_url($this->prefix.'/v1'),
             'wsBaseUrl' => $ws_base_url,
             'defaultAgentId' => $agent['agent_id'] ?? '',
             'dataSourceId' => $agent['data_source_id'] ?? '',
             'welcomeMessage' => $agent['welcome_message'] ?? 'Hello! How can I assist you today?',
-            'pluginUrl' => rtrim(\JensiAI\Main::$BASEURL, '/'),
-            'avatarUrl' => !empty($agent['avatar_url']) ? esc_url($agent['avatar_url']) : '',
+            'pluginUrl' => rtrim(Main::$BASEURL, '/'),
+            'avatarUrl' => ! empty($agent['avatar_url']) ? esc_url($agent['avatar_url']) : '',
         ];
 
         // Allow filtering of configuration

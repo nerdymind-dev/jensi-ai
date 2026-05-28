@@ -2,6 +2,8 @@
 
 namespace JensiAI\Api;
 
+use JensiAI\Main;
+
 /**
  * Backend configs controller.
  */
@@ -26,16 +28,14 @@ class ConfigController extends \WP_REST_Controller
      */
     public function __construct()
     {
-        $this->prefix = \JensiAI\Main::PREFIX;
-        $this->namespace = $this->prefix . '/v1';
+        $this->prefix = Main::PREFIX;
+        $this->namespace = $this->prefix.'/v1';
         $this->rest_base = 'configs';
-        $this->table_name = $this->prefix . '_configs';
+        $this->table_name = $this->prefix.'_configs';
     }
 
     /**
      * Get the primary table for this controllers data
-     *
-     * @return string
      */
     public function getTableName(): string
     {
@@ -52,19 +52,19 @@ class ConfigController extends \WP_REST_Controller
         // Register the /wp-json/ + get_endpoint() route
         register_rest_route(
             $this->namespace,
-            '/' . $this->rest_base . '/all',
+            '/'.$this->rest_base.'/all',
             [
                 [
                     'methods' => \WP_REST_Server::READABLE,
                     'callback' => [$this, 'get_configs'],
                     'permission_callback' => [$this, 'get_items_permissions_check'],
                     'args' => $this->get_collection_params(),
-                ]
+                ],
             ]
         );
         register_rest_route(
             $this->namespace,
-            '/' . $this->rest_base . '/config',
+            '/'.$this->rest_base.'/config',
             [
                 [
                     'methods' => \WP_REST_Server::READABLE,
@@ -88,7 +88,7 @@ class ConfigController extends \WP_REST_Controller
         );
         register_rest_route(
             $this->namespace,
-            '/' . $this->rest_base . '/taxonomy',
+            '/'.$this->rest_base.'/taxonomy',
             [
                 [
                     'methods' => \WP_REST_Server::READABLE,
@@ -99,9 +99,9 @@ class ConfigController extends \WP_REST_Controller
                             // 'validate_callback' => function ($param, $request, $key) {
                             //     return is_numeric($param);
                             // },
-                            'required' => true
+                            'required' => true,
                         ],
-                    ]
+                    ],
                 ],
             ]
         );
@@ -118,15 +118,15 @@ class ConfigController extends \WP_REST_Controller
         return [
             'all' => esc_url_raw(
                 // GET
-                rest_url($this->namespace . '/' . $this->rest_base . '/all')
+                rest_url($this->namespace.'/'.$this->rest_base.'/all')
             ),
             'crud' => esc_url_raw(
                 // GET/POST/DELETE
-                rest_url($this->namespace . '/' . $this->rest_base . '/config')
+                rest_url($this->namespace.'/'.$this->rest_base.'/config')
             ),
             'taxonomy' => esc_url_raw(
                 // GET
-                rest_url($this->namespace . '/' . $this->rest_base . '/taxonomy')
+                rest_url($this->namespace.'/'.$this->rest_base.'/taxonomy')
             ),
         ];
     }
@@ -134,8 +134,7 @@ class ConfigController extends \WP_REST_Controller
     /**
      * Retrieves taxonomy.
      *
-     * @param \WP_REST_Request $request Full details about the request.
-     *
+     * @param  \WP_REST_Request  $request  Full details about the request.
      * @return \WP_REST_Response|\WP_Error Response object on success, or WP_Error object on failure.
      */
     public function get_taxonomy($request)
@@ -157,10 +156,10 @@ class ConfigController extends \WP_REST_Controller
             $taxonomy = $params['taxonomy'] ?? null;
 
             // Post type is required
-            if (!$postType) {
+            if (! $postType) {
                 return rest_ensure_response($response);
             }
-            if (!$taxonomy) {
+            if (! $taxonomy) {
                 // Get taxonomies registered for this specific post type
                 $taxonomies = get_object_taxonomies($postType, 'names');
                 if ($search) {
@@ -189,21 +188,21 @@ class ConfigController extends \WP_REST_Controller
                         'hide_empty' => false,
                     ]);
                 }
-                if (!is_wp_error($terms) && !empty($terms)) {
+                if (! is_wp_error($terms) && ! empty($terms)) {
                     $postTerms = array_values($terms);
                     $response['data'] = $postTerms;
                     $response['success'] = true;
                 }
             }
         }
+
         return rest_ensure_response($response);
     }
 
     /**
      * Retrieves all configs.
      *
-     * @param \WP_REST_Request $request Full details about the request.
-     *
+     * @param  \WP_REST_Request  $request  Full details about the request.
      * @return \WP_REST_Response|\WP_Error Response object on success, or WP_Error object on failure.
      */
     public function get_configs($request)
@@ -214,14 +213,14 @@ class ConfigController extends \WP_REST_Controller
             'success' => true,
             'nonce' => $nonce,
         ];
+
         return rest_ensure_response($response);
     }
 
     /**
      * Retrieves config.
      *
-     * @param \WP_REST_Request $request Full details about the request.
-     *
+     * @param  \WP_REST_Request  $request  Full details about the request.
      * @return \WP_REST_Response|\WP_Error Response object on success, or WP_Error object on failure.
      */
     public function get_config($request)
@@ -244,14 +243,14 @@ class ConfigController extends \WP_REST_Controller
                 $response['success'] = true;
             }
         }
+
         return rest_ensure_response($response);
     }
 
     /**
      * Update config.
      *
-     * @param \WP_REST_Request $request Full details about the request.
-     *
+     * @param  \WP_REST_Request  $request  Full details about the request.
      * @return \WP_REST_Response|\WP_Error Response object on success, or WP_Error object on failure.
      */
     public function create_update_config(\WP_REST_Request $request)
@@ -270,7 +269,7 @@ class ConfigController extends \WP_REST_Controller
         if (isset($params)) {
             global $wpdb;
             $id = $params['id'] ?? null;
-            $tableName = $wpdb->prefix . $this->table_name;
+            $tableName = $wpdb->prefix.$this->table_name;
 
             // Sanitize and prepare data
             $fields = [
@@ -282,7 +281,7 @@ class ConfigController extends \WP_REST_Controller
                 'data_source_id' => sanitize_text_field($params['data_source_id'] ?? null),
                 'enabled' => $params['enabled'], // true/false, default true
             ];
-            if (!$id) {
+            if (! $id) {
                 // Create it
                 $wpdb->insert($tableName, $fields);
                 $result = $this->get_config_object(); // get the latest item
@@ -306,14 +305,14 @@ class ConfigController extends \WP_REST_Controller
                 }
             }
         }
+
         return rest_ensure_response($response);
     }
 
     /**
      * Destroy config.
      *
-     * @param \WP_REST_Request $request Full details about the request.
-     *
+     * @param  \WP_REST_Request  $request  Full details about the request.
      * @return \WP_REST_Response|\WP_Error Response object on success, or WP_Error object on failure.
      */
     public function destroy_config(\WP_REST_Request $request)
@@ -335,7 +334,7 @@ class ConfigController extends \WP_REST_Controller
             if ($result) {
                 global $wpdb;
                 // Destroy the object
-                $result = $wpdb->delete($wpdb->prefix . $this->table_name, ['id' => $result->id]);
+                $result = $wpdb->delete($wpdb->prefix.$this->table_name, ['id' => $result->id]);
                 $response['success'] = $result !== false;
             }
         }
@@ -346,8 +345,7 @@ class ConfigController extends \WP_REST_Controller
     /**
      * Checks if a given request has access to read the items.
      *
-     * @param \WP_REST_Request $request Full details about the request.
-     *
+     * @param  \WP_REST_Request  $request  Full details about the request.
      * @return true|\WP_Error True if the request has read access, WP_Error object otherwise.
      */
     public function get_items_permissions_check($request)
@@ -357,12 +355,12 @@ class ConfigController extends \WP_REST_Controller
         // example: /wp-json/me/v1/endpoint/?_wpnonce=${nonce}
         // check_ajax_referer('wp_rest', '_wpnonce', true)
         // 3rd parameter (die=true) to kill rest of execution
-        if (!current_user_can('manage_options')) {
+        if (! current_user_can('manage_options')) {
             return new \WP_Error('rest_forbidden', __('Sorry, you cannot update settings.'), ['status' => 403]);
         }
 
         // since success, we respond with next nonce
-        header('X-WP-Nonce: ' . wp_create_nonce('wp_rest'));
+        header('X-WP-Nonce: '.wp_create_nonce('wp_rest'));
 
         return true;
     }
@@ -382,37 +380,38 @@ class ConfigController extends \WP_REST_Controller
                         'validate_callback' => function ($param, $request, $key) {
                             return is_numeric($param);
                         },
-                        'required' => true
-                    ]
+                        'required' => true,
+                    ],
                 ];
             case 'update':
                 return [
                     'title' => [
                         'validate_callback' => function ($param, $request, $key) {
-                            return !empty($param);
+                            return ! empty($param);
                         },
-                        'required' => true
+                        'required' => true,
                     ],
                     'post_type' => [
                         'validate_callback' => function ($param, $request, $key) {
-                            return !empty($param);
+                            return ! empty($param);
                         },
-                        'required' => true
+                        'required' => true,
                     ],
                     'agent_id' => [
                         'required' => true,
                         'validate_callback' => function ($param, $request, $key) {
-                            return !empty($param) && is_string($param);
+                            return ! empty($param) && is_string($param);
                         },
                     ],
                     'data_source_id' => [
                         'required' => true,
                         'validate_callback' => function ($param, $request, $key) {
-                            return !empty($param) && is_string($param);
+                            return ! empty($param) && is_string($param);
                         },
                     ],
                 ];
         }
+
         return [];
     }
 
@@ -424,20 +423,21 @@ class ConfigController extends \WP_REST_Controller
     public function get_all_configs()
     {
         global $wpdb;
-        $configs_table = $wpdb->prefix . $this->table_name;
+        $configs_table = $wpdb->prefix.$this->table_name;
+
         return $wpdb->get_results("SELECT * FROM $configs_table ORDER BY `created` DESC");
     }
 
     /**
      * Fetch row from the configs table
      *
-     * @param object|null $id
+     * @param  object|null  $id
      * @return array|object|\stdClass|null
      */
     public function get_config_object($id = null)
     {
         global $wpdb;
-        $configs_table = $wpdb->prefix . $this->table_name;
+        $configs_table = $wpdb->prefix.$this->table_name;
         if ($id !== null) {
             // Get specified item from the database
             $result = $wpdb->get_row("SELECT * FROM $configs_table WHERE `id` = $id");
@@ -445,23 +445,22 @@ class ConfigController extends \WP_REST_Controller
             // Get first item (latest entry) if no ID passed
             $result = $wpdb->get_row("SELECT * FROM $configs_table ORDER BY `modified` DESC");
         }
+
         return $result;
     }
 
     /**
      * Get config for given post type and terms
      *
-     * @param $post_type
-     * @param $terms
      * @return false|mixed|\stdClass
      */
     public function get_config_for_terms($post_type, $terms)
     {
         global $wpdb;
-        $configs_table = $wpdb->prefix . $this->table_name;
+        $configs_table = $wpdb->prefix.$this->table_name;
         $results = $wpdb->get_results("SELECT * FROM $configs_table WHERE `enabled` = TRUE AND `post_type` = '$post_type' ORDER BY `created` DESC");
         foreach ($results as $config) {
-            if (!$config->taxonomy) {
+            if (! $config->taxonomy) {
                 // If taxonomy is null, it means all terms are included
                 return $config;
             }
@@ -470,11 +469,12 @@ class ConfigController extends \WP_REST_Controller
                 // If no terms are set, it means all terms are included
                 return $config;
             }
-            if (!empty(array_intersect($configTerms, $terms))) {
+            if (! empty(array_intersect($configTerms, $terms))) {
                 // If any of the terms match, return this config
                 return $config;
             }
         }
+
         return false;
     }
 }

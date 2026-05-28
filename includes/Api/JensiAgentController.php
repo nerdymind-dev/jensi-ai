@@ -2,6 +2,8 @@
 
 namespace JensiAI\Api;
 
+use JensiAI\Main;
+
 /**
  * Backend configs controller.
  */
@@ -40,13 +42,13 @@ class JensiAgentController extends \WP_REST_Controller
      */
     public function __construct()
     {
-        $this->prefix = \JensiAI\Main::PREFIX;
-        $this->namespace = $this->prefix . '/v1';
+        $this->prefix = Main::PREFIX;
+        $this->namespace = $this->prefix.'/v1';
         $this->rest_base = 'agents';
         $this->table_name = null;
 
         // Get settings so we can set the API token
-        $settings = (new SettingController())->get_settings_raw();
+        $settings = (new SettingController)->get_settings_raw();
         $this->token = $settings['jensi_ai_api_key'] ?? '';
 
         // Get the base API url
@@ -57,8 +59,6 @@ class JensiAgentController extends \WP_REST_Controller
 
     /**
      * Get the primary table for this controllers data
-     *
-     * @return string|null
      */
     public function getTableName(): ?string
     {
@@ -76,7 +76,7 @@ class JensiAgentController extends \WP_REST_Controller
         // Register the /wp-json/ + get_endpoint() route
         register_rest_route(
             $this->namespace,
-            '/' . $this->rest_base . '/get',
+            '/'.$this->rest_base.'/get',
             [
                 [
                     'methods' => \WP_REST_Server::READABLE,
@@ -99,7 +99,7 @@ class JensiAgentController extends \WP_REST_Controller
         return [
             'get' => esc_url_raw(
                 // GET
-                rest_url($this->namespace . '/' . $this->rest_base . '/get')
+                rest_url($this->namespace.'/'.$this->rest_base.'/get')
             ),
         ];
     }
@@ -107,8 +107,7 @@ class JensiAgentController extends \WP_REST_Controller
     /**
      * Retrieve data sources.
      *
-     * @param \WP_REST_Request $request Full details about the request.
-     *
+     * @param  \WP_REST_Request  $request  Full details about the request.
      * @return \WP_REST_Response|\WP_Error Response object on success, or WP_Error object on failure.
      */
     public function get_agents($request)
@@ -125,15 +124,16 @@ class JensiAgentController extends \WP_REST_Controller
         ];
 
         // See if we already have a cached value
-        $cache_key = 'jensi_ai_agents_' . md5(json_encode($params));
+        $cache_key = 'jensi_ai_agents_'.md5(json_encode($params));
         $cached = get_transient($cache_key);
         if ($cached !== false) {
             $response['data'] = $cached;
             $response['success'] = true;
+
             return rest_ensure_response($response);
         }
 
-        if (!$this->token) {
+        if (! $this->token) {
             $response['data'] = 'No JENSi AI API token configured.';
         } else {
             // get search param if provided
@@ -141,7 +141,7 @@ class JensiAgentController extends \WP_REST_Controller
             $id = isset($params['id']) ? $params['id'] : null;
 
             // call the remote API to get agents
-            $url = $this->base_api . '/agents';
+            $url = $this->base_api.'/agents';
             if ($search) {
                 $url = add_query_arg('search', urlencode($search), $url);
             }
@@ -151,7 +151,7 @@ class JensiAgentController extends \WP_REST_Controller
             $api_response = wp_remote_get($url, [
                 'headers' => [
                     'Accept' => 'application/json',
-                    'Authorization' => 'Bearer ' . $this->token,
+                    'Authorization' => 'Bearer '.$this->token,
                 ],
                 'timeout' => 15,
                 'sslverify' => wp_get_environment_type() !== 'local',
@@ -164,11 +164,13 @@ class JensiAgentController extends \WP_REST_Controller
             if ($code !== 200) {
                 $data = json_decode($body, true);
                 $message = $data['message'] ?? __('JENSi AI API returned an error.');
+
                 return new \WP_Error($code, $message, $data);
             } else {
                 $data = json_decode($body, true);
                 if (json_last_error() !== JSON_ERROR_NONE) {
-                    $response['data'] = 'Failed to parse JENSi AI API response: ' . json_last_error_msg();
+                    $response['data'] = 'Failed to parse JENSi AI API response: '.json_last_error_msg();
+
                     return new \WP_Error('rest_api_error', __('Failed to parse JENSi AI API response.'), ['status' => 500]);
                 }
                 $response['data'] = $data['data'];
@@ -178,14 +180,14 @@ class JensiAgentController extends \WP_REST_Controller
                 set_transient($cache_key, $response['data'], 10);
             }
         }
+
         return rest_ensure_response($response);
     }
 
     /**
      * Checks if a given request has access to read the items.
      *
-     * @param \WP_REST_Request $request Full details about the request.
-     *
+     * @param  \WP_REST_Request  $request  Full details about the request.
      * @return true|\WP_Error True if the request has read access, WP_Error object otherwise.
      */
     public function get_items_permissions_check($request)
@@ -195,12 +197,12 @@ class JensiAgentController extends \WP_REST_Controller
         // example: /wp-json/me/v1/endpoint/?_wpnonce=${nonce}
         // check_ajax_referer('wp_rest', '_wpnonce', true)
         // 3rd parameter (die=true) to kill rest of execution
-        if (!current_user_can('manage_options')) {
+        if (! current_user_can('manage_options')) {
             return new \WP_Error('rest_forbidden', __('Sorry, you cannot update settings.'), ['status' => 403]);
         }
 
         // since success, we respond with next nonce
-        header('X-WP-Nonce: ' . wp_create_nonce('wp_rest'));
+        header('X-WP-Nonce: '.wp_create_nonce('wp_rest'));
 
         return true;
     }
@@ -218,17 +220,18 @@ class JensiAgentController extends \WP_REST_Controller
                     'search' => [
                         'required' => false,
                         'validate_callback' => function ($param, $request, $key) {
-                            return !empty($param) && is_string($param);
+                            return ! empty($param) && is_string($param);
                         },
                     ],
                     'id' => [
                         'required' => false,
                         'validate_callback' => function ($param, $request, $key) {
-                            return !empty($param) && is_string($param);
+                            return ! empty($param) && is_string($param);
                         },
                     ],
                 ];
         }
+
         return [];
     }
 }

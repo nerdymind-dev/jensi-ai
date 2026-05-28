@@ -17,7 +17,7 @@ class Assets
     /**
      * Initialize this class.
      *
-     * @param string $prefix
+     * @param  string  $prefix
      */
     public function __construct($prefix)
     {
@@ -39,8 +39,7 @@ class Assets
     /**
      * Register scripts.
      *
-     * @param  array $scripts
-     *
+     * @param  array  $scripts
      * @return void
      */
     private function register_scripts($scripts)
@@ -56,8 +55,7 @@ class Assets
     /**
      * Register styles.
      *
-     * @param  array $styles
-     *
+     * @param  array  $styles
      * @return void
      */
     public function register_styles($styles)
@@ -78,46 +76,46 @@ class Assets
     {
         $env = wp_get_environment_type();
         $assets_url = ($env !== 'local')
-            ? \JensiAI\Main::$BASEURL . '/public'
+            ? Main::$BASEURL.'/public'
             : 'https://localhost:8080';
 
         $scripts = [
-            $this->prefix . '-vuejs' => [
+            $this->prefix.'-vuejs' => [
                 'src' => ($env !== 'local')
-                    ? $assets_url . $this->mix('/js/vendor/vue.global.prod.js')
-                    : $assets_url . $this->mix('/js/vendor/vue.global.js'),
+                    ? $assets_url.$this->mix('/js/vendor/vue.global.prod.js')
+                    : $assets_url.$this->mix('/js/vendor/vue.global.js'),
                 'in_footer' => true,
             ],
-            $this->prefix . '-manifest' => [
-                'src' => $assets_url . $this->mix('/js/manifest.js'),
+            $this->prefix.'-manifest' => [
+                'src' => $assets_url.$this->mix('/js/manifest.js'),
                 'deps' => [
-                    $this->prefix . '-vuejs',
+                    $this->prefix.'-vuejs',
                 ],
                 'in_footer' => true,
             ],
-            $this->prefix . '-vendor' => [
-                'src' => $assets_url . $this->mix('/js/vendor.js'),
-                'deps' => [$this->prefix . '-vuejs', $this->prefix . '-manifest'],
+            $this->prefix.'-vendor' => [
+                'src' => $assets_url.$this->mix('/js/vendor.js'),
+                'deps' => [$this->prefix.'-vuejs', $this->prefix.'-manifest'],
                 'in_footer' => true,
             ],
-            $this->prefix . '-admin' => [
-                'src' => $assets_url . $this->mix('/js/admin.js'),
-                'deps' => [$this->prefix . '-vendor'],
+            $this->prefix.'-admin' => [
+                'src' => $assets_url.$this->mix('/js/admin.js'),
+                'deps' => [$this->prefix.'-vendor'],
                 'in_footer' => true,
             ],
-            $this->prefix . '-frontend'  => [
-                'src'       => $assets_url . $this->mix('/js/frontend.js'),
-                'deps'      => ['jquery', $this->prefix . '-vendor'],
+            $this->prefix.'-frontend' => [
+                'src' => $assets_url.$this->mix('/js/frontend.js'),
+                'deps' => ['jquery', $this->prefix.'-vendor'],
                 'in_footer' => true,
             ],
-            $this->prefix . '-frontview' => [
-                'src'       => $assets_url . $this->mix('/js/frontview.js'),
-                'deps'      => ['jquery', $this->prefix . '-vendor'],
+            $this->prefix.'-frontview' => [
+                'src' => $assets_url.$this->mix('/js/frontview.js'),
+                'deps' => ['jquery', $this->prefix.'-vendor'],
                 'in_footer' => true,
             ],
-            $this->prefix . '-chat-widget' => [
-                'src'       => $assets_url . $this->mix('/js/chat-widget.js'),
-                'deps'      => [$this->prefix . '-vendor'],
+            $this->prefix.'-chat-widget' => [
+                'src' => $assets_url.$this->mix('/js/chat-widget.js'),
+                'deps' => [$this->prefix.'-vendor'],
                 'in_footer' => true,
             ],
         ];
@@ -134,21 +132,21 @@ class Assets
     {
         $env = wp_get_environment_type();
         $assets_url = ($env !== 'local')
-            ? \JensiAI\Main::$BASEURL . '/public'
+            ? Main::$BASEURL.'/public'
             : 'https://localhost:8080';
 
         $styles = [
-            $this->prefix . '-frontend' => [
-                'src' => $assets_url . $this->mix('/css/frontend.css'),
+            $this->prefix.'-frontend' => [
+                'src' => $assets_url.$this->mix('/css/frontend.css'),
             ],
-            $this->prefix . '-frontview' => [
-                'src' => $assets_url . $this->mix('/css/frontview.css'),
+            $this->prefix.'-frontview' => [
+                'src' => $assets_url.$this->mix('/css/frontview.css'),
             ],
-            $this->prefix . '-admin' => [
-                'src' => $assets_url . $this->mix('/css/admin.css'),
+            $this->prefix.'-admin' => [
+                'src' => $assets_url.$this->mix('/css/admin.css'),
             ],
-            $this->prefix . '-chat-widget' => [
-                'src' => $assets_url . $this->mix('/css/chat-widget.css'),
+            $this->prefix.'-chat-widget' => [
+                'src' => $assets_url.$this->mix('/css/chat-widget.css'),
             ],
         ];
 
@@ -167,14 +165,14 @@ class Assets
         static $manifests = [];
 
         if (empty($manifestDirectory)) {
-            $manifestDirectory = \JensiAI\Main::$PLUGINDIR . '/public';
+            $manifestDirectory = Main::$PLUGINDIR.'/public';
         }
 
-        $manifestPath = $manifestDirectory . '/mix-manifest.json';
+        $manifestPath = $manifestDirectory.'/mix-manifest.json';
 
-        if (!isset($manifests[$manifestPath])) {
-            if (!is_file($manifestPath)) {
-                throw new \Exception('The Mix manifest does not exist in: ' . $manifestPath);
+        if (! isset($manifests[$manifestPath])) {
+            if (! is_file($manifestPath)) {
+                throw new \Exception('The Mix manifest does not exist in: '.$manifestPath);
             }
 
             $manifests[$manifestPath] = json_decode(file_get_contents($manifestPath), true);
@@ -182,7 +180,7 @@ class Assets
 
         $manifest = $manifests[$manifestPath];
 
-        if (!isset($manifest[$path])) {
+        if (! isset($manifest[$path])) {
             throw new \Exception("Unable to locate Mix file: {$path}.");
         }
 

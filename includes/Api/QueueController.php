@@ -3,6 +3,7 @@
 namespace JensiAI\Api;
 
 use Exception;
+use JensiAI\Main;
 use JensiAI\QueueLoader;
 
 /**
@@ -29,16 +30,14 @@ class QueueController extends \WP_REST_Controller
      */
     public function __construct()
     {
-        $this->prefix = \JensiAI\Main::PREFIX;
-        $this->namespace = $this->prefix . '/v1';
+        $this->prefix = Main::PREFIX;
+        $this->namespace = $this->prefix.'/v1';
         $this->rest_base = 'jobs';
-        $this->table_name = $this->prefix . '_jobs';
+        $this->table_name = $this->prefix.'_jobs';
     }
 
     /**
      * Get the primary table for this controllers data
-     *
-     * @return string
      */
     public function getTableName(): string
     {
@@ -55,7 +54,7 @@ class QueueController extends \WP_REST_Controller
         // Register the /wp-json/ + get_endpoint() route
         register_rest_route(
             $this->namespace,
-            '/' . $this->rest_base . '/table',
+            '/'.$this->rest_base.'/table',
             [
                 [
                     'methods' => \WP_REST_Server::READABLE,
@@ -67,7 +66,7 @@ class QueueController extends \WP_REST_Controller
         );
         register_rest_route(
             $this->namespace,
-            '/' . $this->rest_base . '/table/vpage=(?P<vpage>\d+)',
+            '/'.$this->rest_base.'/table/vpage=(?P<vpage>\d+)',
             [
                 [
                     'methods' => \WP_REST_Server::READABLE,
@@ -79,7 +78,7 @@ class QueueController extends \WP_REST_Controller
         );
         register_rest_route(
             $this->namespace,
-            '/' . $this->rest_base . '/job',
+            '/'.$this->rest_base.'/job',
             [
                 [
                     'methods' => \WP_REST_Server::DELETABLE,
@@ -91,7 +90,7 @@ class QueueController extends \WP_REST_Controller
         );
         register_rest_route(
             $this->namespace,
-            '/' . $this->rest_base . '/process',
+            '/'.$this->rest_base.'/process',
             [
                 [
                     'methods' => \WP_REST_Server::CREATABLE,
@@ -103,7 +102,7 @@ class QueueController extends \WP_REST_Controller
         );
         register_rest_route(
             $this->namespace,
-            '/' . $this->rest_base . '/process-all',
+            '/'.$this->rest_base.'/process-all',
             [
                 [
                     'methods' => \WP_REST_Server::CREATABLE,
@@ -115,7 +114,7 @@ class QueueController extends \WP_REST_Controller
         );
         register_rest_route(
             $this->namespace,
-            '/' . $this->rest_base . '/clear-all',
+            '/'.$this->rest_base.'/clear-all',
             [
                 [
                     'methods' => \WP_REST_Server::DELETABLE,
@@ -138,23 +137,23 @@ class QueueController extends \WP_REST_Controller
         return [
             'table' => esc_url_raw(
                 // GET
-                rest_url($this->namespace . '/' . $this->rest_base . '/table')
+                rest_url($this->namespace.'/'.$this->rest_base.'/table')
             ),
             'job' => esc_url_raw(
                 // DELETE
-                rest_url($this->namespace . '/' . $this->rest_base . '/job')
+                rest_url($this->namespace.'/'.$this->rest_base.'/job')
             ),
             'process' => esc_url_raw(
                 // POST
-                rest_url($this->namespace . '/' . $this->rest_base . '/process')
+                rest_url($this->namespace.'/'.$this->rest_base.'/process')
             ),
             'process_all' => esc_url_raw(
                 // POST
-                rest_url($this->namespace . '/' . $this->rest_base . '/process-all')
+                rest_url($this->namespace.'/'.$this->rest_base.'/process-all')
             ),
             'clear_all' => esc_url_raw(
                 // DELETE
-                rest_url($this->namespace . '/' . $this->rest_base . '/clear-all')
+                rest_url($this->namespace.'/'.$this->rest_base.'/clear-all')
             ),
         ];
     }
@@ -162,8 +161,7 @@ class QueueController extends \WP_REST_Controller
     /**
      * Queue table.
      *
-     * @param \WP_REST_Request $request Full details about the request.
-     *
+     * @param  \WP_REST_Request  $request  Full details about the request.
      * @return \WP_REST_Response|\WP_Error Response object on success, or WP_Error object on failure.
      */
     public function get_queue_table(\WP_REST_Request $request)
@@ -186,20 +184,20 @@ class QueueController extends \WP_REST_Controller
                     $order,
                     $sort ?? 'DESC',
                     $includeCompleted
-                )
+                ),
             ],
 
             'success' => true,
             'nonce' => $nonce,
         ]);
+
         return rest_ensure_response($response);
     }
 
     /**
      * Process first queued item.
      *
-     * @param \WP_REST_Request $request Full details about the request.
-     *
+     * @param  \WP_REST_Request  $request  Full details about the request.
      * @return \WP_REST_Response|\WP_Error Response object on success, or WP_Error object on failure.
      */
     public function process_job(\WP_REST_Request $request)
@@ -210,19 +208,19 @@ class QueueController extends \WP_REST_Controller
         $id = $params['id'] ?? null;
         $response = rest_ensure_response([
             'data' => [
-                'processed' => (new QueueLoader())->process_job($id)
+                'processed' => (new QueueLoader)->process_job($id),
             ],
             'success' => true,
             'nonce' => $nonce,
         ]);
+
         return rest_ensure_response($response);
     }
 
     /**
      * Process all queued items.
      *
-     * @param \WP_REST_Request $request Full details about the request.
-     *
+     * @param  \WP_REST_Request  $request  Full details about the request.
      * @return \WP_REST_Response|\WP_Error Response object on success, or WP_Error object on failure.
      */
     public function process_all_jobs(\WP_REST_Request $request)
@@ -232,43 +230,39 @@ class QueueController extends \WP_REST_Controller
         $nonce = wp_create_nonce('wp_rest');
         $response = rest_ensure_response([
             'data' => [
-                'processed' => (new QueueLoader())->process_job() // Process all jobs
+                'processed' => (new QueueLoader)->process_job(), // Process all jobs
             ],
             'success' => true,
             'nonce' => $nonce,
         ]);
+
         return rest_ensure_response($response);
     }
 
     /**
      * Get WordPress table html from our data
      *
-     * @param int $page
-     * @param int $perPage
-     * @param string|null $search
-     * @param string|null $order
-     * @param string $sort
      * @return array
      */
     public function queue_table(
         int $page = 1,
         int $perPage = 15,
-        string $search = null,
-        string $order = null,
+        ?string $search = null,
+        ?string $order = null,
         string $sort = 'DESC',
         bool $includeCompleted = false
     ) {
         global $wpdb;
         try {
-            $queue_table = $wpdb->prefix . $this->table_name;
+            $queue_table = $wpdb->prefix.$this->table_name;
             $query = "SELECT * FROM $queue_table";
-            $where = "";
-            if (!$includeCompleted) {
+            $where = '';
+            if (! $includeCompleted) {
                 // Need to exclude completed jobs, but only if `failed` is not set to 1
                 // This way we can display failed jobs for re-processing and review
-                $where = " WHERE processed != 1 OR failed = 1";
+                $where = ' WHERE processed != 1 OR failed = 1';
             }
-            $orderBy = " ORDER BY created DESC";
+            $orderBy = ' ORDER BY created DESC';
             if ($order) {
                 $orderBy = sprintf(' ORDER BY %s %s', $order, $sort);
             }
@@ -284,7 +278,7 @@ class QueueController extends \WP_REST_Controller
             $p = $page;
 
             $offset = ($p * $items_per_page) - $items_per_page;
-            $result = $wpdb->get_results($query . $orderBy . " LIMIT $offset, $items_per_page");
+            $result = $wpdb->get_results($query.$orderBy." LIMIT $offset, $items_per_page");
 
             $total_page = ceil($total / $items_per_page);
 
@@ -301,27 +295,27 @@ class QueueController extends \WP_REST_Controller
                     $links[] = [
                         'label' => $i,
                         'url' => null,
-                        'active' => true
+                        'active' => true,
                     ];
                     $dots = true;
-                } else if ($i <= $ends_count || ($p && $i >= $p - $middle_count && $i <= $p + $middle_count) || $i > $total - $ends_count) {
+                } elseif ($i <= $ends_count || ($p && $i >= $p - $middle_count && $i <= $p + $middle_count) || $i > $total - $ends_count) {
                     $links[] = [
                         'label' => $i,
-                        'url' => rest_url($this->namespace . '/' . $this->rest_base . "/table/vpage=$i"),
-                        'active' => false
+                        'url' => rest_url($this->namespace.'/'.$this->rest_base."/table/vpage=$i"),
+                        'active' => false,
                     ];
                     $dots = true;
                 } elseif ($dots) {
                     $links[] = [
-                        'label' => "...",
+                        'label' => '...',
                         'url' => null,
-                        'active' => false
+                        'active' => false,
                     ];
                     $dots = false;
                 }
             }
 
-            $total = (int)$total;
+            $total = (int) $total;
             $to = $offset + $items_per_page;
             if ($to > $total) {
                 $to = $total;
@@ -332,15 +326,15 @@ class QueueController extends \WP_REST_Controller
                 'per_page' => $items_per_page,
                 'current_page' => $p,
                 'last_page' => $total_page,
-                'first_page_url' => rest_url($this->namespace . '/' . $this->rest_base . '/table'),
-                'last_page_url' => rest_url($this->namespace . '/' . $this->rest_base . "/table/vpage=$total_page"),
-                'next_page_url' => $next_page !== null ? rest_url($this->namespace . '/' . $this->rest_base . "/table/vpage=$next_page") : null,
-                'prev_page_url' => $prev_page !== null ? rest_url($this->namespace . '/' . $this->rest_base . "/table/vpage=$prev_page") : null,
-                'path' => rest_url($this->namespace . '/' . $this->rest_base . '/table'),
+                'first_page_url' => rest_url($this->namespace.'/'.$this->rest_base.'/table'),
+                'last_page_url' => rest_url($this->namespace.'/'.$this->rest_base."/table/vpage=$total_page"),
+                'next_page_url' => $next_page !== null ? rest_url($this->namespace.'/'.$this->rest_base."/table/vpage=$next_page") : null,
+                'prev_page_url' => $prev_page !== null ? rest_url($this->namespace.'/'.$this->rest_base."/table/vpage=$prev_page") : null,
+                'path' => rest_url($this->namespace.'/'.$this->rest_base.'/table'),
                 'from' => $offset + 1,
                 'to' => $to,
                 'links' => $links,
-                'rows' => $result
+                'rows' => $result,
             ];
         } catch (Exception $e) {
             // Return generic/empty structure on error
@@ -349,15 +343,15 @@ class QueueController extends \WP_REST_Controller
                 'per_page' => $perPage,
                 'current_page' => $page,
                 'last_page' => $page,
-                'first_page_url' => rest_url($this->namespace . '/' . $this->rest_base . '/table'),
-                'last_page_url' => rest_url($this->namespace . '/' . $this->rest_base . "/table/vpage=1"),
+                'first_page_url' => rest_url($this->namespace.'/'.$this->rest_base.'/table'),
+                'last_page_url' => rest_url($this->namespace.'/'.$this->rest_base.'/table/vpage=1'),
                 'next_page_url' => null,
                 'prev_page_url' => null,
-                'path' => rest_url($this->namespace . '/' . $this->rest_base . '/table'),
+                'path' => rest_url($this->namespace.'/'.$this->rest_base.'/table'),
                 'from' => 0,
                 'to' => 0,
                 'links' => [],
-                'rows' => []
+                'rows' => [],
             ];
         }
     }
@@ -365,8 +359,7 @@ class QueueController extends \WP_REST_Controller
     /**
      * Checks if a given request has access to read the items.
      *
-     * @param \WP_REST_Request $request Full details about the request.
-     *
+     * @param  \WP_REST_Request  $request  Full details about the request.
      * @return true|\WP_Error True if the request has read access, WP_Error object otherwise.
      */
     public function get_items_permissions_check($request)
@@ -376,12 +369,12 @@ class QueueController extends \WP_REST_Controller
         // example: /wp-json/me/v1/endpoint/?_wpnonce=${nonce}
         // check_ajax_referer('wp_rest', '_wpnonce', true)
         // 3rd parameter (die=true) to kill rest of execution
-        if (!current_user_can('manage_options')) {
+        if (! current_user_can('manage_options')) {
             return new \WP_Error('rest_forbidden', __('Sorry, you cannot update settings.'), ['status' => 403]);
         }
 
         // since success, we respond with next nonce
-        header('X-WP-Nonce: ' . wp_create_nonce('wp_rest'));
+        header('X-WP-Nonce: '.wp_create_nonce('wp_rest'));
 
         return true;
     }
@@ -389,8 +382,7 @@ class QueueController extends \WP_REST_Controller
     /**
      * Destroy job.
      *
-     * @param \WP_REST_Request $request Full details about the request.
-     *
+     * @param  \WP_REST_Request  $request  Full details about the request.
      * @return \WP_REST_Response|\WP_Error Response object on success, or WP_Error object on failure.
      */
     public function destroy_job(\WP_REST_Request $request)
@@ -418,19 +410,19 @@ class QueueController extends \WP_REST_Controller
                 $result = $id ? $this->get_job_object($id) : null;
                 if ($result) {
                     // Destroy the object
-                    $result = $wpdb->delete($wpdb->prefix . $this->table_name, ['id' => $result->id]);
+                    $result = $wpdb->delete($wpdb->prefix.$this->table_name, ['id' => $result->id]);
                     $response['success'] = $result !== false;
                 }
             }
         }
+
         return rest_ensure_response($response);
     }
 
     /**
      * Destroy all jobs.
      *
-     * @param \WP_REST_Request $request Full details about the request.
-     *
+     * @param  \WP_REST_Request  $request  Full details about the request.
      * @return \WP_REST_Response|\WP_Error Response object on success, or WP_Error object on failure.
      */
     public function destroy_all_jobs(\WP_REST_Request $request)
@@ -469,8 +461,8 @@ class QueueController extends \WP_REST_Controller
                         'validate_callback' => function ($param, $request, $key) {
                             return is_numeric($param) || is_array($param);
                         },
-                        'required' => true
-                    ]
+                        'required' => true,
+                    ],
                 ];
             case 'table':
                 return [
@@ -478,23 +470,24 @@ class QueueController extends \WP_REST_Controller
                         'validate_callback' => function ($param, $request, $key) {
                             return is_numeric($param);
                         },
-                        'required' => true
+                        'required' => true,
                     ],
                 ];
         }
+
         return [];
     }
 
     /**
      * Fetch row from the jobs table
      *
-     * @param object|null $id
+     * @param  object|null  $id
      * @return array|object|\stdClass|null
      */
     public function get_job_object($id = null)
     {
         global $wpdb;
-        $jobs_table = $wpdb->prefix . $this->table_name;
+        $jobs_table = $wpdb->prefix.$this->table_name;
         if ($id !== null) {
             // Get specified item from the database
             $result = $wpdb->get_row("SELECT * FROM $jobs_table WHERE `id` = $id");
@@ -502,6 +495,7 @@ class QueueController extends \WP_REST_Controller
             // Get first item (latest entry) if no ID passed
             $result = $wpdb->get_row("SELECT * FROM $jobs_table ORDER BY `modified` DESC");
         }
+
         return $result;
     }
 }

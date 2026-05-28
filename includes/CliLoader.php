@@ -13,7 +13,7 @@ class CliLoader
     public function __construct($prefix)
     {
         // this is where you can load Cli
-        \WP_CLI::add_command($prefix, \JensiAI\ExampleCommand::class);
+        \WP_CLI::add_command($prefix, ExampleCommand::class);
 
         // additional command can be registered here
         // \WP_CLI::add_command( $prefix, \JensiAI\IndexerCommand::class );

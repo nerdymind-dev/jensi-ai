@@ -41,8 +41,8 @@ class AdminLoader
             $capability,
             $slug,
             [$this, 'plugin_page'],
-            'data:image/svg+xml;base64,' . base64_encode('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6"><path fill-rule="evenodd" d="M4.804 21.644A6.707 6.707 0 006 21.75a6.721 6.721 0 003.583-1.029c.774.182 1.584.279 2.417.279 5.322 0 9.75-3.97 9.75-9 0-5.03-4.428-9-9.75-9s-9.75 3.97-9.75 9c0 2.409 1.025 4.587 2.674 6.192.232.226.277.428.254.543a3.73 3.73 0 01-.814 1.686.75.75 0 00.44 1.223zM8.25 10.875a1.125 1.125 0 100 2.25 1.125 1.125 0 000-2.25zM10.875 12a1.125 1.125 0 112.25 0 1.125 1.125 0 01-2.25 0zm4.875-1.125a1.125 1.125 0 100 2.25 1.125 1.125 0 000-2.25z" clip-rule="evenodd" /></svg>')
-            //'dashicons-superhero' // tip: https://developer.wordpress.org/resource/dashicons
+            'data:image/svg+xml;base64,'.base64_encode('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6"><path fill-rule="evenodd" d="M4.804 21.644A6.707 6.707 0 006 21.75a6.721 6.721 0 003.583-1.029c.774.182 1.584.279 2.417.279 5.322 0 9.75-3.97 9.75-9 0-5.03-4.428-9-9.75-9s-9.75 3.97-9.75 9c0 2.409 1.025 4.587 2.674 6.192.232.226.277.428.254.543a3.73 3.73 0 01-.814 1.686.75.75 0 00.44 1.223zM8.25 10.875a1.125 1.125 0 100 2.25 1.125 1.125 0 000-2.25zM10.875 12a1.125 1.125 0 112.25 0 1.125 1.125 0 01-2.25 0zm4.875-1.125a1.125 1.125 0 100 2.25 1.125 1.125 0 000-2.25z" clip-rule="evenodd" /></svg>')
+            // 'dashicons-superhero' // tip: https://developer.wordpress.org/resource/dashicons
         );
 
         if (current_user_can($capability)) {
@@ -91,8 +91,8 @@ class AdminLoader
      */
     public function enqueue_scripts()
     {
-        wp_enqueue_style($this->prefix . '-admin');
-        wp_enqueue_script($this->prefix . '-admin');
+        wp_enqueue_style($this->prefix.'-admin');
+        wp_enqueue_script($this->prefix.'-admin');
     }
 
     /**
@@ -106,13 +106,13 @@ class AdminLoader
         $this->enqueue_scripts();
 
         // instantiate controllers
-        $settingController = new Api\SettingController();
-        $queueController = new Api\QueueController();
-        $configController = new Api\ConfigController();
-        $agentController = new Api\JensiAgentController();
-        $AgentController = new Api\AgentController();
-        $dataSourceController = new Api\DataSourceController();
-        $syncController = new Api\SyncController();
+        $settingController = new Api\SettingController;
+        $queueController = new Api\QueueController;
+        $configController = new Api\ConfigController;
+        $agentController = new Api\JensiAgentController;
+        $AgentController = new Api\AgentController;
+        $dataSourceController = new Api\DataSourceController;
+        $syncController = new Api\SyncController;
 
         // Get API URLs based on environment
         $env = wp_get_environment_type();
@@ -140,7 +140,7 @@ class AdminLoader
         foreach ($postTypes as $postType) {
             $taxonomiesForPostType = get_object_taxonomies($postType, 'names');
             $taxonomies[$postType] = [
-                '_taxonomies' => []
+                '_taxonomies' => [],
             ];
             foreach ($taxonomiesForPostType as $taxonomy) {
                 // Exclude built-in taxonomies that are not useful
@@ -149,7 +149,7 @@ class AdminLoader
                 }
 
                 // Ensure we only add each taxonomy once
-                if (!in_array($taxonomy, $taxonomies[$postType]['_taxonomies'])) {
+                if (! in_array($taxonomy, $taxonomies[$postType]['_taxonomies'])) {
                     $taxonomies[$postType]['_taxonomies'][] = $taxonomy;
                 }
 
@@ -160,7 +160,7 @@ class AdminLoader
                 ]);
 
                 // Store terms in a structured way
-                if (!is_wp_error($terms)) {
+                if (! is_wp_error($terms)) {
                     $taxonomies[$postType][$taxonomy] = array_map(function ($term) {
                         return [
                             'term_id' => $term->term_id,
@@ -201,11 +201,11 @@ class AdminLoader
             'postTypes' => $postTypes,
             'postTerms' => $taxonomies,
             'adminUrl' => admin_url('/'),
-            'pluginUrl' => rtrim(\JensiAI\Main::$BASEURL, '/'),
-            'pluginVersion' => JENSI_AI_VERSION
+            'pluginUrl' => rtrim(Main::$BASEURL, '/'),
+            'pluginVersion' => JENSI_AI_VERSION,
         ]);
 
-        wp_localize_script($this->prefix . '-admin', 'vue_wp_plugin_config_admin', $appVars);
+        wp_localize_script($this->prefix.'-admin', 'vue_wp_plugin_config_admin', $appVars);
 
         $content = '<div class="admin-app-wrapper"><div id="vue-admin-app"></div></div>';
         echo $content;

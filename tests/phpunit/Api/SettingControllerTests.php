@@ -3,8 +3,10 @@
 namespace Tests;
 
 use Brain\Monkey\Functions;
+use JensiAI\Api\SettingController;
+use JensiAI\Main;
 
-defined('ABSPATH') or die();
+defined('ABSPATH') or exit();
 
 class SettingControllerTests extends PluginTestCase
 {
@@ -16,10 +18,10 @@ class SettingControllerTests extends PluginTestCase
             ->with('', 'names')
             ->andReturn(['post', 'page']);
 
-        $controller = new \JensiAI\Api\SettingController();
+        $controller = new SettingController;
 
         $actual = $this->accessNonPublicProperty($controller, 'namespace');
-        $expected = \JensiAI\Main::PREFIX.'/v1';
+        $expected = Main::PREFIX.'/v1';
         $this->assertEquals($expected, $actual);
 
         $actual = $this->accessNonPublicProperty($controller, 'rest_base');

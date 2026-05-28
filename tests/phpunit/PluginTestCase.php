@@ -3,6 +3,7 @@
 namespace Tests;
 
 use Brain\Monkey;
+use JensiAI\Main;
 use PHPUnit\Framework\TestCase;
 
 class PluginTestCase extends TestCase
@@ -24,7 +25,7 @@ class PluginTestCase extends TestCase
         Monkey\Functions\when('esc_html')
             ->returnArg(1);
 
-        $instance = \JensiAI\Main::get_instance(realpath(__DIR__.'/../../index.php'), '1.0.0');
+        $instance = Main::get_instance(realpath(__DIR__.'/../../index.php'), '1.0.0');
     }
 
     protected function tearDown(): void

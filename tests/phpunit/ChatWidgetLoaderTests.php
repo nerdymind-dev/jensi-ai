@@ -2,10 +2,11 @@
 
 namespace Tests;
 
-use Brain\Monkey\Functions;
 use Brain\Monkey\Actions;
+use Brain\Monkey\Functions;
+use JensiAI\ChatWidgetLoader;
 
-defined('ABSPATH') or die();
+defined('ABSPATH') or exit();
 
 class ChatWidgetLoaderTests extends PluginTestCase
 {
@@ -13,12 +14,12 @@ class ChatWidgetLoaderTests extends PluginTestCase
     {
         // Mock the is_admin function to return false (frontend)
         Functions\when('is_admin')->justReturn(false);
-        
+
         // Expect wp_enqueue_scripts action to be added
         Actions\expectAdded('wp_enqueue_scripts');
-        
-        new \JensiAI\ChatWidgetLoader('test');
-        
+
+        new ChatWidgetLoader('test');
+
         $this->assertTrue(true); // If we get here without errors, the test passes
     }
 
@@ -28,22 +29,22 @@ class ChatWidgetLoaderTests extends PluginTestCase
         Functions\when('is_login')->justReturn(false);
         Functions\when('wp_doing_ajax')->justReturn(false);
         Functions\when('wp_doing_cron')->justReturn(false);
-        
+
         // Mock SettingController to return empty settings
         $mockSettingController = $this->getMockBuilder('\JensiAI\Api\SettingController')
             ->getMock();
         $mockSettingController->method('get_settings_raw')
             ->willReturn([]);
-        
-        $loader = new \JensiAI\ChatWidgetLoader('test');
-        
+
+        $loader = new ChatWidgetLoader('test');
+
         // Use reflection to test the private method
         $reflection = new \ReflectionClass($loader);
         $method = $reflection->getMethod('should_load_widget');
         $method->setAccessible(true);
-        
+
         $result = $method->invoke($loader);
-        
+
         // Should return false when no API key is configured
         $this->assertFalse($result);
     }
@@ -54,7 +55,7 @@ class ChatWidgetLoaderTests extends PluginTestCase
         Functions\when('wp_get_environment_type')->justReturn('local');
         Functions\when('rest_url')->returnArg(1);
         Functions\when('wp_create_nonce')->returnArg(1);
-        
+
         // Mock SettingController to return test settings
         $mockSettingController = $this->getMockBuilder('\JensiAI\Api\SettingController')
             ->getMock();
@@ -62,25 +63,25 @@ class ChatWidgetLoaderTests extends PluginTestCase
             ->willReturn([
                 'jensi_ai_api_key' => 'test-key',
                 'jensi_ai_agent' => 'test-agent-id',
-                'jensi_ai_chat_widget_enabled' => true
+                'jensi_ai_chat_widget_enabled' => true,
             ]);
-        
-        $loader = new \JensiAI\ChatWidgetLoader('test');
-        
+
+        $loader = new ChatWidgetLoader('test');
+
         // Use reflection to test the private method
         $reflection = new \ReflectionClass($loader);
         $method = $reflection->getMethod('get_widget_config');
         $method->setAccessible(true);
-        
+
         $config = $method->invoke($loader);
-        
+
         // Verify config structure
         $this->assertArrayHasKey('apiBaseUrl', $config);
         $this->assertArrayHasKey('wsBaseUrl', $config);
         $this->assertArrayHasKey('nonce', $config);
         $this->assertArrayHasKey('defaultAgentId', $config);
         $this->assertArrayHasKey('pluginUrl', $config);
-        
+
         // Verify values
         $this->assertEquals('test-agent-id', $config['defaultAgentId']);
         $this->assertStringContainsString('jensi-ai.test', $config['wsBaseUrl']);

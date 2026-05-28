@@ -2,8 +2,6 @@
 
 namespace JensiAI;
 
-use Exception;
-use Carbon\Carbon;
 use JensiAI\Api\ConfigController;
 use JensiAI\Api\SettingController;
 
@@ -26,6 +24,7 @@ final class Main
      * Holds various class instances.
      *
      * @var array
+     *
      * @since   1.0.0
      */
     private $container = [];
@@ -33,15 +32,17 @@ final class Main
     /**
      * The single instance of Main.
      *
-     * @var     object
+     * @var object
+     *
      * @since   1.0.0
      */
-    private static $_instance = null; //phpcs:ignore
+    private static $_instance = null; // phpcs:ignore
 
     /**
      * The version number.
      *
-     * @var     string
+     * @var string
+     *
      * @since   1.0.0
      */
     public $VERSION;
@@ -73,8 +74,8 @@ final class Main
      * Sets up all the appropriate hooks and actions
      * within our plugin.
      *
-     * @param string $filepath the plugin file path
-     * @param string $version Plugin version.
+     * @param  string  $filepath  the plugin file path
+     * @param  string  $version  Plugin version.
      */
     private function __construct($filepath, $version = '1.0.0')
     {
@@ -88,9 +89,8 @@ final class Main
      *
      * Usage: Main::get_instance()
      *
-     * @param string $filepath the plugin file path
-     * @param string $version Plugin version.
-     *
+     * @param  string  $filepath  the plugin file path
+     * @param  string  $version  Plugin version.
      * @return Main the singleton instance
      */
     public static function get_instance($filepath, $version = '1.0.0')
@@ -109,8 +109,8 @@ final class Main
     {
         flush_rewrite_rules();
 
-        $settings = (new SettingController())->get_settings_raw();
-        (new \JensiAI\Migrations())->cleanUp(self::PREFIX, $settings);
+        $settings = (new SettingController)->get_settings_raw();
+        (new Migrations)->cleanUp(self::PREFIX, $settings);
     }
 
     /**
@@ -133,7 +133,7 @@ final class Main
 
         // setup cli
         if (defined('WP_CLI') && \WP_CLI) {
-            $this->container['cli'] = new \JensiAI\CliLoader(self::PREFIX);
+            $this->container['cli'] = new CliLoader(self::PREFIX);
         }
 
         // this is to register an action link from the Plugin manager page to our settings page
@@ -160,31 +160,31 @@ final class Main
     {
         $transient = get_transient('jensi_ai_generating');
         if ($transient !== false) {
-?>
+            ?>
             <div class="notice notice-<?php echo $transient['status']; ?> is-dismissible">
                 <p><?php echo $transient['message']; ?></p>
             </div>
         <?php
-            delete_transient('jensi_ai_generating');
+                        delete_transient('jensi_ai_generating');
         }
     }
 
     /**
      * Register custom CRON interval
      *
-     * @param $schedules
      * @return mixed
      */
-    function jensi_ai_cron_schedules($schedules)
+    public function jensi_ai_cron_schedules($schedules)
     {
         // NOTE: need to update CRON timeout interval to be less than/equal to the shortest interval
         // E.g.: `define('WP_CRON_LOCK_TIMEOUT', 10);`
-        if (!isset($schedules["every_ten_seconds"])) {
-            $schedules["every_ten_seconds"] = [
+        if (! isset($schedules['every_ten_seconds'])) {
+            $schedules['every_ten_seconds'] = [
                 'interval' => 10,
-                'display' => __('Every 10 seconds')
+                'display' => __('Every 10 seconds'),
             ];
         }
+
         return $schedules;
     }
 
@@ -193,14 +193,11 @@ final class Main
      */
     public function process_jensi_ai_queue()
     {
-        (new QueueLoader())->run();
+        (new QueueLoader)->run();
     }
 
     /**
      * If product, product image URL
-     *
-     * @param $post_id
-     * @return void
      */
     public function jensi_ai_save_post($post_id): void
     {
@@ -218,18 +215,17 @@ final class Main
     /**
      * On post save, check if we need to generate new content
      *
-     * @param $post_id
      * @return void
      */
     public function submit_post_for_ai($post_id)
     {
-        $controller = new ConfigController();
+        $controller = new ConfigController;
         $post_type = get_post_type($post_id);
         $terms = wp_get_post_categories($post_id, ['fields' => 'ids']);
         $config = $controller->get_config_for_terms($post_type, $terms);
 
         // If no config found, return
-        if (!$config) {
+        if (! $config) {
             return;
         }
 
@@ -239,11 +235,6 @@ final class Main
 
     /**
      * Generate content for post
-     *
-     * @param $post_id
-     * @param $config
-     * @param $type
-     * @return void
      */
     private function generate_content_for_post($post_id, $config, $type): void
     {
@@ -253,12 +244,12 @@ final class Main
         // If post and config set, queue it up!
         if ($post) {
             // Add to queue
-            (new QueueLoader())->store_job($post, $config, $type);
+            (new QueueLoader)->store_job($post, $config, $type);
 
             // Add admin notice that we've queued this post up
             set_transient('jensi_ai_generating', [
                 'message' => "Process has queued for \"{$post->post_title}\"! It will be imported into JENSi AI and added to your AI knowledge library.",
-                'status' => 'success'
+                'status' => 'success',
             ], 30);
         }
     }
@@ -283,7 +274,6 @@ final class Main
     /**
      * Output product AI metabox
      *
-     * @param $post
      * @return void
      */
     public function jensi_ai_echo_meta_box($post)
@@ -348,7 +338,6 @@ final class Main
     /**
      * Magic getter to bypass referencing plugin.
      *
-     * @param $prop
      *
      * @return mixed
      */
@@ -364,7 +353,6 @@ final class Main
     /**
      * Magic isset to bypass referencing plugin.
      *
-     * @param $prop
      *
      * @return mixed
      */
@@ -388,7 +376,7 @@ final class Main
      */
     public function activate_plugin()
     {
-        (new \JensiAI\Migrations())
+        (new Migrations)
             ->run(self::PREFIX, $this->VERSION);
     }
 
@@ -409,13 +397,13 @@ final class Main
     /**
      * Register settings link that display on the plugins listing page.
      *
-     * @param array $links
+     * @param  array  $links
      * @return array
      */
     public function register_settings_link($links)
     {
-        $settings_link = '<a href="admin.php?page=' . self::PREFIX . '#/settings">';
-        $settings_link .= esc_html(__('Settings', self::PREFIX)) . '</a>';
+        $settings_link = '<a href="admin.php?page='.self::PREFIX.'#/settings">';
+        $settings_link .= esc_html(__('Settings', self::PREFIX)).'</a>';
         array_unshift($links, $settings_link);
 
         return $links;
@@ -429,23 +417,23 @@ final class Main
     public function init_hook_handler()
     {
         // initialize assets
-        $this->container['assets'] = new \JensiAI\Assets(self::PREFIX);
+        $this->container['assets'] = new Assets(self::PREFIX);
 
         // initialize the various loader classes
         if ($this->is_request('admin')) {
-            $this->container['admin'] = new \JensiAI\AdminLoader(self::PREFIX);
+            $this->container['admin'] = new AdminLoader(self::PREFIX);
         }
 
         if ($this->is_request('frontend')) {
-            $this->container['frontend'] = new \JensiAI\FrontendLoader(self::PREFIX);
-            $this->container['chat_widget'] = new \JensiAI\ChatWidgetLoader(self::PREFIX);
+            $this->container['frontend'] = new FrontendLoader(self::PREFIX);
+            $this->container['chat_widget'] = new ChatWidgetLoader(self::PREFIX);
         }
 
         // finally load api routes
-        $this->container['api'] = new \JensiAI\ApiRoutes(self::PREFIX);
+        $this->container['api'] = new ApiRoutes(self::PREFIX);
 
         // Ensure CRON is scheduled
-        if (!wp_next_scheduled('jensi_ai_queue')) {
+        if (! wp_next_scheduled('jensi_ai_queue')) {
             wp_schedule_event(time(), 'every_ten_seconds', 'jensi_ai_queue');
         }
     }
@@ -460,15 +448,14 @@ final class Main
         load_plugin_textdomain(
             self::PREFIX,
             false,
-            dirname(plugin_basename(self::PREFIX)) . '/languages/'
+            dirname(plugin_basename(self::PREFIX)).'/languages/'
         );
     }
 
     /**
      * What type of request is this?
      *
-     * @param string $type admin, ajax, cron or frontend.
-     *
+     * @param  string  $type  admin, ajax, cron or frontend.
      * @return bool
      */
     private function is_request($type)
@@ -487,7 +474,7 @@ final class Main
                 return defined('DOING_CRON');
 
             case 'frontend':
-                return (!is_admin() || defined('DOING_AJAX')) && !defined('DOING_CRON');
+                return (! is_admin() || defined('DOING_AJAX')) && ! defined('DOING_CRON');
         }
     }
 

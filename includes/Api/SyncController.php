@@ -2,6 +2,7 @@
 
 namespace JensiAI\Api;
 
+use JensiAI\Main;
 use JensiAI\QueueLoader;
 
 /**
@@ -28,16 +29,14 @@ class SyncController extends \WP_REST_Controller
      */
     public function __construct()
     {
-        $this->prefix = \JensiAI\Main::PREFIX;
-        $this->namespace = $this->prefix . '/v1';
+        $this->prefix = Main::PREFIX;
+        $this->namespace = $this->prefix.'/v1';
         $this->rest_base = 'sync';
         $this->table_name = null;
     }
 
     /**
      * Get the primary table for this controllers data
-     *
-     * @return string|null
      */
     public function getTableName(): ?string
     {
@@ -55,7 +54,7 @@ class SyncController extends \WP_REST_Controller
         // Register the /wp-json/ + get_endpoint() route
         register_rest_route(
             $this->namespace,
-            '/' . $this->rest_base,
+            '/'.$this->rest_base,
             [
                 [
                     'methods' => \WP_REST_Server::CREATABLE,
@@ -77,15 +76,14 @@ class SyncController extends \WP_REST_Controller
         // example: jensi-ai/v1/sync
         return esc_url_raw(
             // GET/POST
-            rest_url($this->namespace . '/' . $this->rest_base)
+            rest_url($this->namespace.'/'.$this->rest_base)
         );
     }
 
     /**
      * Queue up all valid posts for syncing with the AI service.
      *
-     * @param \WP_REST_Request $request Full details about the request.
-     *
+     * @param  \WP_REST_Request  $request  Full details about the request.
      * @return \WP_REST_Response|\WP_Error Response object on success, or WP_Error object on failure.
      */
     public function sync(\WP_REST_Request $request)
@@ -97,7 +95,7 @@ class SyncController extends \WP_REST_Controller
         $config_id = $params['id'] ?? null;
 
         // Init the config controller
-        $controller = new ConfigController();
+        $controller = new ConfigController;
         $configs = $config_id
             ? [$controller->get_config_object($config_id)]
             : $controller->get_all_configs();
@@ -124,14 +122,14 @@ class SyncController extends \WP_REST_Controller
             ];
 
             // Add taxonomy query if needed
-            if (!empty($taxonomy)) {
+            if (! empty($taxonomy)) {
                 $args['tax_query'] = [
                     [
                         'taxonomy' => $taxonomy,
                         'field' => 'term_id',
                     ],
                 ];
-                if (!empty($terms) && is_array($terms)) {
+                if (! empty($terms) && is_array($terms)) {
                     $args['tax_query'][0]['terms'] = $terms;
                     $args['tax_query'][0]['operator'] = 'IN';
                 } else {
@@ -140,7 +138,7 @@ class SyncController extends \WP_REST_Controller
             }
 
             // Don't include existing posts that have already been fetched
-            if (!empty($post_ids)) {
+            if (! empty($post_ids)) {
                 $args['post__not_in'] = $post_ids;
             }
 
@@ -150,7 +148,7 @@ class SyncController extends \WP_REST_Controller
                 $post_ids[] = $post->ID;
 
                 // Add to sync list as a simple object
-                $posts_to_sync[] = (object)[
+                $posts_to_sync[] = (object) [
                     'ID' => $post->ID,
                     'post_title' => $post->post_title,
                     'post_date' => $post->post_date,
@@ -162,7 +160,7 @@ class SyncController extends \WP_REST_Controller
         }
 
         // Setup the queue for each post
-        $loader = new QueueLoader();
+        $loader = new QueueLoader;
         $errors = [];
         foreach ($posts_to_sync as $post) {
             // Queue each post for syncing
@@ -179,14 +177,14 @@ class SyncController extends \WP_REST_Controller
             'success' => empty($errors),
             'nonce' => $nonce,
         ]);
+
         return rest_ensure_response($response);
     }
 
     /**
      * Checks if a given request has access to read the items.
      *
-     * @param \WP_REST_Request $request Full details about the request.
-     *
+     * @param  \WP_REST_Request  $request  Full details about the request.
      * @return true|\WP_Error True if the request has read access, WP_Error object otherwise.
      */
     public function get_items_permissions_check($request)
@@ -196,12 +194,12 @@ class SyncController extends \WP_REST_Controller
         // example: /wp-json/me/v1/endpoint/?_wpnonce=${nonce}
         // check_ajax_referer('wp_rest', '_wpnonce', true)
         // 3rd parameter (die=true) to kill rest of execution
-        if (!current_user_can('manage_options')) {
+        if (! current_user_can('manage_options')) {
             return new \WP_Error('rest_forbidden', __('Sorry, you cannot update settings.'), ['status' => 403]);
         }
 
         // since success, we respond with next nonce
-        header('X-WP-Nonce: ' . wp_create_nonce('wp_rest'));
+        header('X-WP-Nonce: '.wp_create_nonce('wp_rest'));
 
         return true;
     }
@@ -226,6 +224,7 @@ class SyncController extends \WP_REST_Controller
                     // ]
                 ];
         }
+
         return [];
     }
 }

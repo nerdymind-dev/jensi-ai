@@ -35,8 +35,8 @@ class QueueLoader
      */
     public function __construct()
     {
-        $this->prefix = \JensiAI\Main::PREFIX;
-        $this->table_name = $this->prefix . '_jobs';
+        $this->prefix = Main::PREFIX;
+        $this->table_name = $this->prefix.'_jobs';
 
         // Get the base API url
         $this->base_api = wp_get_environment_type() === 'local'
@@ -45,9 +45,7 @@ class QueueLoader
     }
 
     /**
-     * @param $post
-     * @param $config
-     * @param null|string $type
+     * @param  null|string  $type
      * @return array|true
      */
     public function store_job($post, $config, $type = null)
@@ -60,11 +58,11 @@ class QueueLoader
         $existing = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}{$this->table_name} WHERE post_id = %d AND processed = 0", $post->ID));
         if ($existing) {
             // Delete the existing unprocessed job for this post
-            $wpdb->delete($wpdb->prefix . $this->table_name, ['id' => $existing->id]);
+            $wpdb->delete($wpdb->prefix.$this->table_name, ['id' => $existing->id]);
         }
 
         // Insert new job
-        $result = $wpdb->insert($wpdb->prefix . $this->table_name, [
+        $result = $wpdb->insert($wpdb->prefix.$this->table_name, [
             'name' => $post->post_title,
             'post_id' => $post->ID,
             'content' => strip_tags($post->post_content),
@@ -79,8 +77,9 @@ class QueueLoader
             // 'processed' => false // populated by default...
         ]);
         if ($result === false) {
-            $error = 'Failed to insert job into queue table: ' . $wpdb->last_error;
+            $error = 'Failed to insert job into queue table: '.$wpdb->last_error;
         }
+
         return $error === null ? true : $error;
     }
 
@@ -95,13 +94,13 @@ class QueueLoader
     }
 
     /**
-     * @param int|null $id
+     * @param  int|null  $id
      * @return bool
      */
     public function process_job($id = null)
     {
         global $wpdb;
-        $queue_table = $wpdb->prefix . $this->table_name;
+        $queue_table = $wpdb->prefix.$this->table_name;
         $statement = "SELECT * FROM $queue_table";
         if (is_numeric($id)) {
             $id = intval($id);
@@ -111,49 +110,51 @@ class QueueLoader
         }
         $where = $id
             ? " WHERE `processed` = 0 AND `id` $id"
-            : " WHERE `processed` = 0";
-        $orderBy = " ORDER BY `created` ASC";
+            : ' WHERE `processed` = 0';
+        $orderBy = ' ORDER BY `created` ASC';
 
         // Load settings
-        $settings = (new SettingController())->get_settings_raw();
+        $settings = (new SettingController)->get_settings_raw();
 
         // The API endpoint
-        $url = $this->base_api . '/data-sources/data';
+        $url = $this->base_api.'/data-sources/data';
 
         // Get queued items
-        $results = $wpdb->get_results($statement . $where . $orderBy);
+        $results = $wpdb->get_results($statement.$where.$orderBy);
         if ($results) {
             foreach ($results as $result) {
                 // Flag item as processed (so it doesn't get run again)
                 $wpdb->update($queue_table, ['processed' => true], ['id' => $result->id]);
                 try {
                     // Make sure we have the required minimum for connecting to the API
-                    if (!$settings['jensi_ai_api_key']) {
+                    if (! $settings['jensi_ai_api_key']) {
                         $wpdb->update($queue_table, [
                             'failed' => true,
                             'errors' => json_encode([
                                 'message' => 'No API key configured',
                                 'trace' => '',
                                 'file' => __CLASS__,
-                                'line' => null
-                            ])
+                                'line' => null,
+                            ]),
                         ], ['id' => $result->id]);
+
                         continue;
                     }
 
                     // Fetch the meta data
                     $meta = json_decode($result->meta, true);
 
-                    if (!$meta['source_id']) {
+                    if (! $meta['source_id']) {
                         $wpdb->update($queue_table, [
                             'failed' => true,
                             'errors' => json_encode([
                                 'message' => 'No data source configured',
                                 'trace' => '',
                                 'file' => __CLASS__,
-                                'line' => null
-                            ])
+                                'line' => null,
+                            ]),
                         ], ['id' => $result->id]);
+
                         continue;
                     }
 
@@ -175,7 +176,7 @@ class QueueLoader
                         'headers' => [
                             'Accept' => 'application/json',
                             'Content-Type' => 'application/json',
-                            'Authorization' => 'Bearer ' . $settings['jensi_ai_api_key'],
+                            'Authorization' => 'Bearer '.$settings['jensi_ai_api_key'],
                         ],
                         'timeout' => 60, // give it a bit longer to process
                         'body' => json_encode($body),
@@ -188,8 +189,8 @@ class QueueLoader
                                 'message' => $api_response->get_error_message(),
                                 'trace' => '',
                                 'file' => __CLASS__,
-                                'line' => null
-                            ])
+                                'line' => null,
+                            ]),
                         ], ['id' => $result->id]);
                     }
                     $code = wp_remote_retrieve_response_code($api_response);
@@ -202,19 +203,19 @@ class QueueLoader
                                 'message' => $data['message'] ?? __('JENSi AI API returned an error.'),
                                 'trace' => '',
                                 'file' => __CLASS__,
-                                'line' => null
-                            ])
+                                'line' => null,
+                            ]),
                         ], ['id' => $result->id]);
                     } else {
                         if (json_last_error() !== JSON_ERROR_NONE) {
                             $wpdb->update($queue_table, [
                                 'failed' => true,
                                 'errors' => json_encode([
-                                    'message' => 'Failed to parse JENSi AI API response: ' . json_last_error_msg(),
+                                    'message' => 'Failed to parse JENSi AI API response: '.json_last_error_msg(),
                                     'trace' => '',
                                     'file' => __CLASS__,
-                                    'line' => null
-                                ])
+                                    'line' => null,
+                                ]),
                             ], ['id' => $result->id]);
                         }
 
@@ -222,9 +223,9 @@ class QueueLoader
                         $wpdb->update($queue_table, [
                             'failed' => false,
                             'meta' => [
-                                'message' => $data['message'] ?? 'N/A'
+                                'message' => $data['message'] ?? 'N/A',
                             ],
-                            'errors' => null
+                            'errors' => null,
                         ], ['id' => $result->id]);
                     }
                 } catch (\Exception $e) {
@@ -234,12 +235,13 @@ class QueueLoader
                             'message' => $e->getMessage(),
                             'trace' => $e->getTraceAsString(),
                             'file' => $e->getFile(),
-                            'line' => $e->getLine()
-                        ])
+                            'line' => $e->getLine(),
+                        ]),
                     ], ['id' => $result->id]);
                 }
             }
         }
+
         return true;
     }
 }
