@@ -63,20 +63,23 @@ class ChatWidgetLoader
         $bottomOffset = isset($agent['bottom_offset']) ? intval($agent['bottom_offset']) : 20;
         $rightOffset = isset($agent['right_offset']) ? intval($agent['right_offset']) : 20;
         $this->widget_css = '
-    :root {
-        --jensi-ai-color-primary: ' . $primaryHex . ';
-        --jensi-ai-rgb-primary: ' . implode(',', $primaryRgb) . ';
-        --jensi-ai-color-secondary: ' . $secondaryHex . ';
-        --jensi-ai-bottom-offset: ' . $bottomOffset . 'px;
-        --jensi-ai-right-offset: ' . $rightOffset . 'px;
-        --jensi-ai-color-background: ' . $backgroundHex . ';
-        --jensi-ai-color-text: ' . $textHex . ';
-        --jensi-ai-color-text-secondary: ' . $secondaryTextHex . ';
-    }';
+        :root {
+            --jensi-ai-color-primary: ' . $primaryHex . ';
+            --jensi-ai-rgb-primary: ' . implode(',', $primaryRgb) . ';
+            --jensi-ai-color-secondary: ' . $secondaryHex . ';
+            --jensi-ai-bottom-offset: ' . $bottomOffset . 'px;
+            --jensi-ai-right-offset: ' . $rightOffset . 'px;
+            --jensi-ai-color-background: ' . $backgroundHex . ';
+            --jensi-ai-color-text: ' . $textHex . ';
+            --jensi-ai-color-text-secondary: ' . $secondaryTextHex . ';
+        }';
 
         // Store agent and config for the footer lazy-loader
         $this->widget_agent = $agent;
         $this->widget_config = $this->get_widget_config($agent);
+
+        // Load the widget CSS immediately — it is small and the placeholder depends on it
+        wp_enqueue_style($this->prefix . '-chat-widget');
 
         // Output the lazy-loader in the footer instead of enqueuing scripts now
         add_action('wp_footer', [$this, 'output_lazy_loader'], 21);
@@ -93,7 +96,7 @@ class ChatWidgetLoader
             return;
         }
 
-        global $wp_scripts, $wp_styles;
+        global $wp_scripts;
 
         // Collect script URLs in dependency order
         $handles = [
@@ -114,41 +117,26 @@ class ChatWidgetLoader
             }
         }
 
-        $css_url = '';
-        if (isset($wp_styles->registered[$this->prefix . '-chat-widget'])) {
-            $css_reg = $wp_styles->registered[$this->prefix . '-chat-widget'];
-            $css_url = esc_url($css_reg->src . ($css_reg->ver ? '?ver=' . $css_reg->ver : ''));
-        }
-
         if (empty($srcs)) {
             return;
         }
 
         $srcs_json = wp_json_encode($srcs);
-        $css_json  = wp_json_encode($css_url);
 
-        // Placeholder button values from the agent
-        $bottom = isset($this->widget_agent['bottom_offset']) ? intval($this->widget_agent['bottom_offset']) : 20;
-        $right  = isset($this->widget_agent['right_offset']) ? intval($this->widget_agent['right_offset']) : 20;
-
-        // Inline CSS vars and config — both must be present before the widget JS runs
+        // Inline the dynamic CSS vars — these cannot live in the static CSS file
         echo '<style>' . wp_strip_all_tags($this->widget_css) . '</style>' . "\n";
         echo '<script>window.jensi_ai_chat_widget_config=' . wp_json_encode($this->widget_config) . ';</script>' . "\n";
 
-        // Static placeholder button — matches the real .jensi-ai-chat-button exactly using the same CSS vars
-        $button_style = sprintf(
-            'position:fixed;bottom:%dpx;right:%dpx;z-index:2147483647;border:none;background:linear-gradient(135deg,var(--jensi-ai-color-primary) 0%%,var(--jensi-ai-color-secondary) 100%%);padding:0;cursor:pointer;border-radius:50%%;width:60px;height:60px;box-shadow:0 4px 12px rgba(0,0,0,0.15);display:flex;align-items:center;justify-content:center;color:var(--jensi-ai-color-text-secondary);transition:all 0.3s ease;',
-            $bottom,
-            $right
-        );
-        echo '<button id="jensi-ai-launcher-placeholder" style="' . $button_style . '" aria-label="Open chat with AI assistant">';
-        echo '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width:28px;height:28px;"><path d="M20 2H4C2.9 2 2 2.9 2 4V22L6 18H20C21.1 18 22 17.1 22 16V4C22 2.9 21.1 2 20 2ZM20 16H5.17L4 17.17V4H20V16Z"/><path d="M7 9H17V11H7V9ZM7 12H14V14H7V12Z"/></svg>';
-        echo '</button>' . "\n";
+        // Static placeholder — uses the real CSS classes so styles are defined in one place
+        echo '<div id="jensi-ai-launcher-placeholder" class="jensi-ai-chat-widget">';
+        echo '<button class="jensi-ai-chat-button jensi-ai-chat-button--pulsing" aria-label="Open chat with AI assistant">';
+        echo '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="jensi-ai-chat-icon"><path d="M20 2H4C2.9 2 2 2.9 2 4V22L6 18H20C21.1 18 22 17.1 22 16V4C22 2.9 21.1 2 20 2ZM20 16H5.17L4 17.17V4H20V16Z"/><path d="M7 9H17V11H7V9ZM7 12H14V14H7V12Z"/></svg>';
+        echo '</button></div>' . "\n";
 
         // Loader: sequential asset loading triggered by placeholder click or background interaction
         echo '<script>';
         echo '(function(){';
-        echo 'var loaded=false,srcs=' . $srcs_json . ',css=' . $css_json . ';';
+        echo 'var loaded=false,srcs=' . $srcs_json . ';';
         echo 'var placeholder=document.getElementById("jensi-ai-launcher-placeholder");';
         // Hide placeholder only once Vue has actually added #jensi-ai-chat-widget to the DOM
         echo 'function onAllLoaded(){';
@@ -161,7 +149,6 @@ class ChatWidgetLoader
         echo 'function load(autoOpen){';
         echo 'if(autoOpen&&window.jensi_ai_chat_widget_config)window.jensi_ai_chat_widget_config.autoOpen=true;';
         echo 'if(loaded)return;loaded=true;';
-        echo 'if(css){var l=document.createElement("link");l.rel="stylesheet";l.href=css;document.head.appendChild(l);}';
         echo 'var i=0;function next(){if(i>=srcs.length){onAllLoaded();return;}var s=document.createElement("script");s.src=srcs[i++];s.onload=next;document.body.appendChild(s);}next();';
         echo '}';
         // Placeholder click: load scripts and open the chat widget immediately
