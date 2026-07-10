@@ -9,8 +9,7 @@ import { Vue3ProgressPlugin } from '@marcoschulte/vue3-progress';
  * This creates a floating chat widget that can be embedded on any page
  */
 
-// Wait for DOM to be ready
-document.addEventListener('DOMContentLoaded', () => {
+const init = () => {
   // Create the chat widget container
   const widgetContainer = document.createElement('div')
   widgetContainer.id = 'jensi-ai-chat-widget'
@@ -28,4 +27,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Mount the app
   app.mount('#jensi-ai-chat-widget')
-})
+}
+
+// Guard against DOMContentLoaded having already fired (e.g. when scripts are lazy-loaded)
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init)
+} else {
+  init()
+}

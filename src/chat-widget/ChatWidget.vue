@@ -617,6 +617,11 @@ onMounted(() => {
     win.$jensiAiConfig.nonce = config.nonce
   }
 
+  // Auto-open if triggered by the placeholder button click during lazy load
+  if (wpConfig?.autoOpen) {
+    openWidget()
+  }
+
   // Set pulse animation to stop after a few seconds
   setTimeout(() => {
     shouldPulse.value = false
