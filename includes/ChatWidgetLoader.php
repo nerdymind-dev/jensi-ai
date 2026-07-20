@@ -78,9 +78,6 @@ class ChatWidgetLoader
         $this->widget_agent = $agent;
         $this->widget_config = $this->get_widget_config($agent);
 
-        // Load the widget CSS immediately — it is small and the placeholder depends on it
-        wp_enqueue_style($this->prefix . '-chat-widget');
-
         // Output the lazy-loader in the footer instead of enqueuing scripts now
         add_action('wp_footer', [$this, 'output_lazy_loader'], 21);
     }
@@ -96,7 +93,7 @@ class ChatWidgetLoader
             return;
         }
 
-        global $wp_scripts;
+        global $wp_scripts, $wp_styles;
 
         // Collect script URLs in dependency order
         $handles = [
@@ -117,14 +114,29 @@ class ChatWidgetLoader
             }
         }
 
+        $css_url = '';
+        if (isset($wp_styles->registered[$this->prefix . '-chat-widget'])) {
+            $css_reg = $wp_styles->registered[$this->prefix . '-chat-widget'];
+            $css_url = esc_url($css_reg->src . ($css_reg->ver ? '?ver=' . $css_reg->ver : ''));
+        }
+
         if (empty($srcs)) {
             return;
         }
 
         $srcs_json = wp_json_encode($srcs);
+        $css_json  = wp_json_encode($css_url);
 
-        // Inline the dynamic CSS vars — these cannot live in the static CSS file
-        echo '<style>' . wp_strip_all_tags($this->widget_css) . '</style>' . "\n";
+        // Critical CSS for the placeholder — inlined so it never blocks rendering.
+        // Only the styles needed before the full chat-widget.css lazy-loads are included here.
+        $critical_css =
+            '.jensi-ai-chat-widget{position:fixed;right:var(--jensi-ai-right-offset,20px);bottom:var(--jensi-ai-bottom-offset,20px);z-index:9999;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen,Ubuntu,Cantarell,sans-serif;}'
+            . '.jensi-ai-chat-button{display:flex;align-items:center;justify-content:center;width:60px;height:60px;color:var(--jensi-ai-color-text-secondary);background:linear-gradient(135deg,var(--jensi-ai-color-primary) 0%,var(--jensi-ai-color-secondary) 100%);border:none;border-radius:50%;box-shadow:0 4px 12px rgb(0 0 0/15%);cursor:pointer;transition:all .3s ease;}'
+            . '.jensi-ai-chat-button--pulsing{animation:jensi-ai-pulse 2s infinite;}'
+            . '.jensi-ai-chat-icon{width:28px;height:28px;}';
+
+        // Inline the dynamic CSS vars and critical placeholder styles
+        echo '<style>' . wp_strip_all_tags($this->widget_css) . $critical_css . '</style>' . "\n";
         echo '<script>window.jensi_ai_chat_widget_config=' . wp_json_encode($this->widget_config) . ';</script>' . "\n";
 
         // Static placeholder — uses the real CSS classes so styles are defined in one place
@@ -136,7 +148,7 @@ class ChatWidgetLoader
         // Loader: sequential asset loading triggered by placeholder click or background interaction
         echo '<script>';
         echo '(function(){';
-        echo 'var loaded=false,srcs=' . $srcs_json . ';';
+        echo 'var loaded=false,srcs=' . $srcs_json . ',css=' . $css_json . ';';
         echo 'var placeholder=document.getElementById("jensi-ai-launcher-placeholder");';
         // Hide placeholder only once Vue has actually added #jensi-ai-chat-widget to the DOM
         echo 'function onAllLoaded(){';
@@ -149,6 +161,7 @@ class ChatWidgetLoader
         echo 'function load(autoOpen){';
         echo 'if(autoOpen&&window.jensi_ai_chat_widget_config)window.jensi_ai_chat_widget_config.autoOpen=true;';
         echo 'if(loaded)return;loaded=true;';
+        echo 'if(css){var l=document.createElement("link");l.rel="stylesheet";l.href=css;document.head.appendChild(l);}';
         echo 'var i=0;function next(){if(i>=srcs.length){onAllLoaded();return;}var s=document.createElement("script");s.src=srcs[i++];s.onload=next;document.body.appendChild(s);}next();';
         echo '}';
         // Placeholder click: load scripts and open the chat widget immediately
