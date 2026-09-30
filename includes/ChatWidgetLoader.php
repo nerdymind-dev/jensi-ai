@@ -64,14 +64,14 @@ class ChatWidgetLoader
         $rightOffset = isset($agent['right_offset']) ? intval($agent['right_offset']) : 20;
         $this->widget_css = '
         :root {
-            --jensi-ai-color-primary: ' . $primaryHex . ';
-            --jensi-ai-rgb-primary: ' . implode(',', $primaryRgb) . ';
-            --jensi-ai-color-secondary: ' . $secondaryHex . ';
-            --jensi-ai-bottom-offset: ' . $bottomOffset . 'px;
-            --jensi-ai-right-offset: ' . $rightOffset . 'px;
-            --jensi-ai-color-background: ' . $backgroundHex . ';
-            --jensi-ai-color-text: ' . $textHex . ';
-            --jensi-ai-color-text-secondary: ' . $secondaryTextHex . ';
+            --jensi-ai-color-primary: '.$primaryHex.';
+            --jensi-ai-rgb-primary: '.implode(',', $primaryRgb).';
+            --jensi-ai-color-secondary: '.$secondaryHex.';
+            --jensi-ai-bottom-offset: '.$bottomOffset.'px;
+            --jensi-ai-right-offset: '.$rightOffset.'px;
+            --jensi-ai-color-background: '.$backgroundHex.';
+            --jensi-ai-color-text: '.$textHex.';
+            --jensi-ai-color-text-secondary: '.$secondaryTextHex.';
         }';
 
         // Store agent and config for the footer lazy-loader
@@ -84,8 +84,6 @@ class ChatWidgetLoader
 
     /**
      * Output the lazy loader for the chat widget.
-     *
-     * @return void
      */
     public function output_lazy_loader(): void
     {
@@ -97,10 +95,10 @@ class ChatWidgetLoader
 
         // Collect script URLs in dependency order
         $handles = [
-            $this->prefix . '-vuejs',
-            $this->prefix . '-manifest',
-            $this->prefix . '-vendor',
-            $this->prefix . '-chat-widget',
+            $this->prefix.'-vuejs',
+            $this->prefix.'-manifest',
+            $this->prefix.'-vendor',
+            $this->prefix.'-chat-widget',
         ];
         $srcs = [];
         foreach ($handles as $handle) {
@@ -115,9 +113,9 @@ class ChatWidgetLoader
         }
 
         $css_url = '';
-        if (isset($wp_styles->registered[$this->prefix . '-chat-widget'])) {
-            $css_reg = $wp_styles->registered[$this->prefix . '-chat-widget'];
-            $css_url = esc_url($css_reg->src . ($css_reg->ver ? '?ver=' . $css_reg->ver : ''));
+        if (isset($wp_styles->registered[$this->prefix.'-chat-widget'])) {
+            $css_reg = $wp_styles->registered[$this->prefix.'-chat-widget'];
+            $css_url = esc_url($css_reg->src.($css_reg->ver ? '?ver='.$css_reg->ver : ''));
         }
 
         if (empty($srcs)) {
@@ -125,30 +123,30 @@ class ChatWidgetLoader
         }
 
         $srcs_json = wp_json_encode($srcs);
-        $css_json  = wp_json_encode($css_url);
+        $css_json = wp_json_encode($css_url);
 
         // Critical CSS for the placeholder — inlined so it never blocks rendering.
         // Only the styles needed before the full chat-widget.css lazy-loads are included here.
         $critical_css =
             '.jensi-ai-chat-widget{position:fixed;right:var(--jensi-ai-right-offset,20px);bottom:var(--jensi-ai-bottom-offset,20px);z-index:9999;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen,Ubuntu,Cantarell,sans-serif;}'
-            . '.jensi-ai-chat-button{display:flex;align-items:center;justify-content:center;width:60px;height:60px;color:var(--jensi-ai-color-text-secondary);background:linear-gradient(135deg,var(--jensi-ai-color-primary) 0%,var(--jensi-ai-color-secondary) 100%);border:none;border-radius:50%;box-shadow:0 4px 12px rgb(0 0 0/15%);cursor:pointer;transition:all .3s ease;}'
-            . '.jensi-ai-chat-button--pulsing{animation:jensi-ai-pulse 2s infinite;}'
-            . '.jensi-ai-chat-icon{width:28px;height:28px;}';
+            .'.jensi-ai-chat-button{display:flex;align-items:center;justify-content:center;width:60px;height:60px;color:var(--jensi-ai-color-text-secondary);background:linear-gradient(135deg,var(--jensi-ai-color-primary) 0%,var(--jensi-ai-color-secondary) 100%);border:none;border-radius:50%;box-shadow:0 4px 12px rgb(0 0 0/15%);cursor:pointer;transition:all .3s ease;}'
+            .'.jensi-ai-chat-button--pulsing{animation:jensi-ai-pulse 2s infinite;}'
+            .'.jensi-ai-chat-icon{width:28px;height:28px;}';
 
         // Inline the dynamic CSS vars and critical placeholder styles
-        echo '<style>' . wp_strip_all_tags($this->widget_css) . $critical_css . '</style>' . "\n";
-        echo '<script>window.jensi_ai_chat_widget_config=' . wp_json_encode($this->widget_config) . ';</script>' . "\n";
+        echo '<style>'.wp_strip_all_tags($this->widget_css).$critical_css.'</style>'."\n";
+        echo '<script>window.jensi_ai_chat_widget_config='.wp_json_encode($this->widget_config).';</script>'."\n";
 
         // Static placeholder — uses the real CSS classes so styles are defined in one place
         echo '<div id="jensi-ai-launcher-placeholder" class="jensi-ai-chat-widget">';
         echo '<button class="jensi-ai-chat-button jensi-ai-chat-button--pulsing" aria-label="Open chat with AI assistant">';
         echo '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="jensi-ai-chat-icon"><path d="M20 2H4C2.9 2 2 2.9 2 4V22L6 18H20C21.1 18 22 17.1 22 16V4C22 2.9 21.1 2 20 2ZM20 16H5.17L4 17.17V4H20V16Z"/><path d="M7 9H17V11H7V9ZM7 12H14V14H7V12Z"/></svg>';
-        echo '</button></div>' . "\n";
+        echo '</button></div>'."\n";
 
         // Loader: sequential asset loading triggered by placeholder click or background interaction
         echo '<script>';
         echo '(function(){';
-        echo 'var loaded=false,srcs=' . $srcs_json . ',css=' . $css_json . ';';
+        echo 'var loaded=false,srcs='.$srcs_json.',css='.$css_json.';';
         echo 'var placeholder=document.getElementById("jensi-ai-launcher-placeholder");';
         // Hide placeholder only once Vue has actually added #jensi-ai-chat-widget to the DOM
         echo 'function onAllLoaded(){';
@@ -169,7 +167,7 @@ class ChatWidgetLoader
         // Preload scripts on other interactions so they are ready before the user clicks
         echo "['scroll','mousemove','touchstart','keydown'].forEach(function(e){document.addEventListener(e,function(){load(false);},{once:true,passive:true});});";
         echo '})();';
-        echo '</script>' . "\n";
+        echo '</script>'."\n";
     }
 
     /**
@@ -238,7 +236,7 @@ class ChatWidgetLoader
         }
 
         global $wpdb;
-        $agents_table = $wpdb->prefix . $this->prefix . '_agents';
+        $agents_table = $wpdb->prefix.$this->prefix.'_agents';
 
         $agents = $wpdb->get_results("SELECT * FROM $agents_table WHERE enabled = 1 ORDER BY created ASC");
         if (! $agents) {
@@ -335,7 +333,7 @@ class ChatWidgetLoader
         $config = [
             'id' => $agent['id'],
             'nonce' => wp_create_nonce('wp_rest'),
-            'apiBaseUrl' => rest_url($this->prefix . '/v1'),
+            'apiBaseUrl' => rest_url($this->prefix.'/v1'),
             'wsBaseUrl' => $ws_base_url,
             'defaultAgentId' => $agent['agent_id'] ?? '',
             'dataSourceId' => $agent['data_source_id'] ?? '',
